@@ -1,0 +1,163 @@
+"use client";
+
+import { useCart } from "@/components/providers/CartProvider";
+import { formatPrice } from "@/lib/utils";
+import { Check, Heart, ShoppingBag, Star } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+
+export interface ProductCardProps {
+  id: string;
+  title: string;
+  slug: string;
+  price: number;
+  salePrice?: number | null;
+  discountPercent?: number | null;
+  rating: number;
+  reviewCount: number;
+  image?: string;
+  category?: string;
+  seller?: {
+    storeName: string;
+    storeSlug: string;
+  };
+  inStock?: boolean;
+}
+
+export function ProductCard({
+  id,
+  title,
+  slug,
+  price,
+  salePrice,
+  discountPercent,
+  rating,
+  reviewCount,
+  image,
+  category,
+  seller,
+  inStock = true,
+}: ProductCardProps) {
+  const { addToCart } = useCart();
+  const [added, setAdded] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+
+  const displayPrice = salePrice || price;
+  const originalPrice = salePrice ? price : null;
+
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const ok = await addToCart(id, undefined, 1);
+    if (ok) {
+      setAdded(true);
+      setTimeout(() => setAdded(false), 2000);
+    }
+  };
+
+  return (
+    <div className="group relative bg-white rounded-2xl border border-slate-200/80 hover:border-brand-400 hover:shadow-card-hover transition-all duration-300 flex flex-col overflow-hidden">
+      {/* Badges */}
+      <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
+        {discountPercent && discountPercent > 0 ? (
+          <span className="px-2 py-0.5 bg-fayzee-coral text-white text-[10px] font-extrabold rounded-md shadow-sm">
+            -{discountPercent}%
+          </span>
+        ) : null}
+      </div>
+
+      {/* Wishlist toggle */}
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsLiked(!isLiked);
+        }}
+        className="absolute top-3 right-3 z-10 p-2 rounded-full bg-white/90 backdrop-blur-xs text-slate-400 hover:text-red-500 transition shadow-xs"
+        title="Save to Wishlist"
+      >
+        <Heart className={`w-4 h-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`} />
+      </button>
+
+      {/* Image container */}
+      <Link href={`/products/${slug}`} className="block relative aspect-square bg-slate-100 overflow-hidden">
+        <img
+          src={image || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600"}
+          alt={title}
+          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+          loading="lazy"
+        />
+      </Link>
+
+      {/* Content */}
+      <div className="p-4 flex-1 flex flex-col justify-between">
+        <div>
+          {seller && (
+            <Link
+              href={`/sellers/${seller.storeSlug}`}
+              className="text-[11px] font-medium text-slate-500 hover:text-brand-600 truncate block mb-1"
+            >
+              Store: {seller.storeName}
+            </Link>
+          )}
+
+          <Link href={`/products/${slug}`} className="block">
+            <h3 className="text-xs sm:text-sm font-semibold text-slate-900 group-hover:text-brand-600 transition line-clamp-2 leading-snug">
+              {title}
+            </h3>
+          </Link>
+
+          {/* Rating */}
+          <div className="flex items-center gap-1.5 mt-2">
+            <div className="flex items-center text-amber-400">
+              <Star className="w-3.5 h-3.5 fill-amber-400" />
+            </div>
+            <span className="text-xs font-bold text-slate-800">{rating.toFixed(1)}</span>
+            <span className="text-[11px] text-slate-400">({reviewCount})</span>
+          </div>
+        </div>
+
+        {/* Pricing & Add to Cart button */}
+        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+          <div>
+            <div className="text-sm sm:text-base font-extrabold text-slate-900">
+              {formatPrice(displayPrice)}
+            </div>
+            {originalPrice && (
+              <div className="text-xs text-slate-400 line-through">
+                {formatPrice(originalPrice)}
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={handleAddToCart}
+            disabled={!inStock}
+            className={`p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition ${
+              added
+                ? "bg-emerald-600 text-white"
+                : inStock
+                ? "bg-brand-50 hover:bg-brand-600 text-brand-700 hover:text-white"
+                : "bg-slate-100 text-slate-400 cursor-not-allowed"
+            }`}
+            title={inStock ? "Add to Cart" : "Out of Stock"}
+          >
+            {added ? (
+              <>
+                <Check className="w-4 h-4" />
+                <span className="hidden sm:inline">Added</span>
+              </>
+            ) : inStock ? (
+              <>
+                <ShoppingBag className="w-4 h-4" />
+                <span className="hidden sm:inline">Add</span>
+              </>
+            ) : (
+              <span>Sold Out</span>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
