@@ -23,7 +23,7 @@ export function ProductDetailView({ product }: { product: any }) {
   const router = useRouter();
   const { addToCart } = useCart();
   const [selectedImage, setSelectedImage] = useState<string>(
-    product.images[0]?.url || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800"
+    product.images[0]?.url || "/images/product-placeholder.svg"
   );
   const [selectedVariant, setSelectedVariant] = useState<any>(
     product.variants[0] || null

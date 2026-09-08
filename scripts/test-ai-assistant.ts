@@ -79,62 +79,78 @@ async function runAIAssistantTestSuite() {
       const philipsBrand = await prisma.brand.findFirst({ where: { slug: "philips" } });
 
       if (elecCat && seller) {
-        await prisma.product.createMany({
-          data: [
-            {
-              title: "Samsung Galaxy S24 Ultra",
-              slug: `samsung-galaxy-s24-ultra-${Date.now()}`,
-              sku: `SAM-S24-${Date.now()}`,
-              description: "Flagship smartphone with 200MP camera, Snapdragon 8 Gen 3, and AI zoom.",
-              price: 399000,
-              salePrice: 385000,
-              stockQuantity: 15,
-              status: "ACTIVE",
-              sellerId: seller.id,
-              categoryId: elecCat.id,
-              brandId: samsungBrand?.id,
+        const testProducts = [
+          {
+            title: "Samsung Galaxy S24 Ultra",
+            slug: `samsung-galaxy-s24-ultra-${Date.now()}`,
+            sku: `SAM-S24-${Date.now()}`,
+            description: "Flagship smartphone with 200MP camera, Snapdragon 8 Gen 3, and AI zoom.",
+            price: 399000,
+            salePrice: 385000,
+            stockQuantity: 15,
+            status: "ACTIVE",
+            sellerId: seller.id,
+            categoryId: elecCat.id,
+            brandId: samsungBrand?.id,
+            imageUrl: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=800&auto=format&fit=crop&q=80",
+          },
+          {
+            title: "Sony WH-1000XM5 Noise Canceling Headphones",
+            slug: `sony-wh-1000xm5-${Date.now()}`,
+            sku: `SONY-XM5-${Date.now()}`,
+            description: "Industry leading noise canceling wireless over-ear headphones with superior audio.",
+            price: 95000,
+            salePrice: 89000,
+            stockQuantity: 20,
+            status: "ACTIVE",
+            sellerId: seller.id,
+            categoryId: elecCat.id,
+            brandId: sonyBrand?.id,
+            imageUrl: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=800&auto=format&fit=crop&q=80",
+          },
+          {
+            title: "Nike Air Max 270 Sneakers",
+            slug: `nike-air-max-270-${Date.now()}`,
+            sku: `NIKE-270-${Date.now()}`,
+            description: "Iconic Nike lifestyle sneakers with responsive Air cushioning.",
+            price: 35000,
+            salePrice: 29999,
+            stockQuantity: 30,
+            status: "ACTIVE",
+            sellerId: seller.id,
+            categoryId: fashionCat?.id || elecCat.id,
+            brandId: nikeBrand?.id,
+            imageUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&auto=format&fit=crop&q=80",
+          },
+          {
+            title: "Philips Digital Air Fryer XL",
+            slug: `philips-air-fryer-xl-${Date.now()}`,
+            sku: `PHIL-AF-${Date.now()}`,
+            description: "Rapid Air technology with digital touch screen presets for healthy oil-free cooking.",
+            price: 42000,
+            salePrice: 38000,
+            stockQuantity: 12,
+            status: "ACTIVE",
+            sellerId: seller.id,
+            categoryId: applianceCat?.id || elecCat.id,
+            brandId: philipsBrand?.id,
+            imageUrl: "https://images.unsplash.com/photo-1585515320310-259814833e62?w=800&auto=format&fit=crop&q=80",
+          },
+        ];
+
+        for (const item of testProducts) {
+          const { imageUrl, ...prodData } = item;
+          const created = await prisma.product.create({ data: prodData });
+          await prisma.productImage.create({
+            data: {
+              productId: created.id,
+              url: imageUrl,
+              alt: created.title,
+              isThumbnail: true,
+              sortOrder: 0,
             },
-            {
-              title: "Sony WH-1000XM5 Noise Canceling Headphones",
-              slug: `sony-wh-1000xm5-${Date.now()}`,
-              sku: `SONY-XM5-${Date.now()}`,
-              description: "Industry leading noise canceling wireless over-ear headphones with superior audio.",
-              price: 95000,
-              salePrice: 89000,
-              stockQuantity: 20,
-              status: "ACTIVE",
-              sellerId: seller.id,
-              categoryId: elecCat.id,
-              brandId: sonyBrand?.id,
-            },
-            {
-              title: "Nike Air Max 270 Sneakers",
-              slug: `nike-air-max-270-${Date.now()}`,
-              sku: `NIKE-270-${Date.now()}`,
-              description: "Iconic Nike lifestyle sneakers with responsive Air cushioning.",
-              price: 35000,
-              salePrice: 29999,
-              stockQuantity: 30,
-              status: "ACTIVE",
-              sellerId: seller.id,
-              categoryId: fashionCat?.id || elecCat.id,
-              brandId: nikeBrand?.id,
-            },
-            {
-              title: "Philips Digital Air Fryer XL",
-              slug: `philips-air-fryer-xl-${Date.now()}`,
-              sku: `PHIL-AF-${Date.now()}`,
-              description: "Rapid Air technology with digital touch screen presets for healthy oil-free cooking.",
-              price: 42000,
-              salePrice: 38000,
-              stockQuantity: 12,
-              status: "ACTIVE",
-              sellerId: seller.id,
-              categoryId: applianceCat?.id || elecCat.id,
-              brandId: philipsBrand?.id,
-            },
-          ],
-        });
+          });
+        }
       }
     }
 
@@ -436,6 +452,51 @@ async function runAIAssistantTestSuite() {
       nonExistentLower.includes("sorry") ||
       nonExistentLower.includes("couldn't find");
     assert(isGraceful, "Non-existent product query truthfully and gracefully reports unavailability");
+
+    // ------------------------------------------------------------------------
+    // TEST 16: Product Image Specificity & Integrity (No Placeholder Watch)
+    // ------------------------------------------------------------------------
+    console.log("\n[TEST 16] Product Image Specificity & Integrity...");
+    const allCatalogProducts = await toolSearchProducts({ limit: 10 });
+    const samsungItem = allCatalogProducts.find((p) => p.title.toLowerCase().includes("samsung"));
+    const sonyItem = allCatalogProducts.find((p) => p.title.toLowerCase().includes("sony"));
+    const nikeItem = allCatalogProducts.find((p) => p.title.toLowerCase().includes("nike"));
+    const philipsItem = allCatalogProducts.find((p) => p.title.toLowerCase().includes("philips"));
+
+    assert(!!samsungItem && typeof samsungItem.image === "string", "Samsung product has image URL defined");
+    assert(!!sonyItem && typeof sonyItem.image === "string", "Sony product has image URL defined");
+    assert(!!nikeItem && typeof nikeItem.image === "string", "Nike product has image URL defined");
+    assert(!!philipsItem && typeof philipsItem.image === "string", "Philips product has image URL defined");
+
+    assert(
+      samsungItem?.image !== sonyItem?.image,
+      "Samsung and Sony have DIFFERENT product-specific images (not shared)"
+    );
+    assert(
+      samsungItem?.image !== nikeItem?.image && sonyItem?.image !== nikeItem?.image,
+      "Nike footwear has distinct image from tech products"
+    );
+    assert(
+      philipsItem?.image !== samsungItem?.image && philipsItem?.image !== sonyItem?.image,
+      "Philips kitchen appliance has distinct image"
+    );
+
+    const oldWatchUrlPattern = "photo-1523275335684-37898b6baf30";
+    assert(
+      !allCatalogProducts.some((p) => p.image && p.image.includes(oldWatchUrlPattern)),
+      "None of the catalog products use the old watch placeholder URL"
+    );
+
+    // Verify chat assistant metadata returns authentic images
+    const dualProductChat = await handleFayzeeAIChat({
+      messages: [{ role: "user", content: "Show me Samsung Galaxy S24 Ultra and Sony headphones" }],
+    });
+    const chatProducts = dualProductChat.metadata.products || [];
+    assert(chatProducts.length >= 1, "Chat returned products in metadata for Samsung and Sony query");
+    assert(
+      chatProducts.every((p) => p.image && !p.image.includes(oldWatchUrlPattern)),
+      "All chat product cards return authentic product images (no watch placeholder)"
+    );
 
   } catch (err: any) {
     console.error("Test execution threw an error:", err);

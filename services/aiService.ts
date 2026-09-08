@@ -138,7 +138,10 @@ export async function toolSearchProducts(args: {
     where,
     take: args.limit || 6,
     include: {
-      images: { where: { isThumbnail: true }, take: 1 },
+      images: {
+        orderBy: [{ isThumbnail: "desc" }, { sortOrder: "asc" }],
+        take: 1,
+      },
       category: { select: { name: true, slug: true } },
       brand: { select: { name: true, slug: true } },
       seller: { select: { storeName: true, rating: true } },
@@ -252,7 +255,10 @@ export async function toolCompareProducts(queriesOrIds: string[]) {
         ],
       } as any),
       include: {
-        images: { where: { isThumbnail: true }, take: 1 },
+        images: {
+          orderBy: [{ isThumbnail: "desc" }, { sortOrder: "asc" }],
+          take: 1,
+        },
         brand: true,
         category: true,
       },
@@ -273,7 +279,10 @@ export async function toolCompareProducts(queriesOrIds: string[]) {
       },
       take: 2,
       include: {
-        images: { where: { isThumbnail: true }, take: 1 },
+        images: {
+          orderBy: [{ isThumbnail: "desc" }, { sortOrder: "asc" }],
+          take: 1,
+        },
         brand: true,
         category: true,
       },
@@ -434,7 +443,12 @@ export async function toolGetUserOrders(userId?: string) {
       items: {
         include: {
           product: {
-            include: { images: { take: 1 } },
+            include: {
+              images: {
+                orderBy: [{ isThumbnail: "desc" }, { sortOrder: "asc" }],
+                take: 1,
+              },
+            },
           },
         },
       },
@@ -910,6 +924,34 @@ export async function handleFayzeeAIChat(params: {
         maxPrice,
         inStockOnly: true,
       });
+    }
+
+    // Multi-product query handling (e.g., "Samsung Galaxy S24 Ultra and Sony WH-1000XM5")
+    if (userQuery.includes(" and ") || userQuery.includes(",")) {
+      const parts = userQuery
+        .replace(/show me|find me|recommend|please|i need|i want/gi, "")
+        .split(/\s+and\s+|\s*,\s*/i)
+        .map((p) => p.trim())
+        .filter((p) => p.length >= 3);
+
+      if (parts.length >= 2) {
+        const multiResults: ProductCardData[] = [...foundProducts];
+        for (const part of parts) {
+          const partResults = await toolSearchProducts({
+            query: part,
+            inStockOnly: true,
+            limit: 2,
+          });
+          for (const item of partResults) {
+            if (!multiResults.some((p) => p.id === item.id)) {
+              multiResults.push(item);
+            }
+          }
+        }
+        if (multiResults.length > foundProducts.length) {
+          foundProducts = multiResults;
+        }
+      }
     }
 
     metadata.products = foundProducts;

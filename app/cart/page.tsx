@@ -84,7 +84,7 @@ export default function CartPage() {
                   <img
                     src={
                       item.product?.images[0]?.url ||
-                      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200"
+                      "/images/product-placeholder.svg"
                     }
                     alt={item.product.title}
                     className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-xl shrink-0 bg-[#F7F9FA] border border-[#DDE2E6]"

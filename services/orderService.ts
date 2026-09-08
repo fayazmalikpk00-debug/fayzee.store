@@ -244,7 +244,10 @@ export async function getCustomerOrders(userId: string) {
         include: {
           product: {
             include: {
-              images: { where: { isThumbnail: true }, take: 1 },
+              images: {
+                orderBy: [{ isThumbnail: "desc" }, { sortOrder: "asc" }],
+                take: 1,
+              },
             },
           },
         },

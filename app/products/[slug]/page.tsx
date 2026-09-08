@@ -44,7 +44,10 @@ export default async function ProductDetailPage({
     },
     take: 4,
     include: {
-      images: { where: { isThumbnail: true }, take: 1 },
+      images: {
+        orderBy: [{ isThumbnail: "desc" }, { sortOrder: "asc" }],
+        take: 1,
+      },
       category: true,
       seller: { select: { storeName: true, storeSlug: true } },
     },

@@ -26,7 +26,8 @@
   "exclude": ["node_modules", "prisma", "scripts"],
   "ts-node": {
     "compilerOptions": {
-      "module": "commonjs"
+      "module": "commonjs",
+      "moduleResolution": "node"
     }
   }
 }

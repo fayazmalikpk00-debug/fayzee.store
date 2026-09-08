@@ -503,7 +503,7 @@ export function FayzeeAIAssistant() {
                             {/* Image */}
                             <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg bg-slate-100 overflow-hidden shrink-0 relative border border-slate-100">
                               <img
-                                src={prod.image || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200"}
+                                src={prod.image || "/images/product-placeholder.svg"}
                                 alt={prod.title}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                               />

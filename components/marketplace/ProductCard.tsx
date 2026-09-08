@@ -82,7 +82,7 @@ export function ProductCard({
       {/* Image container */}
       <Link href={`/products/${slug}`} className="block relative aspect-square bg-[#F7F9FA] overflow-hidden">
         <img
-          src={image || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600"}
+          src={image || "/images/product-placeholder.svg"}
           alt={title}
           className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
           loading="lazy"

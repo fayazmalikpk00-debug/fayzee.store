@@ -153,7 +153,7 @@ export default async function OrderDetailPage({
               <img
                 src={
                   item.product.images[0]?.url ||
-                  "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100"
+                  "/images/product-placeholder.svg"
                 }
                 alt=""
                 className="w-14 h-14 object-cover rounded-xl bg-[#F7F9FA]"

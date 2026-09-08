@@ -310,7 +310,7 @@ export default function CheckoutPage() {
                     <img
                       src={
                         item.product.images[0]?.url ||
-                        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100"
+                        "/images/product-placeholder.svg"
                       }
                       alt=""
                       className="w-10 h-10 object-cover rounded-lg bg-[#F7F9FA] border border-[#DDE2E6] shrink-0"

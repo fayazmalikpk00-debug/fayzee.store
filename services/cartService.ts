@@ -9,7 +9,10 @@ export async function getOrCreateCart(userId?: string, sessionToken?: string) {
           include: {
             product: {
               include: {
-                images: { where: { isThumbnail: true }, take: 1 },
+                images: {
+                  orderBy: [{ isThumbnail: "desc" }, { sortOrder: "asc" }],
+                  take: 1,
+                },
                 seller: { select: { storeName: true, storeSlug: true } },
               },
             },
@@ -27,7 +30,10 @@ export async function getOrCreateCart(userId?: string, sessionToken?: string) {
             include: {
               product: {
                 include: {
-                  images: { where: { isThumbnail: true }, take: 1 },
+                  images: {
+                  orderBy: [{ isThumbnail: "desc" }, { sortOrder: "asc" }],
+                  take: 1,
+                },
                   seller: { select: { storeName: true, storeSlug: true } },
                 },
               },
@@ -49,7 +55,10 @@ export async function getOrCreateCart(userId?: string, sessionToken?: string) {
           include: {
             product: {
               include: {
-                images: { where: { isThumbnail: true }, take: 1 },
+                images: {
+                  orderBy: [{ isThumbnail: "desc" }, { sortOrder: "asc" }],
+                  take: 1,
+                },
                 seller: { select: { storeName: true, storeSlug: true } },
               },
             },
@@ -67,7 +76,10 @@ export async function getOrCreateCart(userId?: string, sessionToken?: string) {
             include: {
               product: {
                 include: {
-                  images: { where: { isThumbnail: true }, take: 1 },
+                  images: {
+                  orderBy: [{ isThumbnail: "desc" }, { sortOrder: "asc" }],
+                  take: 1,
+                },
                   seller: { select: { storeName: true, storeSlug: true } },
                 },
               },
