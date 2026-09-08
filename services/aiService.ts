@@ -526,6 +526,91 @@ function extractPriceFloor(text: string): number | undefined {
   return extractPriceConstraint(text).minPrice;
 }
 
+/**
+ * Classifies whether a user's message is seeking products/shopping assistance
+ * versus general conversational queries (greetings, math, platform info, small talk).
+ */
+export function isProductSeekingQuery(query: string, hasProductsInContext: boolean = false): boolean {
+  const q = query.toLowerCase().trim();
+  if (!q) return false;
+
+  // 1. Definite general/non-product signals (math, company info, pure greetings, identity)
+  const isPureMath =
+    /^(?:what\s+is\s+|calculate\s+|solve\s+)?[\d\s\+\-\*\/\(\)\^\.\%]{2,}(?:\s*\?)?$/i.test(q) ||
+    /(?:what\s+is\s+)?\d+\s*[\+\-\*\/]\s*\d+/i.test(q);
+  const isCompanyQuestion =
+    /^(?:what|who|tell\s+me\s+about)\s+is\s+(?:fayzee|this\s+website|this\s+store|this\s+app)/i.test(q) ||
+    /^(?:how\s+does\s+fayzee\s+work|what\s+does\s+fayzee\s+sell)/i.test(q);
+  const isPureGreeting =
+    /^(?:hello|hi|hey|salam|assalam\s*o\s*alaikum|good\s+(?:morning|afternoon|evening)|hola|namaste)(?:[!\.\s]+)?$/i.test(q);
+  const isSelfIntro = /^(?:my\s+name\s+is|i\s+am|i'm)\s+[a-z\s]+$/i.test(q);
+  const isBotMeta =
+    /^(?:who\s+are\s+you|what\s+is\s+your\s+name|what\s+can\s+you\s+do|how\s+can\s+you\s+help\s+me|help\s*me|help)(?:\s*\?)?$/i.test(q);
+
+  if (isPureMath || isCompanyQuestion || isPureGreeting || isSelfIntro || isBotMeta) {
+    // If it also contains specific product nouns like "phone", "laptop", "samsung", "shoes", then it's product seeking
+    const hasExplicitProductNoun = /\b(?:phone|mobile|smartphone|laptop|computer|headphone|earphone|shoe|shoes|sneaker|sneakers|appliance|airfryer|watch|samsung|apple|iphone|nike|sony|philips|dell)\b/i.test(q);
+    if (!hasExplicitProductNoun) {
+      return false;
+    }
+  }
+
+  // 2. Product Categories & Nouns
+  const productNouns = [
+    "phone", "mobile", "smartphone", "iphone", "android",
+    "laptop", "notebook", "computer", "pc", "macbook",
+    "headphone", "earphone", "airpods", "earbuds", "audio", "speaker",
+    "sneaker", "sneakers", "shoe", "shoes", "footwear", "boots", "sandals",
+    "appliance", "appliances", "airfryer", "fryer", "oven", "microwave", "blender", "juicer",
+    "tv", "television", "camera", "tablet", "ipad", "smartwatch", "watch",
+    "shirt", "t-shirt", "jeans", "pants", "dress", "jacket", "hoodie", "clothes", "clothing",
+    "product", "products", "item", "items", "merchandise", "goods"
+  ];
+  const hasProductNoun = productNouns.some((n) => new RegExp(`\\b${n}s?\\b`, "i").test(q));
+
+  // 3. Known Brands
+  const knownBrands = [
+    "samsung", "apple", "sony", "dell", "hp", "lenovo", "nike", "adidas",
+    "philips", "dawlance", "haier", "infinix", "tecno", "xiaomi", "redmi",
+    "realme", "oppo", "vivo", "asus", "acer"
+  ];
+  const hasBrand = knownBrands.some((b) => new RegExp(`\\b${b}\\b`, "i").test(q));
+
+  // 4. Shopping & Commercial Intent verbs/phrases
+  const shoppingVerbs = [
+    "buy", "purchase", "price", "cost", "how much", "rate", "discount", "discounts",
+    "sale", "deal", "deals", "offer", "offers", "cheap", "expensive", "budget",
+    "under", "below", "rs", "pkr", "in stock", "out of stock", "available",
+    "recommend", "recommendation", "recommendations", "show me", "find me",
+    "looking for", "search for", "browse", "catalog", "inventory",
+    "compare", "spec", "specs", "specification", "specifications", "features",
+    "add to cart"
+  ];
+  const hasShoppingVerb = shoppingVerbs.some((v) => q.includes(v));
+
+  // 5. Roman Urdu Shopping Intent
+  const urduShoppingTerms = [
+    "chahiye", "dikhao", "sasta", "sasti", "mehenga", "mehengi", "kitne ka",
+    "kitne ki", "qemat", "rate kya", "kuch acha", "kuch achi", "kharidna",
+    "lena hai", "le loon", "pasand", "wala", "wali"
+  ];
+  const hasUrduShopping = urduShoppingTerms.some((u) => q.includes(u));
+
+  // 6. Follow-up context when products were previously shown
+  if (hasProductsInContext) {
+    const followUpPatterns = [
+      "which one", "first one", "second one", "third one",
+      "tell me more about", "what about", "is it good", "how is the",
+      "does it have", "better", "best of these", "compare them", "battery", "camera"
+    ];
+    if (followUpPatterns.some((f) => q.includes(f))) {
+      return true;
+    }
+  }
+
+  return hasProductNoun || hasBrand || hasShoppingVerb || hasUrduShopping;
+}
+
 // -----------------------------------------------------------------------------
 // 3. Main Multi-Turn Handler with Groq (Primary), Gemini, and Grounded Engine
 // -----------------------------------------------------------------------------
@@ -772,65 +857,73 @@ export async function handleFayzeeAIChat(params: {
   // B. Product Search, Filtering, Recommendations & Follow-Up Questions
   // ---------------------------------------------------------------------------
 
-  const previousUserQueries = previousUserMessages.map((m) => m.content).join(" ");
-  const combinedContextText = `${previousUserQueries} ${userQuery}`;
+  const isProductSeeking = isProductSeekingQuery(userQuery, lastProductsInContext.length > 0);
+  let foundProducts: ProductCardData[] = [];
 
-  // Extract category, brand, and constraints from conversation history
-  const detectedCategory = extractCategoryFromIntent(userQuery) || extractCategoryFromIntent(combinedContextText);
-  const detectedBrand = extractBrandFromIntent(userQuery) || extractBrandFromIntent(combinedContextText);
-  const maxPrice = extractPriceCeiling(userQuery) ?? extractPriceCeiling(combinedContextText);
-  const minPrice = extractPriceFloor(userQuery) ?? extractPriceFloor(combinedContextText);
+  if (isProductSeeking) {
+    const previousUserQueries = previousUserMessages.map((m) => m.content).join(" ");
+    const combinedContextText = `${previousUserQueries} ${userQuery}`;
 
-  // Clean raw keywords for specific search
-  let cleanedSearchQuery = userQuery
-    .replace(/fayzee|show me|find me|recommend|can you|please|i need|i want|mujhe|chahiye|dikhao|acha|ache|achi|best|top|cheap|sasta|mehenga|kuch|high[- ]end|flagship|premium|budget|latest|new/gi, "")
-    .replace(/(?:under|below|less than|within|max|budget)\s*(?:rs\.?|pkr)?\s*[\d,]+(?:\s*(?:k|hazar))?/gi, "")
-    .replace(/[\d,]+\s*(?:k|hazar)?\s*(?:ke andar|se kam|tak)/gi, "")
-    .replace(/\b(?:a|an|the)\b/gi, "")
-    .trim();
+    // Extract category, brand, and constraints from conversation history
+    const detectedCategory = extractCategoryFromIntent(userQuery) || extractCategoryFromIntent(combinedContextText);
+    const detectedBrand = extractBrandFromIntent(userQuery) || extractBrandFromIntent(combinedContextText);
+    const maxPrice = extractPriceCeiling(userQuery) ?? extractPriceCeiling(combinedContextText);
+    const minPrice = extractPriceFloor(userQuery) ?? extractPriceFloor(combinedContextText);
 
-  // If brand was detected and already passed to brand filter, remove it from raw query
-  if (detectedBrand) {
-    cleanedSearchQuery = cleanedSearchQuery.replace(new RegExp(`\\b${detectedBrand}\\b`, "gi"), "").trim();
-  }
+    // Clean raw keywords for specific search
+    let cleanedSearchQuery = userQuery
+      .replace(/fayzee|show me|find me|recommend|can you|please|i need|i want|mujhe|chahiye|dikhao|acha|ache|achi|best|top|cheap|sasta|mehenga|kuch|high[- ]end|flagship|premium|budget|latest|new/gi, "")
+      .replace(/(?:under|below|less than|within|max|budget)\s*(?:rs\.?|pkr)?\s*[\d,]+(?:\s*(?:k|hazar))?/gi, "")
+      .replace(/[\d,]+\s*(?:k|hazar)?\s*(?:ke andar|se kam|tak)/gi, "")
+      .replace(/\b(?:a|an|the)\b/gi, "")
+      .trim();
 
-  // If a category was detected and the remaining query is merely a generic noun (e.g. "phone", "a phone", "mobile", "laptop"),
-  // avoid literal title filtering on that noun so that all products in the category are returned!
-  if (detectedCategory) {
-    const isGenericNoun = /^(?:a\s+|an\s+|the\s+)?(?:phone|phones|mobile|mobiles|smartphone|smartphones|laptop|laptops|computer|computers|headphone|headphones|earphone|earphones|shoes|shoe|sneakers|sneaker|footwear|appliances|appliance|airfryer|fryer)?$/i.test(cleanedSearchQuery);
-    if (isGenericNoun) {
-      cleanedSearchQuery = "";
+    // If brand was detected and already passed to brand filter, remove it from raw query
+    if (detectedBrand) {
+      cleanedSearchQuery = cleanedSearchQuery.replace(new RegExp(`\\b${detectedBrand}\\b`, "gi"), "").trim();
     }
-  }
 
-  // Execute database search
-  let foundProducts = await toolSearchProducts({
-    query: cleanedSearchQuery || undefined,
-    category: detectedCategory,
-    brand: detectedBrand,
-    minPrice,
-    maxPrice,
-    inStockOnly: true,
-  });
+    // If a category was detected and the remaining query is merely a generic noun
+    if (detectedCategory) {
+      const isGenericNoun = /^(?:a\s+|an\s+|the\s+)?(?:phone|phones|mobile|mobiles|smartphone|smartphones|laptop|laptops|computer|computers|headphone|headphones|earphone|earphones|shoes|shoe|sneakers|sneaker|footwear|appliances|appliance|airfryer|fryer)?$/i.test(cleanedSearchQuery);
+      if (isGenericNoun) {
+        cleanedSearchQuery = "";
+      }
+    }
 
-  // Resilient Fallback: If query had extra keywords and found 0 products, retry with just brand/category & price
-  if (foundProducts.length === 0 && cleanedSearchQuery && (detectedBrand || detectedCategory)) {
+    // Execute database search
     foundProducts = await toolSearchProducts({
+      query: cleanedSearchQuery || undefined,
       category: detectedCategory,
       brand: detectedBrand,
       minPrice,
       maxPrice,
       inStockOnly: true,
     });
-  }
 
-  metadata.products = foundProducts;
+    // Resilient Fallback: If query had extra keywords and found 0 products, retry with just brand/category & price
+    if (foundProducts.length === 0 && cleanedSearchQuery && (detectedBrand || detectedCategory)) {
+      foundProducts = await toolSearchProducts({
+        category: detectedCategory,
+        brand: detectedBrand,
+        minPrice,
+        maxPrice,
+        inStockOnly: true,
+      });
+    }
+
+    metadata.products = foundProducts;
+  } else {
+    // General conversational query (greetings, math, platform questions): no database search required
+    metadata.products = [];
+  }
 
   // ---------------------------------------------------------------------------
   // C. Generative AI Synthesis (Groq Primary with Multi-Provider Fallback)
   // ---------------------------------------------------------------------------
   const systemPrompt = buildFayzeeSystemPrompt({
     inventory: foundProducts,
+    isGeneralQuery: !isProductSeeking,
     userContext: {
       isAuthenticated: Boolean(userId),
     },
@@ -852,34 +945,70 @@ export async function handleFayzeeAIChat(params: {
   // D. Grounded Catalog Reasoning Engine (Fallback / Offline / No API Key)
   // ---------------------------------------------------------------------------
 
-  // If the query is a simple greeting
-  if (
-    lowerQuery === "hello" ||
-    lowerQuery === "hi" ||
-    lowerQuery === "hey" ||
-    lowerQuery === "salam" ||
-    lowerQuery === "assalam o alaikum"
-  ) {
-    const greetingText =
-      "Hello! Welcome to Fayzee. I'm your official AI shopping assistant. How can I help you today? You can ask me to find products within your budget, compare specs, or check your orders.";
+  // D1. General non-product queries (Math, greetings, what is Fayzee)
+  if (!isProductSeeking) {
+    // Check for math expressions (e.g. 25 + 37)
+    const mathMatch = userQuery.match(/(\d+(?:\.\d+)?)\s*([\+\-\*\/])\s*(\d+(?:\.\d+)?)/);
+    if (mathMatch) {
+      const a = parseFloat(mathMatch[1]);
+      const op = mathMatch[2];
+      const b = parseFloat(mathMatch[3]);
+      let calcRes: number | string = 0;
+      if (op === "+") calcRes = a + b;
+      else if (op === "-") calcRes = a - b;
+      else if (op === "*") calcRes = a * b;
+      else if (op === "/") calcRes = b !== 0 ? Math.round((a / b) * 100) / 100 : "undefined";
+
+      const nameMatch = userQuery.match(/(?:my name is|i am|i'm)\s+([a-zA-Z]+)/i);
+      const nameGreeting = nameMatch ? `Hello ${nameMatch[1]}! ` : "";
+      const mathText = `${nameGreeting}${a} ${op} ${b} = ${calcRes}. I'm your Fayzee AI assistant—how can I help you with shopping on Fayzee today?`;
+
+      return {
+        role: "assistant",
+        content: mathText,
+        message: mathText,
+        metadata,
+      };
+    }
+
+    // Name introduction
+    const nameMatch = userQuery.match(/(?:my name is|i am|i'm)\s+([a-zA-Z]+)/i);
+    if (nameMatch) {
+      const introText = `Hello ${nameMatch[1]}! Welcome to Fayzee. How can I help you find what you need today? You can ask me for product recommendations, compare items, or check your orders.`;
+      return {
+        role: "assistant",
+        content: introText,
+        message: introText,
+        metadata,
+      };
+    }
+
+    // Question about Fayzee platform ("What is Fayzee?")
+    if (lowerQuery.includes("fayzee") || lowerQuery.includes("website") || lowerQuery.includes("store")) {
+      const fayzeeInfo = `Fayzee (fayzee.store) is Pakistan's premier online marketplace offering authentic electronics, fashion, home appliances, and more with fast nationwide delivery and verified seller guarantees.`;
+      return {
+        role: "assistant",
+        content: fayzeeInfo,
+        message: fayzeeInfo,
+        metadata,
+      };
+    }
+
+    // Default friendly conversational response
+    const generalText = `Hello! I am Fayzee AI Assistant, your personal shopping companion. How can I help you today? You can ask me to find products within your budget, compare specs, or check your orders.`;
     return {
       role: "assistant",
-      content: greetingText,
-      message: greetingText,
-      metadata: {
-        ...metadata,
-        configNotice: groqProvider.isAvailable()
-          ? undefined
-          : "Notice: Set GROQ_API_KEY in your .env file to enable high-speed Groq LLaMA 3.3 conversational intelligence.",
-      },
+      content: generalText,
+      message: generalText,
+      metadata,
     };
   }
 
-  // If products were found
+  // D2. Product queries with matching items found in database
   if (foundProducts.length > 0) {
     let responseText = "";
+    const maxPrice = extractPriceCeiling(userQuery);
 
-    // Contextual follow-up answering
     if (lowerQuery.includes("camera") || lowerQuery.includes("best camera")) {
       const topCamera =
         foundProducts.find((p) => p.title.toLowerCase().includes("s24") || p.title.toLowerCase().includes("iphone")) ||
@@ -900,32 +1029,23 @@ export async function handleFayzeeAIChat(params: {
       role: "assistant",
       content: responseText,
       message: responseText,
-      metadata: {
-        ...metadata,
-        configNotice: groqProvider.isAvailable()
-          ? undefined
-          : "Notice: Set GROQ_API_KEY in your .env file to enable high-speed Groq LLaMA 3.3 conversational intelligence.",
-      },
+      metadata,
     };
   }
 
-  // If no products matched the criteria
-  let fallbackMessage = `I searched our inventory but couldn't find products matching "${userQuery}".`;
+  // D3. Product query but zero products matched in database
+  const maxPrice = extractPriceCeiling(userQuery);
+  let fallbackMessage = `I searched our inventory, but currently we don't have products matching "${userQuery}" in stock.`;
   if (maxPrice) {
     fallbackMessage += ` You might consider increasing your budget threshold or exploring related categories like Smartphones, Laptops, Audio, or Footwear.`;
   } else {
-    fallbackMessage += ` Try searching with broader keywords or ask me to show our trending catalog items!`;
+    fallbackMessage += ` Please check back soon as our catalog is updated daily, or ask me to show our top categories like Electronics, Fashion, or Home Appliances!`;
   }
 
   return {
     role: "assistant",
     content: fallbackMessage,
     message: fallbackMessage,
-    metadata: {
-      ...metadata,
-      configNotice: groqProvider.isAvailable()
-        ? undefined
-        : "Notice: Set GROQ_API_KEY in your .env file to enable high-speed Groq LLaMA 3.3 conversational intelligence.",
-    },
+    metadata,
   };
 }

@@ -8,6 +8,7 @@ export interface OpenAICompatibleConfig {
   getModel?: () => string | undefined;
   defaultModel: string;
   fallbackModel?: string;
+  fallbackModels?: string[];
   defaultTemperature?: number;
   defaultMaxTokens?: number;
   defaultTimeoutMs?: number;
@@ -44,6 +45,11 @@ export class OpenAICompatibleProvider extends BaseAIProvider {
     const temperature = options?.temperature ?? this.config.defaultTemperature ?? 0.6;
     const maxTokens = options?.maxTokens ?? this.config.defaultMaxTokens ?? 1024;
     const timeoutMs = options?.timeoutMs ?? this.config.defaultTimeoutMs ?? 15000;
+
+    const attemptedModels: string[] = (options as any)?._attemptedModels || [];
+    if (!attemptedModels.includes(model)) {
+      attemptedModels.push(model);
+    }
 
     // Convert messages to OpenAI chat format
     const formattedMessages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [];
@@ -97,17 +103,37 @@ export class OpenAICompatibleProvider extends BaseAIProvider {
 
         const errorMessage = errorData?.error?.message || errorData?.message || response.statusText;
 
+        // Detect if error is related to model availability (404 not found, 400 decommissioned, or 429 rate limit)
+        const isModelError =
+          response.status === 404 ||
+          response.status === 429 ||
+          (response.status === 400 &&
+            (typeof errorMessage === "string" &&
+              (errorMessage.toLowerCase().includes("model") ||
+                errorMessage.toLowerCase().includes("decommissioned"))));
+
+        if (isModelError) {
+          const candidateFallbacks = [
+            ...(this.config.fallbackModels || []),
+            this.config.fallbackModel,
+          ].filter((m): m is string => Boolean(m) && !attemptedModels.includes(m!));
+
+          if (candidateFallbacks.length > 0) {
+            const nextModel = candidateFallbacks[0];
+            console.warn(
+              `[${this.name}] Model "${model}" unavailable (${response.status}: ${errorMessage}). Retrying with fallback model "${nextModel}"...`
+            );
+            return this.generateResponse(messages, systemPrompt, {
+              ...options,
+              model: nextModel,
+              _attemptedModels: attemptedModels,
+            } as any);
+          }
+        }
+
         if (response.status === 401) {
           throw new Error(`[${this.name}] Authentication failed (401): Invalid API key.`);
         } else if (response.status === 429) {
-          // If using primary model and fallback model exists, try fallback
-          if (this.config.fallbackModel && model !== this.config.fallbackModel) {
-            console.warn(`[${this.name}] Rate limited on ${model}. Retrying with fallback model ${this.config.fallbackModel}...`);
-            return this.generateResponse(messages, systemPrompt, {
-              ...options,
-              model: this.config.fallbackModel,
-            });
-          }
           throw new Error(`[${this.name}] Rate limit exceeded (429): ${errorMessage}`);
         } else if (response.status >= 500) {
           throw new Error(`[${this.name}] Upstream server error (${response.status}): ${errorMessage}`);

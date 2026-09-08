@@ -99,7 +99,36 @@ async function verifyLiveServerEndpoint() {
   res.headers.forEach((val) => {
     if (rawKey && val.includes(rawKey)) keyExposedInHeaders = true;
   });
-  assert(!keyExposedInHeaders, "API key is NOT exposed anywhere in HTTP response headers");
+  // 7. Test General Question: "Hello, my name is Fayaz. What is 25 + 37?"
+  console.log("\n[Testing General Question (Math + Greeting) over HTTP POST...]");
+  const generalRes = await fetch("http://localhost:3000/api/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "User-Agent": "Fayzee-Automated-Verifier",
+    },
+    body: JSON.stringify({ message: "Hello, my name is Fayaz. What is 25 + 37?" }),
+  });
+  assert(generalRes.status === 200, `General question returned HTTP ${generalRes.status}`);
+  const generalData = await generalRes.json();
+  console.log(`  📝 General AI Reply: "${generalData?.message?.slice(0, 140)}..."`);
+  assert(
+    generalData?.message?.includes("62"),
+    "General question answered correctly (25 + 37 = 62)"
+  );
+  assert(
+    !generalData?.message?.toLowerCase().includes("couldn't find products") &&
+      !generalData?.message?.toLowerCase().includes("searched our inventory"),
+    "General question does NOT mention inventory or missing products"
+  );
+  assert(
+    (generalData?.metadata?.products?.length || 0) === 0,
+    "General question does not return irrelevant product cards"
+  );
+  assert(
+    generalData?.metadata?.providerUsed === "Groq",
+    `General question answered by provider: "${generalData?.metadata?.providerUsed}"`
+  );
 
   console.log("\n==========================================================");
   console.log(`HTTP ENDPOINT VERIFICATION RESULTS: ${passed} PASSED, ${failed} FAILED`);

@@ -382,6 +382,61 @@ async function runAIAssistantTestSuite() {
       assert(true, "GEMINI_API_KEY is configured in server environment");
     }
 
+    // ------------------------------------------------------------------------
+    // TEST 13: General Conversational Questions (Greetings, Math, What is Fayzee)
+    // ------------------------------------------------------------------------
+    console.log("\n[TEST 13] General Conversational Questions...");
+    const mathChat = await handleFayzeeAIChat({
+      messages: [{ role: "user", content: "Hello, my name is Fayaz. What is 25 + 37?" }],
+    });
+    assert(mathChat.content.includes("62"), "General math question answered correctly (25 + 37 = 62)");
+    assert(
+      !mathChat.content.toLowerCase().includes("couldn't find products") &&
+        !mathChat.content.toLowerCase().includes("searched our inventory"),
+      "General question does not output 'no products found' inventory error"
+    );
+    assert((mathChat.metadata.products?.length || 0) === 0, "No product cards returned for general math question");
+
+    const fayzeeInfoChat = await handleFayzeeAIChat({
+      messages: [{ role: "user", content: "What is Fayzee?" }],
+    });
+    assert(
+      fayzeeInfoChat.content.toLowerCase().includes("fayzee") ||
+        fayzeeInfoChat.content.toLowerCase().includes("marketplace") ||
+        fayzeeInfoChat.content.toLowerCase().includes("shopping"),
+      "Question 'What is Fayzee?' explained the marketplace platform"
+    );
+
+    // ------------------------------------------------------------------------
+    // TEST 14: Grounded Product Questions with Database Inventory
+    // ------------------------------------------------------------------------
+    console.log("\n[TEST 14] Grounded Product Questions with Inventory...");
+    const phoneChat = await handleFayzeeAIChat({
+      messages: [{ role: "user", content: "Show me Samsung phones" }],
+    });
+    assert((phoneChat.metadata.products?.length || 0) > 0, "Product question returned authentic products in metadata");
+    assert(
+      phoneChat.content.toLowerCase().includes("samsung") || phoneChat.content.toLowerCase().includes("s24"),
+      "Grounded AI response referenced the authentic product"
+    );
+
+    // ------------------------------------------------------------------------
+    // TEST 15: Product Question with Non-Existent Product / Empty Inventory
+    // ------------------------------------------------------------------------
+    console.log("\n[TEST 15] Product Question with Non-Existent Product...");
+    const nonExistentChat = await handleFayzeeAIChat({
+      messages: [{ role: "user", content: "Do you have Martian Flying Saucers for sale?" }],
+    });
+    const nonExistentLower = nonExistentChat.content.toLowerCase();
+    const isGraceful =
+      nonExistentLower.includes("not available") ||
+      nonExistentLower.includes("don't have") ||
+      nonExistentLower.includes("do not have") ||
+      nonExistentLower.includes("out of stock") ||
+      nonExistentLower.includes("sorry") ||
+      nonExistentLower.includes("couldn't find");
+    assert(isGraceful, "Non-existent product query truthfully and gracefully reports unavailability");
+
   } catch (err: any) {
     console.error("Test execution threw an error:", err);
     failed++;
