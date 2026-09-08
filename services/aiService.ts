@@ -1,62 +1,19 @@
 import prisma from "../lib/db";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { addToCart as serviceAddToCart, getOrCreateCart } from "./cartService";
+import {
+  ChatMessage,
+  ProductCardData,
+  AIResponseMetadata,
+  ComparisonData,
+  CartActionData,
+  CartContentsData,
+  OrderSummaryData,
+} from "./ai/types";
+import { buildFayzeeSystemPrompt } from "./ai/systemPrompt";
+import { executeAIWithFallback, groqProvider } from "./ai/providers";
 
-export interface ChatMessage {
-  id?: string;
-  role: "user" | "assistant" | "system";
-  content: string;
-  metadata?: AIResponseMetadata;
-  createdAt?: string | Date;
-}
-
-export interface ProductCardData {
-  id: string;
-  title: string;
-  slug: string;
-  price: number;
-  originalPrice: number | null;
-  discountPercent: number | null;
-  stockQuantity: number;
-  inStock: boolean;
-  rating: number;
-  reviewCount: number;
-  category: string;
-  brand?: string | null;
-  seller: string;
-  image?: string;
-  shortDescription?: string | null;
-}
-
-export interface AIResponseMetadata {
-  products?: ProductCardData[];
-  comparison?: {
-    products: any[];
-    highlights: string[];
-    specsMatrix?: Record<string, Record<string, string>>;
-  };
-  cartAction?: {
-    success: boolean;
-    productTitle: string;
-    quantity: number;
-    price?: number;
-    cartTotal?: number;
-    cartItemCount?: number;
-  };
-  cartContents?: {
-    items: Array<{
-      id: string;
-      title: string;
-      quantity: number;
-      price: number;
-      image?: string;
-    }>;
-    totalAmount: number;
-    totalItems: number;
-  };
-  orders?: any[];
-  configNotice?: string;
-}
+// Re-export all types so existing callers have full compatibility
+export * from "./ai/types";
 
 // -----------------------------------------------------------------------------
 // 1. Authoritative Database Tools
@@ -88,7 +45,7 @@ export async function toolSearchProducts(args: {
     ];
   }
 
-  // Category normalization: fix kitchen-appliances <-> home-appliances mapping
+  // Category normalization: fix hierarchy slugs <-> top-level marketplace categories
   if (args.category && args.category.trim()) {
     const cat = args.category.trim().toLowerCase();
     if (
@@ -100,15 +57,18 @@ export async function toolSearchProducts(args: {
         OR: [
           { slug: "home-appliances" },
           { slug: "kitchen-appliances" },
-          { parent: { slug: "home-appliances" } },
           { name: { contains: "appliances", mode: "insensitive" } },
           { name: { contains: "kitchen", mode: "insensitive" } },
+          { name: { contains: "home", mode: "insensitive" } },
         ],
       };
-    } else if (cat.includes("phone") || cat.includes("mobile")) {
+    } else if (cat.includes("phone") || cat.includes("mobile") || cat.includes("smartphone")) {
       where.category = {
         OR: [
+          { slug: "electronics" },
           { slug: "smartphones-tablets" },
+          { slug: { contains: "phone", mode: "insensitive" } },
+          { name: { contains: "electronic", mode: "insensitive" } },
           { name: { contains: "smartphone", mode: "insensitive" } },
           { name: { contains: "phone", mode: "insensitive" } },
         ],
@@ -116,14 +76,19 @@ export async function toolSearchProducts(args: {
     } else if (cat.includes("laptop") || cat.includes("computer")) {
       where.category = {
         OR: [
+          { slug: "electronics" },
           { slug: "laptops-computers" },
+          { name: { contains: "electronic", mode: "insensitive" } },
           { name: { contains: "laptop", mode: "insensitive" } },
+          { name: { contains: "computer", mode: "insensitive" } },
         ],
       };
     } else if (cat.includes("audio") || cat.includes("headphone")) {
       where.category = {
         OR: [
+          { slug: "electronics" },
           { slug: "audio-headphones" },
+          { name: { contains: "electronic", mode: "insensitive" } },
           { name: { contains: "audio", mode: "insensitive" } },
           { name: { contains: "headphone", mode: "insensitive" } },
         ],
@@ -131,9 +96,13 @@ export async function toolSearchProducts(args: {
     } else if (cat.includes("footwear") || cat.includes("shoe") || cat.includes("sneaker")) {
       where.category = {
         OR: [
+          { slug: "mens-fashion" },
           { slug: "mens-footwear" },
+          { slug: "womens-fashion" },
+          { name: { contains: "fashion", mode: "insensitive" } },
           { name: { contains: "footwear", mode: "insensitive" } },
           { name: { contains: "sneakers", mode: "insensitive" } },
+          { name: { contains: "shoe", mode: "insensitive" } },
         ],
       };
     } else {
@@ -542,29 +511,55 @@ function resolveContextualCategory(text: string, previousContext?: string): stri
   return undefined;
 }
 
+// Helper functions for intent resolution
+function extractCategoryFromIntent(text: string): string | undefined {
+  return resolveContextualCategory(text);
+}
+function extractBrandFromIntent(text: string): string | undefined {
+  const brands = ["samsung", "apple", "sony", "dell", "nike", "philips"];
+  return brands.find(b => text.toLowerCase().includes(b));
+}
+function extractPriceCeiling(text: string): number | undefined {
+  return extractPriceConstraint(text).maxPrice;
+}
+function extractPriceFloor(text: string): number | undefined {
+  return extractPriceConstraint(text).minPrice;
+}
+
 // -----------------------------------------------------------------------------
-// 3. Main Multi-Turn Handler with Gemini Integration & Grounded Catalog Engine
+// 3. Main Multi-Turn Handler with Groq (Primary), Gemini, and Grounded Engine
 // -----------------------------------------------------------------------------
 
 export async function handleFayzeeAIChat(params: {
   messages: ChatMessage[];
   userId?: string;
   sessionToken?: string;
-}) {
-  const { messages, userId, sessionToken } = params;
+}): Promise<{
+  role: "assistant";
+  content: string;
+  message: string;
+  metadata: AIResponseMetadata;
+}> {
+  const { messages = [], userId, sessionToken } = params;
+
+  if (!messages || messages.length === 0) {
+    const welcome = "Hello! Welcome to Fayzee. How can I help you find what you need today?";
+    return {
+      role: "assistant",
+      content: welcome,
+      message: welcome,
+      metadata: {},
+    };
+  }
+
   const userQuery = messages[messages.length - 1]?.content || "";
   const lowerQuery = userQuery.toLowerCase().trim();
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
 
   // Combine past conversation history to form context
   const previousAssistantMessages = messages.filter((m) => m.role === "assistant");
   const previousUserMessages = messages.filter((m) => m.role === "user");
   const lastAssistantMessage = previousAssistantMessages[previousAssistantMessages.length - 1];
   const lastProductsInContext: ProductCardData[] = lastAssistantMessage?.metadata?.products || [];
-
-  const conversationTranscript = messages
-    .map((m) => `${m.role === "user" ? "User" : "Fayzee AI"}: ${m.content}`)
-    .join("\n");
 
   const metadata: AIResponseMetadata = {};
 
@@ -584,30 +579,38 @@ export async function handleFayzeeAIChat(params: {
   ) {
     const orderResult = await toolGetUserOrders(userId);
     if (!orderResult.authenticated) {
+      const authMsg = "To check your live order tracking, delivery updates, and past purchases, please [sign in to your Fayzee account](/login).";
       return {
         role: "assistant",
-        content: "To check your live order tracking, delivery updates, and past purchases, please [sign in to your Fayzee account](/login).",
+        content: authMsg,
+        message: authMsg,
         metadata,
       };
     }
 
     if (orderResult.orders.length === 0) {
+      const emptyOrdersMsg = "You haven't placed any orders yet on Fayzee. Let me know what products you're looking for, and I'll find our best authentic deals for you!";
       return {
         role: "assistant",
-        content: "You haven't placed any orders yet on Fayzee. Let me know what products you're looking for, and I'll find our best authentic deals for you!",
+        content: emptyOrdersMsg,
+        message: emptyOrdersMsg,
         metadata,
       };
     }
 
     const latest = orderResult.orders[0];
     metadata.orders = orderResult.orders;
+    const ordersMsg =
+      `Here is your recent order **#${latest.orderNumber}** placed on ${latest.date}:\n\n` +
+      `• **Status**: ${latest.status}\n` +
+      `• **Payment**: ${latest.paymentStatus}\n` +
+      `• **Total**: Rs. ${Math.round(latest.grandTotal).toLocaleString()}\n\n` +
+      `You can view complete item details and invoice in the order card below.`;
+
     return {
       role: "assistant",
-      content: `Here is your recent order **#${latest.orderNumber}** placed on ${latest.date}:\n\n` +
-        `• **Status**: ${latest.status}\n` +
-        `• **Payment**: ${latest.paymentStatus}\n` +
-        `• **Total**: Rs. ${Math.round(latest.grandTotal).toLocaleString()}\n\n` +
-        `You can view complete item details and invoice in the order card below.`,
+      content: ordersMsg,
+      message: ordersMsg,
       metadata,
     };
   }
@@ -625,9 +628,11 @@ export async function handleFayzeeAIChat(params: {
     metadata.cartContents = cart;
 
     if (cart.items.length === 0) {
+      const emptyCartMsg = "Your cart is currently empty. Tell me what items you'd like to explore, and I can help you add them!";
       return {
         role: "assistant",
-        content: "Your cart is currently empty. Tell me what items you'd like to explore, and I can help you add them!",
+        content: emptyCartMsg,
+        message: emptyCartMsg,
         metadata,
       };
     }
@@ -636,11 +641,15 @@ export async function handleFayzeeAIChat(params: {
       .map((i) => `• **${i.title}** (Qty: ${i.quantity}) - Rs. ${(i.price * i.quantity).toLocaleString()}`)
       .join("\n");
 
+    const cartMsg =
+      `Here is what's currently in your Fayzee cart (${cart.totalItems} item${cart.totalItems > 1 ? "s" : ""}):\n\n${itemsSummary}\n\n` +
+      `**Cart Total**: Rs. ${Math.round(cart.totalAmount).toLocaleString()}.\n\n` +
+      `You can [proceed to checkout](/checkout) or ask me to add more items.`;
+
     return {
       role: "assistant",
-      content: `Here is what's currently in your Fayzee cart (${cart.totalItems} item${cart.totalItems > 1 ? "s" : ""}):\n\n${itemsSummary}\n\n` +
-        `**Cart Total**: Rs. ${Math.round(cart.totalAmount).toLocaleString()}.\n\n` +
-        `You can [proceed to checkout](/checkout) or ask me to add more items.`,
+      content: cartMsg,
+      message: cartMsg,
       metadata,
     };
   }
@@ -668,44 +677,43 @@ export async function handleFayzeeAIChat(params: {
       targetProduct = lastProductsInContext.find((p) =>
         lowerQuery.includes(p.title.toLowerCase()) ||
         (p.brand && lowerQuery.includes(p.brand.toLowerCase()))
-      ) || lastProductsInContext[0];
-    }
-
-    // If still not found, search database with query
-    if (!targetProduct) {
-      const cleaned = lowerQuery
-        .replace(/add to cart|add this to my cart|cart mein daal do|cart mein add karo|please|can you/gi, "")
-        .trim();
-      const searched = await toolSearchProducts({ query: cleaned || undefined, limit: 1 });
-      targetProduct = searched[0];
+      );
     }
 
     if (targetProduct) {
       try {
         const cartAction = await toolAddToCart({
-          userId,
           sessionToken,
+          userId,
           productIdOrSlug: targetProduct.id,
           quantity: 1,
         });
         metadata.cartAction = cartAction;
+        const addSuccessMsg =
+          `✅ Successfully added **${targetProduct.title}** to your cart!\n\n` +
+          `Your cart total is now **Rs. ${Math.round(cartAction.cartTotal || targetProduct.price).toLocaleString()}** (${cartAction.cartItemCount} item${(cartAction.cartItemCount || 1) > 1 ? "s" : ""}). You can [view your cart](/cart) or [proceed to checkout](/checkout) whenever you're ready!`;
+
         return {
           role: "assistant",
-          content: `✅ Successfully added **${targetProduct.title}** to your cart!\n\n` +
-            `Your cart total is now **Rs. ${Math.round(cartAction.cartTotal || targetProduct.price).toLocaleString()}** (${cartAction.cartItemCount} item${(cartAction.cartItemCount || 1) > 1 ? "s" : ""}). You can [view your cart](/cart) or [proceed to checkout](/checkout) whenever you're ready!`,
+          content: addSuccessMsg,
+          message: addSuccessMsg,
           metadata,
         };
       } catch (err: any) {
+        const addErrMsg = `I could not add **${targetProduct.title}** to your cart: ${err.message}`;
         return {
           role: "assistant",
-          content: `I could not add **${targetProduct.title}** to your cart: ${err.message}`,
+          content: addErrMsg,
+          message: addErrMsg,
           metadata,
         };
       }
     } else {
+      const askProductMsg = "Which product would you like me to add to your cart? Please specify the product name or tell me which one from our recommendations you prefer.";
       return {
         role: "assistant",
-        content: "Which product would you like me to add to your cart? Please specify the product name or tell me which one from our recommendations you prefer.",
+        content: askProductMsg,
+        message: askProductMsg,
         metadata,
       };
     }
@@ -746,10 +754,14 @@ export async function handleFayzeeAIChat(params: {
           ? "\n\n" + comparisonResult.highlights.join("\n")
           : "";
 
+        const compMsg =
+          `Here is a side-by-side comparison between **${prodA.title}** and **${prodB.title}** from our verified catalog:${highlightsText}\n\n` +
+          `Review the detailed specification matrix below, and let me know if you would like me to add either one to your cart!`;
+
         return {
           role: "assistant",
-          content: `Here is a side-by-side comparison between **${prodA.title}** and **${prodB.title}** from our verified catalog:${highlightsText}\n\n` +
-            `Review the detailed specification matrix below, and let me know if you would like me to add either one to your cart!`,
+          content: compMsg,
+          message: compMsg,
           metadata,
         };
       }
@@ -760,28 +772,27 @@ export async function handleFayzeeAIChat(params: {
   // B. Product Search, Filtering, Recommendations & Follow-Up Questions
   // ---------------------------------------------------------------------------
 
-  // Extract constraints
-  const { minPrice, maxPrice } = extractPriceConstraint(userQuery);
-  const detectedCategory = resolveContextualCategory(
-    userQuery,
-    messages.slice(-3).map((m) => m.content).join(" ")
-  );
+  const previousUserQueries = previousUserMessages.map((m) => m.content).join(" ");
+  const combinedContextText = `${previousUserQueries} ${userQuery}`;
 
-  // Check if query mentions brands
-  let detectedBrand: string | undefined;
-  for (const b of ["samsung", "apple", "sony", "dell", "nike", "philips"]) {
-    if (lowerQuery.includes(b)) {
-      detectedBrand = b;
-      break;
-    }
-  }
+  // Extract category, brand, and constraints from conversation history
+  const detectedCategory = extractCategoryFromIntent(userQuery) || extractCategoryFromIntent(combinedContextText);
+  const detectedBrand = extractBrandFromIntent(userQuery) || extractBrandFromIntent(combinedContextText);
+  const maxPrice = extractPriceCeiling(userQuery) ?? extractPriceCeiling(combinedContextText);
+  const minPrice = extractPriceFloor(userQuery) ?? extractPriceFloor(combinedContextText);
 
-  // Clean query for search
+  // Clean raw keywords for specific search
   let cleanedSearchQuery = userQuery
-    .replace(/fayzee|show me|find me|recommend|can you|please|i need|i want|mujhe|chahiye|dikhao|acha|best|cheap|sasta/gi, "")
-    .replace(/under\s*(?:rs\.?|pkr)?\s*[\d,]+(?:\s*(?:k|hazar))?/gi, "")
+    .replace(/fayzee|show me|find me|recommend|can you|please|i need|i want|mujhe|chahiye|dikhao|acha|ache|achi|best|top|cheap|sasta|mehenga|kuch|high[- ]end|flagship|premium|budget|latest|new/gi, "")
+    .replace(/(?:under|below|less than|within|max|budget)\s*(?:rs\.?|pkr)?\s*[\d,]+(?:\s*(?:k|hazar))?/gi, "")
     .replace(/[\d,]+\s*(?:k|hazar)?\s*(?:ke andar|se kam|tak)/gi, "")
+    .replace(/\b(?:a|an|the)\b/gi, "")
     .trim();
+
+  // If brand was detected and already passed to brand filter, remove it from raw query
+  if (detectedBrand) {
+    cleanedSearchQuery = cleanedSearchQuery.replace(new RegExp(`\\b${detectedBrand}\\b`, "gi"), "").trim();
+  }
 
   // If a category was detected and the remaining query is merely a generic noun (e.g. "phone", "a phone", "mobile", "laptop"),
   // avoid literal title filtering on that noun so that all products in the category are returned!
@@ -793,7 +804,7 @@ export async function handleFayzeeAIChat(params: {
   }
 
   // Execute database search
-  const foundProducts = await toolSearchProducts({
+  let foundProducts = await toolSearchProducts({
     query: cleanedSearchQuery || undefined,
     category: detectedCategory,
     brand: detectedBrand,
@@ -802,46 +813,43 @@ export async function handleFayzeeAIChat(params: {
     inStockOnly: true,
   });
 
+  // Resilient Fallback: If query had extra keywords and found 0 products, retry with just brand/category & price
+  if (foundProducts.length === 0 && cleanedSearchQuery && (detectedBrand || detectedCategory)) {
+    foundProducts = await toolSearchProducts({
+      category: detectedCategory,
+      brand: detectedBrand,
+      minPrice,
+      maxPrice,
+      inStockOnly: true,
+    });
+  }
+
   metadata.products = foundProducts;
 
   // ---------------------------------------------------------------------------
-  // C. Gemini Generative Synthesis (When GEMINI_API_KEY is configured)
+  // C. Generative AI Synthesis (Groq Primary with Multi-Provider Fallback)
   // ---------------------------------------------------------------------------
-  if (apiKey) {
-    try {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      // Use standard Gemini flash model
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const systemPrompt = buildFayzeeSystemPrompt({
+    inventory: foundProducts,
+    userContext: {
+      isAuthenticated: Boolean(userId),
+    },
+  });
 
-      const systemPrompt = `You are Fayzee AI, the intelligent, friendly, and honest shopping co-pilot for the FAYZEE marketplace ("Shop Smart. Shop Easy.").
+  const aiResult = await executeAIWithFallback(messages, systemPrompt);
 
-Key Instructions:
-1. Maintain conversational context across multiple turns. Understand follow-ups (e.g., "which one has the best camera?", "under 50k", "add this to cart").
-2. Language Understanding: You fluently understand English, Urdu, and Roman Urdu (e.g. "mujhe phone chahiye", "acha laptop dikhao", "cart mein add karo"). Respond naturally in the user's preferred language or clean English.
-3. Strict Grounding: NEVER invent products, prices, stock, discounts, or orders. All product data must strictly reflect the authentic database inventory provided below.
-4. Format: Write clean, concise, helpful messages (2-4 sentences). Rich product and comparison cards are displayed automatically below your message.
-
-Conversation History:
-${conversationTranscript}
-
-Current Database Inventory Retrieved for this Request:
-${JSON.stringify(foundProducts, null, 2)}
-`;
-
-      const result = await model.generateContent(systemPrompt);
-      const generatedText = result.response.text().trim();
-      return {
-        role: "assistant",
-        content: generatedText,
-        metadata,
-      };
-    } catch (err: any) {
-      console.warn("Gemini API call failed, falling back to grounded catalog engine:", err?.message || err);
-    }
+  if (aiResult && aiResult.text) {
+    metadata.providerUsed = aiResult.providerUsed;
+    return {
+      role: "assistant",
+      content: aiResult.text,
+      message: aiResult.text,
+      metadata,
+    };
   }
 
   // ---------------------------------------------------------------------------
-  // D. Grounded Catalog Reasoning Engine (When GEMINI_API_KEY is missing/fallback)
+  // D. Grounded Catalog Reasoning Engine (Fallback / Offline / No API Key)
   // ---------------------------------------------------------------------------
 
   // If the query is a simple greeting
@@ -852,12 +860,17 @@ ${JSON.stringify(foundProducts, null, 2)}
     lowerQuery === "salam" ||
     lowerQuery === "assalam o alaikum"
   ) {
+    const greetingText =
+      "Hello! Welcome to Fayzee. I'm your official AI shopping assistant. How can I help you today? You can ask me to find products within your budget, compare specs, or check your orders.";
     return {
       role: "assistant",
-      content: "Hello! Welcome to Fayzee Marketplace. I'm your AI shopping assistant. How can I help you today? You can ask me for product recommendations, compare specs, or check your orders.",
-      metadata: apiKey ? metadata : {
+      content: greetingText,
+      message: greetingText,
+      metadata: {
         ...metadata,
-        configNotice: "Notice: Set GEMINI_API_KEY in your .env file to enable generative conversational intelligence.",
+        configNotice: groqProvider.isAvailable()
+          ? undefined
+          : "Notice: Set GROQ_API_KEY in your .env file to enable high-speed Groq LLaMA 3.3 conversational intelligence.",
       },
     };
   }
@@ -868,10 +881,14 @@ ${JSON.stringify(foundProducts, null, 2)}
 
     // Contextual follow-up answering
     if (lowerQuery.includes("camera") || lowerQuery.includes("best camera")) {
-      const topCamera = foundProducts.find((p) => p.title.toLowerCase().includes("s24") || p.title.toLowerCase().includes("iphone")) || foundProducts[0];
+      const topCamera =
+        foundProducts.find((p) => p.title.toLowerCase().includes("s24") || p.title.toLowerCase().includes("iphone")) ||
+        foundProducts[0];
       responseText = `Among these options, the **${topCamera.title}** delivers the superior camera performance with advanced optical zoom, AI image stabilization, and pro-grade sensor fidelity.`;
     } else if (lowerQuery.includes("gaming") || lowerQuery.includes("pubg") || lowerQuery.includes("fast")) {
-      const topPerformance = foundProducts.find((p) => p.title.toLowerCase().includes("s24") || p.title.toLowerCase().includes("ultra")) || foundProducts[0];
+      const topPerformance =
+        foundProducts.find((p) => p.title.toLowerCase().includes("s24") || p.title.toLowerCase().includes("ultra")) ||
+        foundProducts[0];
       responseText = `For intensive gaming and high-FPS titles, I recommend the **${topPerformance.title}** featuring high refresh rate display and flagship processing power with zero stutter.`;
     } else if (maxPrice) {
       responseText = `Here are our verified products matching your budget of **under Rs. ${maxPrice.toLocaleString()}**:`;
@@ -882,9 +899,12 @@ ${JSON.stringify(foundProducts, null, 2)}
     return {
       role: "assistant",
       content: responseText,
-      metadata: apiKey ? metadata : {
+      message: responseText,
+      metadata: {
         ...metadata,
-        configNotice: "Notice: Set GEMINI_API_KEY in your .env file to enable generative conversational intelligence.",
+        configNotice: groqProvider.isAvailable()
+          ? undefined
+          : "Notice: Set GROQ_API_KEY in your .env file to enable high-speed Groq LLaMA 3.3 conversational intelligence.",
       },
     };
   }
@@ -900,9 +920,12 @@ ${JSON.stringify(foundProducts, null, 2)}
   return {
     role: "assistant",
     content: fallbackMessage,
-    metadata: apiKey ? metadata : {
+    message: fallbackMessage,
+    metadata: {
       ...metadata,
-      configNotice: "Notice: Set GEMINI_API_KEY in your .env file to enable generative conversational intelligence.",
+      configNotice: groqProvider.isAvailable()
+        ? undefined
+        : "Notice: Set GROQ_API_KEY in your .env file to enable high-speed Groq LLaMA 3.3 conversational intelligence.",
     },
   };
 }

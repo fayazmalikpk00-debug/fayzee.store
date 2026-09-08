@@ -43,6 +43,101 @@ async function runAIAssistantTestSuite() {
       }
     }
 
+    // Ensure test catalog exists for test assertions
+    const existingCount = await prisma.product.count();
+    if (existingCount === 0) {
+      console.log("Seeding test catalog products for AI test suite...");
+      let seller = await prisma.sellerProfile.findFirst();
+      if (!seller) {
+        const sellerUser = await prisma.user.create({
+          data: {
+            email: `test-seller-${Date.now()}@fayzee.store`,
+            name: "Fayzee Test Seller",
+            passwordHash: "$2a$10$e8W1234567890abcdef...",
+            role: "SELLER",
+            sellerProfile: {
+              create: {
+                storeName: "Fayzee Test Electronics",
+                businessName: "Fayzee Test Ltd",
+                storeSlug: `fayzee-test-${Date.now()}`,
+                status: "APPROVED",
+              },
+            },
+          },
+          include: { sellerProfile: true },
+        });
+        seller = sellerUser.sellerProfile!;
+      }
+
+      const elecCat = (await prisma.category.findFirst({ where: { slug: { in: ["electronics", "smartphones-accessories"] } } })) || (await prisma.category.findFirst());
+      const applianceCat = (await prisma.category.findFirst({ where: { slug: { in: ["home-appliances", "appliances"] } } })) || elecCat;
+      const fashionCat = (await prisma.category.findFirst({ where: { slug: { in: ["mens-fashion", "fashion", "footwear"] } } })) || elecCat;
+
+      const samsungBrand = await prisma.brand.findFirst({ where: { slug: "samsung" } });
+      const sonyBrand = await prisma.brand.findFirst({ where: { slug: "sony" } });
+      const nikeBrand = await prisma.brand.findFirst({ where: { slug: "nike" } });
+      const philipsBrand = await prisma.brand.findFirst({ where: { slug: "philips" } });
+
+      if (elecCat && seller) {
+        await prisma.product.createMany({
+          data: [
+            {
+              title: "Samsung Galaxy S24 Ultra",
+              slug: `samsung-galaxy-s24-ultra-${Date.now()}`,
+              sku: `SAM-S24-${Date.now()}`,
+              description: "Flagship smartphone with 200MP camera, Snapdragon 8 Gen 3, and AI zoom.",
+              price: 399000,
+              salePrice: 385000,
+              stockQuantity: 15,
+              status: "ACTIVE",
+              sellerId: seller.id,
+              categoryId: elecCat.id,
+              brandId: samsungBrand?.id,
+            },
+            {
+              title: "Sony WH-1000XM5 Noise Canceling Headphones",
+              slug: `sony-wh-1000xm5-${Date.now()}`,
+              sku: `SONY-XM5-${Date.now()}`,
+              description: "Industry leading noise canceling wireless over-ear headphones with superior audio.",
+              price: 95000,
+              salePrice: 89000,
+              stockQuantity: 20,
+              status: "ACTIVE",
+              sellerId: seller.id,
+              categoryId: elecCat.id,
+              brandId: sonyBrand?.id,
+            },
+            {
+              title: "Nike Air Max 270 Sneakers",
+              slug: `nike-air-max-270-${Date.now()}`,
+              sku: `NIKE-270-${Date.now()}`,
+              description: "Iconic Nike lifestyle sneakers with responsive Air cushioning.",
+              price: 35000,
+              salePrice: 29999,
+              stockQuantity: 30,
+              status: "ACTIVE",
+              sellerId: seller.id,
+              categoryId: fashionCat?.id || elecCat.id,
+              brandId: nikeBrand?.id,
+            },
+            {
+              title: "Philips Digital Air Fryer XL",
+              slug: `philips-air-fryer-xl-${Date.now()}`,
+              sku: `PHIL-AF-${Date.now()}`,
+              description: "Rapid Air technology with digital touch screen presets for healthy oil-free cooking.",
+              price: 42000,
+              salePrice: 38000,
+              stockQuantity: 12,
+              status: "ACTIVE",
+              sellerId: seller.id,
+              categoryId: applianceCat?.id || elecCat.id,
+              brandId: philipsBrand?.id,
+            },
+          ],
+        });
+      }
+    }
+
     // ------------------------------------------------------------------------
     // TEST 1: Case-Insensitive Product Search (PostgreSQL mode: 'insensitive')
     // ------------------------------------------------------------------------

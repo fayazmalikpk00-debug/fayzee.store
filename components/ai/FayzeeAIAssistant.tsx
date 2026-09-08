@@ -239,24 +239,32 @@ export function FayzeeAIAssistant() {
     setLoading(true);
 
     try {
-      const chatHistory = [...messages, userMessage].map((m) => ({
+      const chatHistory = messages.map((m) => ({
         role: m.role,
         content: m.content,
       }));
 
-      const res = await fetch("/api/ai/chat", {
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: chatHistory }),
+        body: JSON.stringify({
+          message: text,
+          conversation: chatHistory,
+        }),
       });
 
       const data = await res.json();
+      const assistantText =
+        data.message ||
+        data.content ||
+        (data.error ? `Notice: ${data.error}` : "Sorry, I could not process your request.");
+
       setMessages((prev) => [
         ...prev,
         {
           id: `ai-${Date.now()}`,
           role: "assistant",
-          content: data.content,
+          content: assistantText,
           metadata: data.metadata,
           createdAt: new Date(),
         },
