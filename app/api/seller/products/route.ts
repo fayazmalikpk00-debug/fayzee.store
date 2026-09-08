@@ -17,6 +17,8 @@ export async function GET() {
       where: { sellerId: user.sellerProfile.id },
       include: {
         category: true,
+        subcategory: true,
+        productType: true,
         images: { orderBy: { sortOrder: "asc" } },
         variants: true,
         _count: { select: { reviews: true, orderItems: true } },
@@ -52,6 +54,8 @@ export async function POST(req: Request) {
     const {
       title,
       categoryId,
+      subcategoryId,
+      productTypeId,
       brandId,
       price,
       salePrice,
@@ -62,6 +66,8 @@ export async function POST(req: Request) {
       imageUrl,
       imageUrls,
       specifications,
+      attributes,
+      variants,
     } = body;
 
     // Field validations
@@ -94,6 +100,34 @@ export async function POST(req: Request) {
         { error: "Please select a valid category from the list." },
         { status: 400 }
       );
+    }
+
+    // Optional Subcategory verification
+    let validSubcategoryId: string | null = null;
+    if (subcategoryId) {
+      const subcat = await prisma.subcategory.findFirst({
+        where: {
+          OR: [{ id: subcategoryId }, { slug: subcategoryId }],
+          categoryId: category.id,
+        },
+      });
+      if (subcat) {
+        validSubcategoryId = subcat.id;
+      }
+    }
+
+    // Optional ProductType verification
+    let validProductTypeId: string | null = null;
+    if (productTypeId) {
+      const ptype = await prisma.productType.findFirst({
+        where: {
+          OR: [{ id: productTypeId }, { slug: productTypeId }],
+          ...(validSubcategoryId ? { subcategoryId: validSubcategoryId } : {}),
+        },
+      });
+      if (ptype) {
+        validProductTypeId = ptype.id;
+      }
     }
 
     // Verify SellerProfile exists in database
@@ -192,10 +226,62 @@ export async function POST(req: Request) {
         ? Math.max(0, Math.round(((numericPrice - numericSalePrice) / numericPrice) * 100))
         : 0;
 
+    // Format attributes
+    const formattedAttributes = attributes
+      ? typeof attributes === "string"
+        ? attributes
+        : JSON.stringify(attributes)
+      : null;
+
+    // Prepare variants if provided
+    const variantRecords: Array<{
+      name: string;
+      sku: string;
+      color?: string | null;
+      size?: string | null;
+      price: number;
+      salePrice?: number | null;
+      stockQuantity: number;
+      attributes?: string | null;
+    }> = [];
+
+    if (Array.isArray(variants) && variants.length > 0) {
+      variants.forEach((v: any, index: number) => {
+        const vPrice = Number(v.price) > 0 ? Number(v.price) : numericPrice;
+        const vSalePrice = v.salePrice ? Number(v.salePrice) : numericSalePrice;
+        const vStock =
+          typeof v.stockQuantity === "number" && !isNaN(v.stockQuantity)
+            ? v.stockQuantity
+            : Number(stockQuantity) || 0;
+        const vSku = v.sku?.trim() || `${sku}-V${index + 1}`;
+        const vName =
+          v.name?.trim() ||
+          [v.color, v.size].filter(Boolean).join(" / ") ||
+          `Variant ${index + 1}`;
+
+        variantRecords.push({
+          name: vName,
+          sku: vSku,
+          color: v.color?.trim() || null,
+          size: v.size?.trim() || null,
+          price: vPrice,
+          salePrice: vSalePrice,
+          stockQuantity: vStock,
+          attributes: v.attributes
+            ? typeof v.attributes === "string"
+              ? v.attributes
+              : JSON.stringify(v.attributes)
+            : null,
+        });
+      });
+    }
+
     const product = await prisma.product.create({
       data: {
         sellerId: sellerProfile.id,
         categoryId: category.id,
+        subcategoryId: validSubcategoryId,
+        productTypeId: validProductTypeId,
         brandId: validBrandId,
         title: title.trim(),
         slug: uniqueSlug,
@@ -211,13 +297,24 @@ export async function POST(req: Request) {
             ? specifications
             : JSON.stringify(specifications)
           : null,
+        attributes: formattedAttributes,
         images: {
           create: imageRecords,
         },
+        ...(variantRecords.length > 0
+          ? {
+              variants: {
+                create: variantRecords,
+              },
+            }
+          : {}),
       },
       include: {
         images: { orderBy: { sortOrder: "asc" } },
         category: true,
+        subcategory: true,
+        productType: true,
+        variants: true,
       },
     });
 

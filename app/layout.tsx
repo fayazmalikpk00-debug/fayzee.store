@@ -37,7 +37,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="h-full">
-      <body className="flex flex-col min-h-full antialiased font-sans bg-slate-50 text-slate-900 selection:bg-brand-500 selection:text-white">
+      <body className="flex flex-col min-h-full antialiased font-sans bg-white text-[#333333] selection:bg-[#FF5E00] selection:text-white">
         <AuthProvider>
           <CartProvider>
             <Navbar />

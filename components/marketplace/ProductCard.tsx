@@ -56,11 +56,11 @@ export function ProductCard({
   };
 
   return (
-    <div className="group relative bg-white rounded-2xl border border-slate-200/80 hover:border-brand-400 hover:shadow-card-hover transition-all duration-300 flex flex-col overflow-hidden">
+    <div className="group relative bg-white rounded-2xl border border-[#DDE2E6] hover:border-[#FF5E00]/50 hover:shadow-card-hover transition-all duration-300 flex flex-col overflow-hidden">
       {/* Badges */}
       <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
         {discountPercent && discountPercent > 0 ? (
-          <span className="px-2 py-0.5 bg-fayzee-coral text-white text-[10px] font-extrabold rounded-md shadow-sm">
+          <span className="px-2 py-0.5 bg-[#FF5E00] text-white text-[10px] font-extrabold rounded-md shadow-sm">
             -{discountPercent}%
           </span>
         ) : null}
@@ -80,7 +80,7 @@ export function ProductCard({
       </button>
 
       {/* Image container */}
-      <Link href={`/products/${slug}`} className="block relative aspect-square bg-slate-100 overflow-hidden">
+      <Link href={`/products/${slug}`} className="block relative aspect-square bg-[#F7F9FA] overflow-hidden">
         <img
           src={image || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600"}
           alt={title}
@@ -95,14 +95,14 @@ export function ProductCard({
           {seller && (
             <Link
               href={`/sellers/${seller.storeSlug}`}
-              className="text-[10px] sm:text-[11px] font-medium text-slate-500 hover:text-brand-600 truncate block mb-1"
+              className="text-[10px] sm:text-[11px] font-medium text-[#777777] hover:text-[#FF5E00] truncate block mb-1"
             >
               Store: {seller.storeName}
             </Link>
           )}
 
           <Link href={`/products/${slug}`} className="block">
-            <h3 className="text-xs sm:text-sm font-semibold text-slate-900 group-hover:text-brand-600 transition line-clamp-2 leading-snug">
+            <h3 className="text-xs sm:text-sm font-bold text-[#1C2A39] group-hover:text-[#FF5E00] transition line-clamp-2 leading-snug">
               {title}
             </h3>
           </Link>
@@ -112,19 +112,19 @@ export function ProductCard({
             <div className="flex items-center text-amber-400">
               <Star className="w-3 sm:w-3.5 h-3 sm:h-3.5 fill-amber-400" />
             </div>
-            <span className="text-[11px] sm:text-xs font-bold text-slate-800">{rating.toFixed(1)}</span>
-            <span className="text-[10px] sm:text-[11px] text-slate-400">({reviewCount})</span>
+            <span className="text-[11px] sm:text-xs font-bold text-[#333333]">{rating.toFixed(1)}</span>
+            <span className="text-[10px] sm:text-[11px] text-[#777777]">({reviewCount})</span>
           </div>
         </div>
 
         {/* Pricing & Add to Cart button */}
         <div className="mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-slate-100 flex items-center justify-between gap-1.5 sm:gap-2">
           <div className="min-w-0 flex-1">
-            <div className="text-xs xs:text-sm sm:text-base font-extrabold text-slate-900 truncate">
+            <div className="text-xs xs:text-sm sm:text-base font-black text-[#FF5E00] truncate">
               {formatPrice(displayPrice)}
             </div>
             {originalPrice && (
-              <div className="text-[10px] sm:text-xs text-slate-400 line-through truncate">
+              <div className="text-[10px] sm:text-xs text-[#777777] line-through truncate">
                 {formatPrice(originalPrice)}
               </div>
             )}
@@ -133,11 +133,11 @@ export function ProductCard({
           <button
             onClick={handleAddToCart}
             disabled={!inStock}
-            className={`p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shrink-0 min-w-[34px] min-h-[34px] ${
+            className={`p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition shrink-0 min-w-[34px] min-h-[34px] ${
               added
-                ? "bg-emerald-600 text-white"
+                ? "bg-emerald-600 text-white shadow-xs"
                 : inStock
-                ? "bg-brand-50 hover:bg-brand-600 text-brand-700 hover:text-white"
+                ? "bg-[#FF5E00] hover:bg-[#FF8C00] text-white shadow-xs"
                 : "bg-slate-100 text-slate-400 cursor-not-allowed"
             }`}
             title={inStock ? "Add to Cart" : "Out of Stock"}

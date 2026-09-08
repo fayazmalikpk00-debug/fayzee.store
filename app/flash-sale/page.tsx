@@ -12,23 +12,23 @@ export default async function FlashSalePage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-red-600 via-orange-600 to-amber-600 text-white p-8 sm:p-12 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div className="relative overflow-hidden bg-[#1C2A39] text-white p-8 sm:p-12 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6 border border-[#2A3B4C]">
         <div className="space-y-3 text-center sm:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-black uppercase tracking-wider">
-            <Flame className="w-4 h-4 text-yellow-300 animate-bounce" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-black uppercase tracking-wider text-[#FF5E00] border border-white/10">
+            <Flame className="w-4 h-4 text-[#FF5E00] animate-bounce" />
             <span>Exclusive Flash Deals</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight">
             ⚡ Super Flash Sale
           </h1>
-          <p className="text-xs sm:text-sm text-orange-100 max-w-xl">
+          <p className="text-xs sm:text-sm text-[#E8EDF2] max-w-xl">
             Limited stock flash deals up to 35% off on flagship tech and lifestyle brands.
           </p>
         </div>
 
         {flashSale && (
-          <div className="bg-black/30 backdrop-blur-md p-5 rounded-3xl border border-white/20 text-center space-y-2">
-            <span className="text-xs text-orange-200 font-bold uppercase tracking-wider block">
+          <div className="bg-[#15202B]/90 backdrop-blur-md p-5 rounded-3xl border border-[#2A3B4C] text-center space-y-2">
+            <span className="text-xs text-[#FF8C00] font-bold uppercase tracking-wider block">
               Sale Concludes In:
             </span>
             <FlashCountdown targetDate={flashSale.endTime} />
@@ -38,10 +38,10 @@ export default async function FlashSalePage() {
 
       {/* Flash Sale Product Grid */}
       {!flashSale || flashSale.items.length === 0 ? (
-        <div className="bg-white p-12 rounded-3xl text-center border border-slate-200 space-y-3">
-          <p className="text-sm font-bold text-slate-800">No active flash sale right now.</p>
-          <p className="text-xs text-slate-500">Check back soon or explore our general catalog.</p>
-          <Link href="/products" className="inline-block px-4 py-2 bg-brand-600 text-white text-xs font-bold rounded-xl">
+        <div className="bg-white p-12 rounded-3xl text-center border border-[#DDE2E6] space-y-3">
+          <p className="text-sm font-bold text-[#1C2A39]">No active flash sale right now.</p>
+          <p className="text-xs text-[#777777]">Check back soon or explore our general catalog.</p>
+          <Link href="/products" className="inline-block px-4 py-2 bg-[#FF5E00] hover:bg-[#FF8C00] text-white text-xs font-bold rounded-xl transition">
             Browse All Products
           </Link>
         </div>

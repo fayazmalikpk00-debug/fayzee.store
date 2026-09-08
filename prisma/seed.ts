@@ -1,12 +1,13 @@
 import { PrismaClient } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
+import { COMPLETE_MARKETPLACE_HIERARCHY } from "../lib/categoryHierarchy";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Seeding Fayzee Marketplace Database...");
+  console.log("🌱 Seeding Fayzee Marketplace Database with 18-Category Hierarchy...");
 
-  // Clean existing data
+  // Clean existing transactional and catalog data
   await prisma.orderItem.deleteMany();
   await prisma.payment.deleteMany();
   await prisma.order.deleteMany();
@@ -22,6 +23,8 @@ async function main() {
   await prisma.productVariant.deleteMany();
   await prisma.productImage.deleteMany();
   await prisma.product.deleteMany();
+  await prisma.productType.deleteMany();
+  await prisma.subcategory.deleteMany();
   await prisma.brand.deleteMany();
   await prisma.category.deleteMany();
   await prisma.sellerProfile.deleteMany();
@@ -144,93 +147,59 @@ async function main() {
     },
   });
 
-  // 3. Hierarchical Categories
-  const catElectronics = await prisma.category.create({
-    data: {
-      name: "Electronics",
-      slug: "electronics",
-      description: "Smartphones, laptops, smart accessories, and next-gen audio",
-      icon: "Smartphone",
-      image: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=600",
-      sortOrder: 1,
-    },
-  });
+  // 3. Seed Complete 18-Category Hierarchy (Categories -> Subcategories -> Product Types)
+  console.log("📂 Seeding 18 Categories, Subcategories & Product Types...");
+  const categoryMap = new Map<string, any>();
+  const subcategoryMap = new Map<string, any>();
+  const productTypeMap = new Map<string, any>();
 
-  const catMobiles = await prisma.category.create({
-    data: {
-      name: "Smartphones & Tablets",
-      slug: "smartphones-tablets",
-      parentId: catElectronics.id,
-      sortOrder: 1,
-    },
-  });
+  for (const catDef of COMPLETE_MARKETPLACE_HIERARCHY) {
+    const category = await prisma.category.create({
+      data: {
+        name: catDef.name,
+        slug: catDef.slug,
+        description: catDef.description,
+        icon: catDef.icon,
+        image: catDef.image,
+        sortOrder: catDef.sortOrder,
+        isActive: true,
+      },
+    });
+    categoryMap.set(catDef.slug, category);
 
-  const catLaptops = await prisma.category.create({
-    data: {
-      name: "Laptops & Computers",
-      slug: "laptops-computers",
-      parentId: catElectronics.id,
-      sortOrder: 2,
-    },
-  });
+    for (let sIdx = 0; sIdx < catDef.subcategories.length; sIdx++) {
+      const subDef = catDef.subcategories[sIdx];
+      const subcategory = await prisma.subcategory.create({
+        data: {
+          categoryId: category.id,
+          name: subDef.name,
+          slug: subDef.slug,
+          description: subDef.description,
+          icon: subDef.icon || category.icon,
+          sortOrder: sIdx + 1,
+          isActive: true,
+        },
+      });
+      subcategoryMap.set(subDef.slug, subcategory);
 
-  const catAudio = await prisma.category.create({
-    data: {
-      name: "Audio & Headphones",
-      slug: "audio-headphones",
-      parentId: catElectronics.id,
-      sortOrder: 3,
-    },
-  });
+      for (let pIdx = 0; pIdx < subDef.productTypes.length; pIdx++) {
+        const ptDef = subDef.productTypes[pIdx];
+        const productType = await prisma.productType.create({
+          data: {
+            subcategoryId: subcategory.id,
+            name: ptDef.name,
+            slug: ptDef.slug,
+            description: ptDef.description,
+            sortOrder: pIdx + 1,
+            isActive: true,
+          },
+        });
+        productTypeMap.set(`${subDef.slug}_${ptDef.slug}`, productType);
+      }
+    }
+  }
 
-  const catFashion = await prisma.category.create({
-    data: {
-      name: "Fashion & Apparel",
-      slug: "fashion-apparel",
-      description: "Men's, Women's, and kids' footwear and wardrobe",
-      icon: "Shirt",
-      image: "https://images.unsplash.com/photo-1445205170230-053b83016050?w=600",
-      sortOrder: 2,
-    },
-  });
-
-  const catFootwear = await prisma.category.create({
-    data: {
-      name: "Men's Footwear & Sneakers",
-      slug: "mens-footwear",
-      parentId: catFashion.id,
-      sortOrder: 1,
-    },
-  });
-
-  const catMenFashion = await prisma.category.create({
-    data: {
-      name: "Men's Clothing",
-      slug: "mens-clothing",
-      parentId: catFashion.id,
-      sortOrder: 2,
-    },
-  });
-
-  const catHome = await prisma.category.create({
-    data: {
-      name: "Home & Appliances",
-      slug: "home-appliances",
-      description: "Smart kitchen appliances, interior lighting, and home decor",
-      icon: "Home",
-      image: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=600",
-      sortOrder: 3,
-    },
-  });
-
-  const catKitchen = await prisma.category.create({
-    data: {
-      name: "Kitchen Appliances",
-      slug: "kitchen-appliances",
-      parentId: catHome.id,
-      sortOrder: 1,
-    },
-  });
+  console.log(`✅ Seeded ${categoryMap.size} Categories and ${subcategoryMap.size} Subcategories!`);
 
   // 4. Brands
   const brandSamsung = await prisma.brand.create({
@@ -254,10 +223,16 @@ async function main() {
 
   // 5. Products
   // Product 1: Samsung Galaxy S24 Ultra
+  const catElectronicsId = categoryMap.get("electronics")!.id;
+  const subSmartphonesId = subcategoryMap.get("smartphones-tablets")?.id;
+  const ptSmartphonesId = productTypeMap.get("smartphones-tablets_smartphones")?.id;
+
   const pGalaxyS24 = await prisma.product.create({
     data: {
       sellerId: techHubSeller.id,
-      categoryId: catMobiles.id,
+      categoryId: catElectronicsId,
+      subcategoryId: subSmartphonesId,
+      productTypeId: ptSmartphonesId,
       brandId: brandSamsung.id,
       title: "Samsung Galaxy S24 Ultra 5G (12GB RAM, 256GB Storage)",
       slug: "samsung-galaxy-s24-ultra-5g-256gb",
@@ -277,6 +252,17 @@ async function main() {
       dimensions: "162.3 x 79 x 8.6 mm",
       shippingFee: 0,
       warrantyInfo: "1 Year Official PTA Approved Brand Warranty",
+      attributes: JSON.stringify({
+        brand: "Samsung",
+        model: "Galaxy S24 Ultra",
+        warranty: "1 Year Official",
+        color: "Titanium Black",
+        storage: "256GB",
+        ram: "12GB",
+        connectivity: "5G, Wi-Fi 7, Bluetooth 5.3",
+        battery: "5000 mAh",
+        condition: "Brand New (Box Pack)",
+      }),
       specifications: JSON.stringify({
         Display: "6.8 inch Dynamic AMOLED 2X, 120Hz, 2600 nits",
         Processor: "Qualcomm Snapdragon 8 Gen 3 (4nm)",
@@ -307,6 +293,8 @@ async function main() {
           {
             name: "Titanium Black (12GB/256GB)",
             sku: "SAM-S24U-BLK-256",
+            color: "Titanium Black",
+            size: "256GB",
             price: 399999,
             salePrice: 369999,
             stockQuantity: 10,
@@ -315,6 +303,8 @@ async function main() {
           {
             name: "Titanium Gray (12GB/512GB)",
             sku: "SAM-S24U-GRY-512",
+            color: "Titanium Gray",
+            size: "512GB",
             price: 439999,
             salePrice: 409999,
             stockQuantity: 8,
@@ -329,7 +319,9 @@ async function main() {
   const pIphone15 = await prisma.product.create({
     data: {
       sellerId: techHubSeller.id,
-      categoryId: catMobiles.id,
+      categoryId: catElectronicsId,
+      subcategoryId: subSmartphonesId,
+      productTypeId: ptSmartphonesId,
       brandId: brandApple.id,
       title: "Apple iPhone 15 Pro Max (256GB, Natural Titanium)",
       slug: "apple-iphone-15-pro-max-256gb-natural-titanium",
@@ -349,6 +341,17 @@ async function main() {
       dimensions: "159.9 x 76.7 x 8.25 mm",
       shippingFee: 0,
       warrantyInfo: "1 Year Official Apple Warranty, PTA Approved",
+      attributes: JSON.stringify({
+        brand: "Apple",
+        model: "iPhone 15 Pro Max",
+        warranty: "1 Year Official",
+        color: "Natural Titanium",
+        storage: "256GB",
+        ram: "8GB",
+        connectivity: "5G, Wi-Fi 6E, USB-C",
+        battery: "4422 mAh",
+        condition: "Brand New (Box Pack)",
+      }),
       specifications: JSON.stringify({
         Display: "6.7 inch Super Retina XDR with ProMotion 120Hz",
         Processor: "Apple A17 Pro Bionic (3nm)",
@@ -372,6 +375,8 @@ async function main() {
           {
             name: "Natural Titanium (256GB)",
             sku: "APL-15PM-NAT-256",
+            color: "Natural Titanium",
+            size: "256GB",
             price: 489999,
             salePrice: 459999,
             stockQuantity: 7,
@@ -380,6 +385,8 @@ async function main() {
           {
             name: "Blue Titanium (512GB)",
             sku: "APL-15PM-BLU-512",
+            color: "Blue Titanium",
+            size: "512GB",
             price: 549999,
             salePrice: 519999,
             stockQuantity: 5,
@@ -391,10 +398,15 @@ async function main() {
   });
 
   // Product 3: Sony WH-1000XM5
+  const subAudioId = subcategoryMap.get("audio")?.id;
+  const ptAudioId = productTypeMap.get("audio_headphones")?.id;
+
   const pSonyXM5 = await prisma.product.create({
     data: {
       sellerId: techHubSeller.id,
-      categoryId: catAudio.id,
+      categoryId: catElectronicsId,
+      subcategoryId: subAudioId,
+      productTypeId: ptAudioId,
       brandId: brandSony.id,
       title: "Sony WH-1000XM5 Wireless Industry-Leading Noise Canceling Headphones",
       slug: "sony-wh-1000xm5-wireless-noise-canceling-headphones",
@@ -411,6 +423,15 @@ async function main() {
       rating: 4.8,
       reviewCount: 43,
       shippingFee: 0,
+      attributes: JSON.stringify({
+        brand: "Sony",
+        model: "WH-1000XM5",
+        color: "Midnight Black",
+        connectivity: "Bluetooth 5.2, LDAC, Multipoint",
+        battery: "30 Hours ANC",
+        warranty: "1 Year Official",
+        condition: "Brand New (Box Pack)",
+      }),
       specifications: JSON.stringify({
         BatteryLife: "Up to 30 hours with ANC on",
         Connectivity: "Bluetooth 5.2, LDAC, Multipoint connection",
@@ -431,10 +452,15 @@ async function main() {
   });
 
   // Product 4: Dell XPS 13
+  const subLaptopsId = subcategoryMap.get("laptops-computers")?.id;
+  const ptLaptopsId = productTypeMap.get("laptops-computers_laptops")?.id;
+
   const pDellXPS = await prisma.product.create({
     data: {
       sellerId: techHubSeller.id,
-      categoryId: catLaptops.id,
+      categoryId: catElectronicsId,
+      subcategoryId: subLaptopsId,
+      productTypeId: ptLaptopsId,
       brandId: brandDell.id,
       title: "Dell XPS 13 (Intel Core Ultra 7, 16GB RAM, 512GB SSD, FHD+)",
       slug: "dell-xps-13-intel-core-ultra-7-16gb-512gb",
@@ -449,6 +475,15 @@ async function main() {
       isFeatured: true,
       rating: 4.7,
       reviewCount: 29,
+      attributes: JSON.stringify({
+        brand: "Dell",
+        model: "XPS 13 9340",
+        ram: "16GB LPDDR5x",
+        storage: "512GB SSD",
+        color: "Platinum Silver",
+        warranty: "1 Year Official",
+        condition: "Brand New (Box Pack)",
+      }),
       specifications: JSON.stringify({
         CPU: "Intel Core Ultra 7 155H (16 cores)",
         Display: "13.4 inch FHD+ (1920 x 1200) 120Hz 500 nits",
@@ -470,10 +505,16 @@ async function main() {
   });
 
   // Product 5: Nike Air Max 270
+  const catMensFashionId = categoryMap.get("mens-fashion")!.id;
+  const subMensFootwearId = subcategoryMap.get("mens-footwear")?.id;
+  const ptSneakersId = productTypeMap.get("mens-footwear_sneakers")?.id;
+
   const pNikeSneakers = await prisma.product.create({
     data: {
       sellerId: urbanStyleSeller.id,
-      categoryId: catFootwear.id,
+      categoryId: catMensFashionId,
+      subcategoryId: subMensFootwearId,
+      productTypeId: ptSneakersId,
       brandId: brandNike.id,
       title: "Nike Air Max 270 Breathable Cushion Running Sneakers",
       slug: "nike-air-max-270-breathable-cushion-running-sneakers",
@@ -490,6 +531,13 @@ async function main() {
       rating: 4.8,
       reviewCount: 112,
       shippingFee: 250,
+      attributes: JSON.stringify({
+        brand: "Nike",
+        shoeType: "Sneakers",
+        gender: "Men",
+        material: "Engineered Mesh & Rubber",
+        color: "Black/Red",
+      }),
       specifications: JSON.stringify({
         Upper: "Engineered mesh and synthetic upper",
         Sole: "Rubber outsole with dual-density foam",
@@ -510,6 +558,8 @@ async function main() {
           {
             name: "Size 41 EU / Black Red",
             sku: "NKE-270-41",
+            color: "Black/Red",
+            size: "EU 41",
             price: 28500,
             salePrice: 22999,
             stockQuantity: 15,
@@ -518,6 +568,8 @@ async function main() {
           {
             name: "Size 42 EU / Black Red",
             sku: "NKE-270-42",
+            color: "Black/Red",
+            size: "EU 42",
             price: 28500,
             salePrice: 22999,
             stockQuantity: 18,
@@ -526,6 +578,8 @@ async function main() {
           {
             name: "Size 43 EU / Black Red",
             sku: "NKE-270-43",
+            color: "Black/Red",
+            size: "EU 43",
             price: 28500,
             salePrice: 22999,
             stockQuantity: 12,
@@ -537,10 +591,16 @@ async function main() {
   });
 
   // Product 6: Philips Airfryer XXL
+  const catAppliancesId = categoryMap.get("home-appliances")!.id;
+  const subKitchenId = subcategoryMap.get("kitchen-appliances")?.id;
+  const ptAirfryerId = productTypeMap.get("kitchen-appliances_air-fryers")?.id;
+
   const pAirfryer = await prisma.product.create({
     data: {
       sellerId: urbanStyleSeller.id,
-      categoryId: catKitchen.id,
+      categoryId: catAppliancesId,
+      subcategoryId: subKitchenId,
+      productTypeId: ptAirfryerId,
       brandId: brandPhilips.id,
       title: "Philips Premium Airfryer XXL Smart Sensing (7.3L, 2225W)",
       slug: "philips-premium-airfryer-xxl-smart-sensing-7-3l",
@@ -548,6 +608,15 @@ async function main() {
       shortDescription: "Fat Removal technology with smart chef programs for effortless, guilt-free family meals.",
       description: `The Philips Airfryer XXL uses hot air to fry your favorite foods with little or no added oil. Twin TurboStar technology removes fat from food, while Smart Sensing technology automatically adjusts time and temperature during cooking for perfectly done dishes.`,
       price: 68000,
+      attributes: JSON.stringify({
+        brand: "Philips",
+        model: "HD9860/99",
+        warranty: "2 Years Official",
+        capacity: "7.3 Liters",
+        power: "2225 Watts",
+        color: "Black / Copper",
+        energyRating: "A+++ Inverter",
+      }),
       salePrice: 54999,
       discountPercent: 19,
       stockQuantity: 14,

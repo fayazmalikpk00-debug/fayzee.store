@@ -1,5 +1,6 @@
 "use client";
 
+import { getAttributesForCategory } from "@/lib/categoryHierarchy";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { formatDate, formatPrice } from "@/lib/utils";
 import {
@@ -8,15 +9,21 @@ import {
   ArrowUpRight,
   Check,
   CheckCircle2,
+  ChevronDown,
   Clock,
   DollarSign,
   Image as ImageIcon,
+  Layers,
   Loader2,
   Package,
   Plus,
+  Search,
   ShoppingBag,
+  Sliders,
+  Sparkles,
   Star,
   Store,
+  Tag,
   Trash2,
   Truck,
   Upload,
@@ -31,6 +38,16 @@ interface UploadedImageItem {
   isThumbnail: boolean;
 }
 
+interface VariantFormItem {
+  id: string;
+  color: string;
+  size: string;
+  sku: string;
+  price: string;
+  salePrice: string;
+  stockQuantity: string;
+}
+
 export default function SellerDashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<"overview" | "products" | "orders">("overview");
@@ -40,10 +57,17 @@ export default function SellerDashboardPage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Add Product Modal State
+  // Add Product Modal State (3-Tier Category + Attributes + Variants)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
-  const [newCategory, setNewCategory] = useState("");
+  const [newCategory, setNewCategory] = useState(""); // Category ID
+  const [newSubcategory, setNewSubcategory] = useState(""); // Subcategory ID
+  const [newProductType, setNewProductType] = useState(""); // ProductType ID
+  const [categorySearch, setCategorySearch] = useState("");
+  const [productAttributes, setProductAttributes] = useState<Record<string, string>>({});
+  const [hasVariants, setHasVariants] = useState(false);
+  const [variants, setVariants] = useState<VariantFormItem[]>([]);
+
   const [newPrice, setNewPrice] = useState("");
   const [newSalePrice, setNewSalePrice] = useState("");
   const [newStock, setNewStock] = useState("20");
@@ -195,9 +219,64 @@ export default function SellerDashboardPage() {
     });
   };
 
+  // Category and cascading helpers
+  const selectedCatObj = categories.find((c: any) => c.id === newCategory);
+  const availableSubcategories = selectedCatObj?.subcategories || [];
+  const selectedSubcatObj = availableSubcategories.find((s: any) => s.id === newSubcategory);
+  const availableProductTypes = selectedSubcatObj?.productTypes || [];
+  const dynamicAttrDefs = selectedCatObj ? getAttributesForCategory(selectedCatObj.slug) : [];
+
+  const handleCategoryChange = (catId: string) => {
+    setNewCategory(catId);
+    setNewSubcategory("");
+    setNewProductType("");
+    setProductAttributes({});
+  };
+
+  const handleSubcategoryChange = (subId: string) => {
+    setNewSubcategory(subId);
+    setNewProductType("");
+  };
+
+  const handleAttributeChange = (key: string, val: string) => {
+    setProductAttributes((prev) => ({
+      ...prev,
+      [key]: val,
+    }));
+  };
+
+  const handleAddVariant = () => {
+    const newVar: VariantFormItem = {
+      id: Math.random().toString(36).substring(2, 9),
+      color: "",
+      size: "",
+      sku: "",
+      price: newPrice || "",
+      salePrice: newSalePrice || "",
+      stockQuantity: "10",
+    };
+    setVariants((prev) => [...prev, newVar]);
+  };
+
+  const handleUpdateVariant = (id: string, field: keyof VariantFormItem, val: string) => {
+    setVariants((prev) =>
+      prev.map((v) => (v.id === id ? { ...v, [field]: val } : v))
+    );
+  };
+
+  const handleRemoveVariant = (id: string) => {
+    setVariants((prev) => prev.filter((v) => v.id !== id));
+  };
+
   const resetFormState = () => {
     setNewTitle("");
     setNewCategory("");
+    setNewSubcategory("");
+    setNewProductType("");
+    setCategorySearch("");
+    setProductAttributes({});
+    setHasVariants(false);
+    setVariants([]);
     setNewPrice("");
     setNewSalePrice("");
     setNewStock("20");
@@ -212,7 +291,12 @@ export default function SellerDashboardPage() {
     setFormError("");
 
     if (!newCategory) {
-      setFormError("Please select a category.");
+      setFormError("Please select a primary category.");
+      return;
+    }
+
+    if (!newSubcategory && availableSubcategories.length > 0) {
+      setFormError("Please select a subcategory.");
       return;
     }
 
@@ -220,6 +304,13 @@ export default function SellerDashboardPage() {
       setFormError("Please upload at least one product image from your device.");
       return;
     }
+
+    const totalVariantStock = variants.reduce(
+      (sum, v) => sum + (Number(v.stockQuantity) || 0),
+      0
+    );
+    const finalStock =
+      hasVariants && variants.length > 0 ? totalVariantStock : Number(newStock);
 
     setAddingProduct(true);
     try {
@@ -229,10 +320,25 @@ export default function SellerDashboardPage() {
         body: JSON.stringify({
           title: newTitle.trim(),
           categoryId: newCategory,
+          subcategoryId: newSubcategory || null,
+          productTypeId: newProductType || null,
           price: Number(newPrice),
           salePrice: newSalePrice ? Number(newSalePrice) : null,
-          stockQuantity: Number(newStock),
+          stockQuantity: finalStock,
           description: newDesc.trim(),
+          attributes: Object.keys(productAttributes).length > 0 ? productAttributes : null,
+          variants:
+            hasVariants && variants.length > 0
+              ? variants.map((v) => ({
+                  name: [v.color.trim(), v.size.trim()].filter(Boolean).join(" / ") || "Standard",
+                  sku: v.sku.trim() || undefined,
+                  color: v.color.trim() || null,
+                  size: v.size.trim() || null,
+                  price: Number(v.price) || Number(newPrice),
+                  salePrice: v.salePrice ? Number(v.salePrice) : null,
+                  stockQuantity: Number(v.stockQuantity) || 0,
+                }))
+              : undefined,
           images: uploadedImages.map((img, idx) => ({
             url: img.url,
             isThumbnail: img.isThumbnail,
@@ -305,10 +411,10 @@ export default function SellerDashboardPage() {
           You must be logged in with an authorized seller account to access this portal.
         </p>
         <div className="flex justify-center gap-3">
-          <Link href="/login?redirect=/seller/dashboard" className="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold">
+          <Link href="/login?redirect=/seller/dashboard" className="px-4 py-2 bg-[#FF5E00] hover:bg-[#FF8C00] text-white rounded-xl text-xs font-bold transition">
             Log In
           </Link>
-          <Link href="/seller/register" className="px-4 py-2 bg-orange-500 text-white rounded-xl text-xs font-bold">
+          <Link href="/seller/register" className="px-4 py-2 bg-[#1C2A39] hover:bg-[#2A3B4C] text-white rounded-xl text-xs font-bold transition">
             Become a Seller
           </Link>
         </div>
@@ -328,7 +434,7 @@ export default function SellerDashboardPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Toast Notification */}
       {successToast && (
-        <div className="fixed top-20 right-4 sm:right-8 z-50 bg-emerald-600 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
+        <div className="fixed top-20 right-4 sm:right-8 z-50 bg-[#16A34A] text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
           <CheckCircle2 className="w-5 h-5 text-emerald-200 shrink-0" />
           <span className="text-xs font-bold">{successToast}</span>
           <button onClick={() => setSuccessToast("")} className="text-white/80 hover:text-white ml-2">
@@ -338,21 +444,21 @@ export default function SellerDashboardPage() {
       )}
 
       {/* Top Header & Store Status */}
-      <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white rounded-3xl p-6 border border-[#DDE2E6] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-gradient-to-tr from-brand-600 to-brand-700 text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-md">
+          <div className="w-14 h-14 bg-[#1C2A39] text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-md border border-[#2A3B4C]">
             {user.sellerProfile?.storeName?.[0] || "S"}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900">
+              <h1 className="text-xl sm:text-2xl font-black text-[#1C2A39]">
                 {user.sellerProfile?.storeName || "Seller Store"}
               </h1>
               <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold rounded-full">
                 {user.sellerProfile?.status || "APPROVED"}
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-[#777777] mt-0.5">
               Welcome back, {user.name} • Manage products, stock, and customer orders
             </p>
           </div>
@@ -362,7 +468,7 @@ export default function SellerDashboardPage() {
           <Link
             href={`/sellers/${user.sellerProfile.storeSlug}`}
             target="_blank"
-            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 transition self-start md:self-auto"
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-white hover:bg-[#F7F9FA] border border-[#1C2A39] rounded-xl text-xs font-bold text-[#1C2A39] transition self-start md:self-auto"
           >
             <span>View Public Store</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
@@ -371,13 +477,13 @@ export default function SellerDashboardPage() {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex border-b border-slate-200 gap-8 text-sm font-bold">
+      <div className="flex border-b border-[#DDE2E6] gap-8 text-sm font-bold">
         <button
           onClick={() => setActiveTab("overview")}
           className={`pb-3 transition relative ${
             activeTab === "overview"
-              ? "text-brand-600 border-b-2 border-brand-600"
-              : "text-slate-500 hover:text-slate-900"
+              ? "text-[#FF5E00] border-b-2 border-[#FF5E00]"
+              : "text-[#777777] hover:text-[#1C2A39]"
           }`}
         >
           Overview & Metrics
@@ -386,8 +492,8 @@ export default function SellerDashboardPage() {
           onClick={() => setActiveTab("products")}
           className={`pb-3 transition relative ${
             activeTab === "products"
-              ? "text-brand-600 border-b-2 border-brand-600"
-              : "text-slate-500 hover:text-slate-900"
+              ? "text-[#FF5E00] border-b-2 border-[#FF5E00]"
+              : "text-[#777777] hover:text-[#1C2A39]"
           }`}
         >
           Product Catalog ({products.length})
@@ -396,8 +502,8 @@ export default function SellerDashboardPage() {
           onClick={() => setActiveTab("orders")}
           className={`pb-3 transition relative ${
             activeTab === "orders"
-              ? "text-brand-600 border-b-2 border-brand-600"
-              : "text-slate-500 hover:text-slate-900"
+              ? "text-[#FF5E00] border-b-2 border-[#FF5E00]"
+              : "text-[#777777] hover:text-[#1C2A39]"
           }`}
         >
           Customer Orders ({orderItems.length})
@@ -494,25 +600,25 @@ export default function SellerDashboardPage() {
       {activeTab === "products" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-slate-900">Your Product Listings</h3>
+            <h3 className="text-base font-bold text-[#1C2A39]">Your Product Listings</h3>
             <button
               onClick={() => {
                 resetFormState();
                 setIsAddModalOpen(true);
               }}
-              className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1.5"
+              className="px-4 py-2 bg-[#FF5E00] hover:bg-[#FF8C00] text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1.5 active:scale-98"
             >
               <Plus className="w-4 h-4" />
               <span>Add New Product</span>
             </button>
           </div>
 
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+          <div className="bg-white rounded-3xl border border-[#DDE2E6] shadow-xs overflow-hidden">
             {products.length === 0 ? (
               <div className="py-12 px-4 text-center">
-                <Package className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <p className="text-sm font-bold text-slate-700">No products listed yet</p>
-                <p className="text-xs text-slate-400 mt-1 mb-4">
+                <Package className="w-12 h-12 text-[#777777] mx-auto mb-3" />
+                <p className="text-sm font-bold text-[#1C2A39]">No products listed yet</p>
+                <p className="text-xs text-[#777777] mt-1 mb-4">
                   Start adding products to your store catalog to sell to customers nationwide.
                 </p>
                 <button
@@ -520,7 +626,7 @@ export default function SellerDashboardPage() {
                     resetFormState();
                     setIsAddModalOpen(true);
                   }}
-                  className="px-4 py-2 bg-brand-600 text-white font-bold text-xs rounded-xl shadow-sm hover:bg-brand-700 transition"
+                  className="px-4 py-2 bg-[#FF5E00] hover:bg-[#FF8C00] text-white font-bold text-xs rounded-xl shadow-sm transition active:scale-98"
                 >
                   List Your First Product
                 </button>
@@ -722,39 +828,174 @@ export default function SellerDashboardPage() {
                 />
               </div>
 
-              {/* Category Dropdown (Hierarchical) */}
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  Category <span className="text-red-500">*</span>
-                </label>
-                <select
-                  required
-                  value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
-                >
-                  <option value="">-- Select a Category --</option>
-                  {categories.map((cat) => {
-                    if (cat.children && cat.children.length > 0) {
-                      return (
-                        <optgroup key={cat.id} label={cat.name}>
-                          <option value={cat.id}>{cat.name} (General)</option>
-                          {cat.children.map((sub: any) => (
-                            <option key={sub.id} value={sub.id}>
-                              {sub.name}
-                            </option>
-                          ))}
-                        </optgroup>
-                      );
-                    }
-                    return (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.name}
+              {/* 3-Tier Categorization: Category -> Subcategory -> Product Type */}
+              <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/80 space-y-3.5">
+                <div className="flex items-center gap-2 pb-1 border-b border-slate-200/60">
+                  <Layers className="w-4 h-4 text-brand-600" />
+                  <span className="font-bold text-slate-800 text-[11px] uppercase tracking-wider">
+                    Marketplace Category Hierarchy (3-Tier)
+                  </span>
+                </div>
+
+                {/* 1. Category */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-bold text-slate-700">
+                      1. Department / Category <span className="text-red-500">*</span>
+                    </label>
+                    <span className="text-[10px] text-slate-400 font-medium">
+                      {categories.length} Departments Available
+                    </span>
+                  </div>
+
+                  {/* Search box for category */}
+                  <div className="relative mb-1.5">
+                    <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
+                    <input
+                      type="text"
+                      value={categorySearch}
+                      onChange={(e) => setCategorySearch(e.target.value)}
+                      placeholder="Quick search categories (e.g. phones, fashion, grocery)..."
+                      className="w-full pl-8 pr-3 py-1.5 bg-white rounded-lg border border-slate-200 text-[11px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    />
+                  </div>
+
+                  <select
+                    required
+                    value={newCategory}
+                    onChange={(e) => handleCategoryChange(e.target.value)}
+                    className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-xs"
+                  >
+                    <option value="">-- Choose Category Department --</option>
+                    {categories
+                      .filter((cat) =>
+                        categorySearch.trim()
+                          ? cat.name.toLowerCase().includes(categorySearch.toLowerCase().trim())
+                          : true
+                      )
+                      .map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name} ({cat.subcategories?.length || 0} Subcategories)
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                {/* 2. Subcategory */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-bold text-slate-700">
+                      2. Subcategory {availableSubcategories.length > 0 && <span className="text-red-500">*</span>}
+                    </label>
+                    {newCategory && (
+                      <span className="text-[10px] text-slate-400 font-medium">
+                        {availableSubcategories.length} subcategories
+                      </span>
+                    )}
+                  </div>
+                  <select
+                    disabled={!newCategory}
+                    required={availableSubcategories.length > 0}
+                    value={newSubcategory}
+                    onChange={(e) => handleSubcategoryChange(e.target.value)}
+                    className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-xs disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+                  >
+                    <option value="">
+                      {!newCategory
+                        ? "-- Select a Category first --"
+                        : availableSubcategories.length === 0
+                        ? "-- No Subcategories defined --"
+                        : "-- Select Subcategory --"}
+                    </option>
+                    {availableSubcategories.map((sub: any) => (
+                      <option key={sub.id} value={sub.id}>
+                        {sub.name} ({sub.productTypes?.length || 0} Product Types)
                       </option>
-                    );
-                  })}
-                </select>
+                    ))}
+                  </select>
+                </div>
+
+                {/* 3. Product Type */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-bold text-slate-700">
+                      3. Specific Product Type <span className="text-slate-400 font-normal">(Optional)</span>
+                    </label>
+                    {newSubcategory && (
+                      <span className="text-[10px] text-slate-400 font-medium">
+                        {availableProductTypes.length} types
+                      </span>
+                    )}
+                  </div>
+                  <select
+                    disabled={!newSubcategory}
+                    value={newProductType}
+                    onChange={(e) => setNewProductType(e.target.value)}
+                    className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-xs disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+                  >
+                    <option value="">
+                      {!newSubcategory
+                        ? "-- Select a Subcategory first --"
+                        : availableProductTypes.length === 0
+                        ? "-- No specific product types (General) --"
+                        : "-- Select Specific Product Type (e.g. Smartphones, T-Shirts) --"}
+                    </option>
+                    {availableProductTypes.map((pt: any) => (
+                      <option key={pt.id} value={pt.id}>
+                        {pt.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
+
+              {/* Dynamic Category Specifications & Attributes */}
+              {dynamicAttrDefs.length > 0 && (
+                <div className="bg-amber-50/50 rounded-2xl p-4 border border-amber-200/60 space-y-3">
+                  <div className="flex items-center gap-2 pb-1 border-b border-amber-200/50">
+                    <Sliders className="w-4 h-4 text-amber-700" />
+                    <span className="font-bold text-amber-900 text-[11px] uppercase tracking-wider">
+                      {selectedCatObj?.name} Specific Attributes
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {dynamicAttrDefs.map((attr: any) => {
+                      const attrName = attr.label || attr.name || attr.key;
+                      const attrKey = attr.key || attr.name || attr.label;
+                      return (
+                        <div key={attrKey}>
+                          <label className="block font-bold text-slate-700 mb-1 text-[11px]">
+                            {attrName}
+                          </label>
+                          {attr.options && attr.options.length > 0 ? (
+                            <select
+                              value={productAttributes[attrKey] || ""}
+                              onChange={(e) => handleAttributeChange(attrKey, e.target.value)}
+                              className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"
+                            >
+                              <option value="">-- Choose {attrName} --</option>
+                              {attr.options.map((opt: string) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              type="text"
+                              value={productAttributes[attrKey] || ""}
+                              onChange={(e) => handleAttributeChange(attrKey, e.target.value)}
+                              placeholder={attr.placeholder || `e.g. Enter ${attrName}`}
+                              className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Price and Sale Price */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -789,17 +1030,179 @@ export default function SellerDashboardPage() {
 
               {/* Stock Quantity */}
               <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  Initial Stock Quantity <span className="text-red-500">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-bold text-slate-700">
+                    Stock Quantity <span className="text-red-500">*</span>
+                  </label>
+                  {hasVariants && variants.length > 0 && (
+                    <span className="text-[10px] text-brand-600 font-bold">
+                      Calculated from variants: {variants.reduce((s, v) => s + (Number(v.stockQuantity) || 0), 0)} units
+                    </span>
+                  )}
+                </div>
                 <input
                   type="number"
-                  required
+                  required={!hasVariants || variants.length === 0}
+                  disabled={hasVariants && variants.length > 0}
                   min="0"
-                  value={newStock}
+                  value={
+                    hasVariants && variants.length > 0
+                      ? variants.reduce((s, v) => s + (Number(v.stockQuantity) || 0), 0)
+                      : newStock
+                  }
                   onChange={(e) => setNewStock(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+                  className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 disabled:bg-slate-100 disabled:text-slate-500"
                 />
+              </div>
+
+              {/* Product Variants (Color, Size, SKU, Custom Price & Stock) */}
+              <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/80 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Tag className="w-4 h-4 text-brand-600" />
+                    <div>
+                      <span className="font-bold text-slate-800 text-[11px] uppercase tracking-wider block">
+                        Product Variants
+                      </span>
+                      <span className="text-[10px] text-slate-400">
+                        Enable if this product has multiple sizes, colors, or specifications
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextState = !hasVariants;
+                      setHasVariants(nextState);
+                      if (nextState && variants.length === 0) {
+                        handleAddVariant();
+                      }
+                    }}
+                    className={`px-3 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${
+                      hasVariants
+                        ? "bg-brand-600 text-white shadow-xs"
+                        : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+                    }`}
+                  >
+                    <span>{hasVariants ? "Variants Enabled" : "+ Enable Variants"}</span>
+                  </button>
+                </div>
+
+                {hasVariants && (
+                  <div className="space-y-2.5 pt-2 border-t border-slate-200/60">
+                    <p className="text-[10px] text-slate-500">
+                      Specify variations with individual stock, color/size, and pricing:
+                    </p>
+
+                    <div className="space-y-2">
+                      {variants.map((v, idx) => (
+                        <div
+                          key={v.id}
+                          className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs space-y-2"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-[11px] text-brand-700">
+                              Variant #{idx + 1}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveVariant(v.id)}
+                              className="text-red-500 hover:text-red-700 p-1 text-[10px] font-bold flex items-center gap-0.5"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              <span>Remove</span>
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-600 mb-0.5">
+                                Color / Shade
+                              </label>
+                              <input
+                                type="text"
+                                value={v.color}
+                                onChange={(e) => handleUpdateVariant(v.id, "color", e.target.value)}
+                                placeholder="e.g. Titanium Black"
+                                className="w-full px-2 py-1.5 bg-slate-50 rounded-lg border border-slate-200 text-xs focus:ring-1 focus:ring-brand-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-600 mb-0.5">
+                                Size / Spec
+                              </label>
+                              <input
+                                type="text"
+                                value={v.size}
+                                onChange={(e) => handleUpdateVariant(v.id, "size", e.target.value)}
+                                placeholder="e.g. 256GB / XL / 42 EU"
+                                className="w-full px-2 py-1.5 bg-slate-50 rounded-lg border border-slate-200 text-xs focus:ring-1 focus:ring-brand-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-600 mb-0.5">
+                                Variant SKU
+                              </label>
+                              <input
+                                type="text"
+                                value={v.sku}
+                                onChange={(e) => handleUpdateVariant(v.id, "sku", e.target.value)}
+                                placeholder="Auto-generated if blank"
+                                className="w-full px-2 py-1.5 bg-slate-50 rounded-lg border border-slate-200 text-xs focus:ring-1 focus:ring-brand-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-600 mb-0.5">
+                                Price (Rs.)
+                              </label>
+                              <input
+                                type="number"
+                                value={v.price}
+                                onChange={(e) => handleUpdateVariant(v.id, "price", e.target.value)}
+                                placeholder={newPrice || "4500"}
+                                className="w-full px-2 py-1.5 bg-slate-50 rounded-lg border border-slate-200 text-xs focus:ring-1 focus:ring-brand-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-600 mb-0.5">
+                                Sale Price (Rs.)
+                              </label>
+                              <input
+                                type="number"
+                                value={v.salePrice}
+                                onChange={(e) => handleUpdateVariant(v.id, "salePrice", e.target.value)}
+                                placeholder={newSalePrice || "Optional"}
+                                className="w-full px-2 py-1.5 bg-slate-50 rounded-lg border border-slate-200 text-xs focus:ring-1 focus:ring-brand-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-600 mb-0.5">
+                                Stock Qty
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={v.stockQuantity}
+                                onChange={(e) => handleUpdateVariant(v.id, "stockQuantity", e.target.value)}
+                                placeholder="10"
+                                className="w-full px-2 py-1.5 bg-slate-50 rounded-lg border border-slate-200 text-xs focus:ring-1 focus:ring-brand-500"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleAddVariant}
+                      className="w-full py-2 border border-dashed border-brand-300 hover:border-brand-500 bg-brand-50/30 hover:bg-brand-50/70 text-brand-700 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Another Variant</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Device Image Upload Section */}
@@ -969,7 +1372,7 @@ export default function SellerDashboardPage() {
                 <button
                   type="submit"
                   disabled={addingProduct || isUploading}
-                  className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl disabled:opacity-50 transition text-xs shadow-sm flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-[#FF5E00] hover:bg-[#FF8C00] text-white font-bold rounded-xl disabled:opacity-50 transition text-xs shadow-sm flex items-center gap-1.5 active:scale-98"
                 >
                   {addingProduct ? (
                     <>

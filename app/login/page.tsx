@@ -54,26 +54,26 @@ function LoginForm() {
     <div className="space-y-6">
       <div className="text-center space-y-2">
         <Link href="/" className="inline-block group">
-          <div className="w-16 h-16 rounded-2xl bg-white p-1.5 shadow-md mx-auto flex items-center justify-center border border-slate-200/80 group-hover:scale-105 transition-transform">
+          <div className="w-16 h-16 rounded-2xl bg-white p-1.5 shadow-md mx-auto flex items-center justify-center border border-[#DDE2E6] group-hover:scale-105 transition-transform">
             <img src="/logo.png" alt="FAYZEE" className="w-full h-full object-contain" />
           </div>
         </Link>
-        <h1 className="text-2xl font-black text-slate-900">Sign in to FAYZEE</h1>
-        <p className="text-xs text-slate-500">
+        <h1 className="text-2xl font-black text-[#1C2A39]">Sign in to FAYZEE</h1>
+        <p className="text-xs text-[#777777]">
           Enter your email and password to access your account
         </p>
       </div>
 
       {errorMsg && (
-        <div className="p-3.5 bg-red-50 rounded-2xl border border-red-200 text-xs text-red-700 flex items-center gap-2">
+        <div className="p-3.5 bg-red-50 rounded-2xl border border-[#DC2626]/30 text-xs text-[#DC2626] flex items-center gap-2">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{errorMsg}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-3xl border border-[#DDE2E6] shadow-sm space-y-4">
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
+          <label className="block text-xs font-bold text-[#1C2A39] mb-1">Email Address</label>
           <div className="relative">
             <input
               type="email"
@@ -81,18 +81,18 @@ function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@example.com"
-              className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500"
+              className="w-full pl-10 pr-3.5 py-2.5 bg-[#F7F9FA] text-xs text-[#333333] rounded-xl border border-[#DDE2E6] focus:outline-none focus:border-[#FF5E00]"
             />
-            <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Mail className="w-4 h-4 text-[#777777] absolute left-3 top-1/2 -translate-y-1/2" />
           </div>
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-1">
-            <label className="block text-xs font-bold text-slate-700">Password</label>
+            <label className="block text-xs font-bold text-[#1C2A39]">Password</label>
             <Link
               href="/forgot-password"
-              className="text-[11px] font-semibold text-brand-600 hover:underline"
+              className="text-[11px] font-semibold text-[#FF5E00] hover:text-[#FF8C00] hover:underline"
             >
               Forgot Password?
             </Link>
@@ -104,24 +104,24 @@ function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500"
+              className="w-full pl-10 pr-3.5 py-2.5 bg-[#F7F9FA] text-xs text-[#333333] rounded-xl border border-[#DDE2E6] focus:outline-none focus:border-[#FF5E00]"
             />
-            <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Lock className="w-4 h-4 text-[#777777] absolute left-3 top-1/2 -translate-y-1/2" />
           </div>
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-1.5"
+          className="w-full py-3 bg-[#FF5E00] hover:bg-[#FF8C00] disabled:opacity-50 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-1.5 active:scale-98"
         >
           {loading ? <span>Authenticating...</span> : <span>Sign In to Account</span>}
           <ArrowRight className="w-4 h-4" />
         </button>
 
-        <div className="text-center pt-2 text-xs text-slate-500">
+        <div className="text-center pt-2 text-xs text-[#777777]">
           Don't have an account yet?{" "}
-          <Link href="/register" className="font-bold text-brand-600 hover:underline">
+          <Link href="/register" className="font-bold text-[#FF5E00] hover:text-[#FF8C00] hover:underline">
             Register Here
           </Link>
         </div>

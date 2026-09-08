@@ -34,11 +34,11 @@ export function FlashCountdown({ targetDate }: { targetDate: string | Date }) {
 
   return (
     <div className="flex items-center gap-1.5 text-xs font-bold text-white">
-      <span className="bg-slate-900 px-2 py-1 rounded-md shadow-xs">{pad(timeLeft.hours)}</span>
-      <span className="text-slate-900 font-extrabold">:</span>
-      <span className="bg-slate-900 px-2 py-1 rounded-md shadow-xs">{pad(timeLeft.minutes)}</span>
-      <span className="text-slate-900 font-extrabold">:</span>
-      <span className="bg-slate-900 px-2 py-1 rounded-md shadow-xs text-fayzee-coral">{pad(timeLeft.seconds)}</span>
+      <span className="bg-[#1C2A39] px-2 py-1 rounded-md shadow-xs">{pad(timeLeft.hours)}</span>
+      <span className="text-[#1C2A39] font-extrabold">:</span>
+      <span className="bg-[#1C2A39] px-2 py-1 rounded-md shadow-xs">{pad(timeLeft.minutes)}</span>
+      <span className="text-[#1C2A39] font-extrabold">:</span>
+      <span className="bg-[#1C2A39] px-2 py-1 rounded-md shadow-xs text-[#FF5E00]">{pad(timeLeft.seconds)}</span>
     </div>
   );
 }

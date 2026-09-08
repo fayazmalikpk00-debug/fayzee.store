@@ -6,14 +6,21 @@ import {
   AlertTriangle,
   ArrowRight,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
   Clock,
   DollarSign,
+  Layers,
   Package,
+  Plus,
+  Search,
   Shield,
   ShieldAlert,
   ShieldCheck,
   ShoppingBag,
   Store,
+  Tag,
+  Trash2,
   Users,
   XCircle,
 } from "lucide-react";
@@ -25,20 +32,34 @@ export default function AdminDashboardPage() {
   const [data, setData] = useState<any>(null);
   const [sellers, setSellers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"analytics" | "sellers" | "audit">("analytics");
+  const [activeTab, setActiveTab] = useState<
+    "analytics" | "sellers" | "categories" | "audit"
+  >("analytics");
+
+  // Category Management State
+  const [categoriesList, setCategoriesList] = useState<any[]>([]);
+  const [catSearch, setCatSearch] = useState("");
+  const [expandedCatId, setExpandedCatId] = useState<string | null>(null);
+  const [isAddingCat, setIsAddingCat] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const [newCatIcon, setNewCatIcon] = useState("📦");
+  const [newCatDesc, setNewCatDesc] = useState("");
 
   const fetchData = async () => {
     try {
-      const [analyticsRes, sellersRes] = await Promise.all([
+      const [analyticsRes, sellersRes, catRes] = await Promise.all([
         fetch("/api/admin/analytics"),
         fetch("/api/admin/sellers"),
+        fetch("/api/admin/categories"),
       ]);
 
       const analyticsData = await analyticsRes.json();
       const sellersData = await sellersRes.json();
+      const catData = await catRes.json();
 
       if (analyticsData.metrics) setData(analyticsData);
       if (sellersData.sellers) setSellers(sellersData.sellers);
+      if (catData.categories) setCategoriesList(catData.categories);
     } catch (e) {
       console.error(e);
     } finally {
@@ -111,11 +132,11 @@ export default function AdminDashboardPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 rounded-3xl shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="bg-[#1C2A39] border border-[#2A3B4C] text-white p-6 sm:p-8 rounded-3xl shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-black">Fayzee Marketplace Admin Panel</h1>
-            <span className="px-2.5 py-0.5 bg-purple-500/30 text-purple-300 text-[10px] font-black rounded-full border border-purple-500/40">
+            <span className="px-2.5 py-0.5 bg-[#FF5E00]/20 text-[#FF8C00] text-[10px] font-black rounded-full border border-[#FF5E00]/40">
               {user.role}
             </span>
           </div>
@@ -132,13 +153,13 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-slate-200 pb-2 text-xs font-bold">
+      <div className="flex gap-2 border-b border-[#DDE2E6] pb-2 text-xs font-bold overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab("analytics")}
           className={`px-4 py-2 rounded-xl transition ${
             activeTab === "analytics"
-              ? "bg-slate-900 text-white"
-              : "text-slate-600 hover:bg-slate-100"
+              ? "bg-[#FF5E00] text-white"
+              : "text-[#333333] hover:bg-[#F7F9FA]"
           }`}
         >
           Platform Analytics
@@ -147,18 +168,29 @@ export default function AdminDashboardPage() {
           onClick={() => setActiveTab("sellers")}
           className={`px-4 py-2 rounded-xl transition ${
             activeTab === "sellers"
-              ? "bg-slate-900 text-white"
-              : "text-slate-600 hover:bg-slate-100"
+              ? "bg-[#FF5E00] text-white"
+              : "text-[#333333] hover:bg-[#F7F9FA]"
           }`}
         >
           Seller Approvals ({sellers.length})
         </button>
         <button
+          onClick={() => setActiveTab("categories")}
+          className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
+            activeTab === "categories"
+              ? "bg-[#FF5E00] text-white"
+              : "text-[#333333] hover:bg-[#F7F9FA]"
+          }`}
+        >
+          <Layers className="w-3.5 h-3.5" />
+          <span>Category Hierarchy ({categoriesList.length})</span>
+        </button>
+        <button
           onClick={() => setActiveTab("audit")}
           className={`px-4 py-2 rounded-xl transition ${
             activeTab === "audit"
-              ? "bg-slate-900 text-white"
-              : "text-slate-600 hover:bg-slate-100"
+              ? "bg-[#FF5E00] text-white"
+              : "text-[#333333] hover:bg-[#F7F9FA]"
           }`}
         >
           Security Audit Logs ({data?.recentAuditLogs?.length || 0})
@@ -332,7 +364,159 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* TAB 3: Audit Trail */}
+      {/* TAB 3: Category Management Hierarchy (3-Tier) */}
+      {activeTab === "categories" && (
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <div>
+              <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                <Layers className="w-5 h-5 text-brand-600" />
+                <span>Marketplace Category Tree Oversight</span>
+              </h3>
+              <p className="text-xs text-slate-500">
+                18 Top-Level Departments &rarr; Subcategories &rarr; Specific Product Types
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                <input
+                  type="text"
+                  value={catSearch}
+                  onChange={(e) => setCatSearch(e.target.value)}
+                  placeholder="Search departments..."
+                  className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-500 w-48 sm:w-64"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Department Statistics */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
+            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+              <span className="text-[10px] font-bold text-slate-400 uppercase">Departments</span>
+              <p className="text-xl font-black text-slate-900">{categoriesList.length}</p>
+            </div>
+            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+              <span className="text-[10px] font-bold text-slate-400 uppercase">Subcategories</span>
+              <p className="text-xl font-black text-brand-600">
+                {categoriesList.reduce(
+                  (sum, c) => sum + (c.subcategories?.length || 0),
+                  0
+                )}
+              </p>
+            </div>
+            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+              <span className="text-[10px] font-bold text-slate-400 uppercase">Product Types</span>
+              <p className="text-xl font-black text-indigo-600">
+                {categoriesList.reduce(
+                  (sum, c) =>
+                    sum +
+                    (c.subcategories?.reduce(
+                      (subSum: number, sub: any) =>
+                        subSum + (sub.productTypes?.length || 0),
+                      0
+                    ) || 0),
+                  0
+                )}
+              </p>
+            </div>
+          </div>
+
+          {/* Hierarchy List Accordion */}
+          <div className="space-y-2">
+            {categoriesList
+              .filter((c) =>
+                catSearch.trim()
+                  ? c.name.toLowerCase().includes(catSearch.toLowerCase().trim())
+                  : true
+              )
+              .map((cat) => {
+                const isExpanded = expandedCatId === cat.id;
+                return (
+                  <div
+                    key={cat.id}
+                    className="border border-slate-200 rounded-2xl overflow-hidden transition"
+                  >
+                    <div
+                      onClick={() => setExpandedCatId(isExpanded ? null : cat.id)}
+                      className="p-4 bg-slate-50/70 hover:bg-slate-100/70 cursor-pointer flex items-center justify-between gap-3 select-none"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl shrink-0">{cat.icon}</span>
+                        <div>
+                          <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                            <span>{cat.name}</span>
+                            <span className="text-[11px] font-mono text-slate-400 font-normal">
+                              /{cat.slug}
+                            </span>
+                          </h4>
+                          <p className="text-[11px] text-slate-500">
+                            {cat.subcategories?.length || 0} Subcategories • {cat._count?.products || 0} Products
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            cat.isActive
+                              ? "bg-emerald-100 text-emerald-800"
+                              : "bg-slate-200 text-slate-600"
+                          }`}
+                        >
+                          {cat.isActive ? "Active" : "Disabled"}
+                        </span>
+                        <ChevronDown
+                          className={`w-4 h-4 text-slate-400 transition-transform ${
+                            isExpanded ? "rotate-180" : ""
+                          }`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Subcategories & Product Types Nested Accordion */}
+                    {isExpanded && (
+                      <div className="p-4 bg-white border-t border-slate-100 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {cat.subcategories?.map((sub: any) => (
+                            <div
+                              key={sub.id}
+                              className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1.5"
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="font-bold text-xs text-slate-900">
+                                  {sub.name}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-medium">
+                                  {sub._count?.products || 0} prods
+                                </span>
+                              </div>
+
+                              <div className="flex flex-wrap gap-1 pt-1">
+                                {sub.productTypes?.map((pt: any) => (
+                                  <span
+                                    key={pt.id}
+                                    className="px-2 py-0.5 bg-white border border-slate-200 text-slate-600 rounded text-[10px]"
+                                  >
+                                    {pt.name}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 4: Audit Trail */}
       {activeTab === "audit" && (
         <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 space-y-4">
           <h3 className="text-sm font-bold text-slate-900">Security & Operational Audit Logs</h3>

@@ -2,11 +2,15 @@ import prisma from "../lib/db";
 
 export interface ProductFilterParams {
   categorySlug?: string;
+  subcategorySlug?: string;
+  productTypeSlug?: string;
   brandSlug?: string;
   minPrice?: number;
   maxPrice?: number;
   rating?: number;
   inStock?: boolean;
+  color?: string;
+  size?: string;
   searchQuery?: string;
   sortBy?: "relevance" | "price_asc" | "price_desc" | "newest" | "rating";
   page?: number;
@@ -16,11 +20,15 @@ export interface ProductFilterParams {
 export async function getProducts(params: ProductFilterParams = {}) {
   const {
     categorySlug,
+    subcategorySlug,
+    productTypeSlug,
     brandSlug,
     minPrice,
     maxPrice,
     rating,
     inStock,
+    color,
+    size,
     searchQuery,
     sortBy = "newest",
     page = 1,
@@ -31,25 +39,67 @@ export async function getProducts(params: ProductFilterParams = {}) {
     status: "ACTIVE",
   };
 
+  const andConditions: any[] = [];
+
   if (searchQuery) {
-    where.OR = [
-      { title: { contains: searchQuery } },
-      { description: { contains: searchQuery } },
-      { shortDescription: { contains: searchQuery } },
-    ];
+    andConditions.push({
+      OR: [
+        { title: { contains: searchQuery, mode: "insensitive" } },
+        { description: { contains: searchQuery, mode: "insensitive" } },
+        { shortDescription: { contains: searchQuery, mode: "insensitive" } },
+        { category: { name: { contains: searchQuery, mode: "insensitive" } } },
+        { subcategory: { name: { contains: searchQuery, mode: "insensitive" } } },
+        { productType: { name: { contains: searchQuery, mode: "insensitive" } } },
+      ],
+    });
   }
 
   if (categorySlug) {
-    where.category = {
+    andConditions.push({
       OR: [
-        { slug: categorySlug },
-        { parent: { slug: categorySlug } },
+        { category: { slug: categorySlug } },
+        { subcategory: { slug: categorySlug } },
+        { productType: { slug: categorySlug } },
       ],
-    };
+    });
+  }
+
+  if (subcategorySlug) {
+    andConditions.push({
+      subcategory: { slug: subcategorySlug },
+    });
+  }
+
+  if (productTypeSlug) {
+    andConditions.push({
+      productType: { slug: productTypeSlug },
+    });
   }
 
   if (brandSlug) {
     where.brand = { slug: brandSlug };
+  }
+
+  if (color) {
+    andConditions.push({
+      OR: [
+        { variants: { some: { color: { contains: color, mode: "insensitive" } } } },
+        { attributes: { contains: color, mode: "insensitive" } },
+      ],
+    });
+  }
+
+  if (size) {
+    andConditions.push({
+      OR: [
+        { variants: { some: { size: { contains: size, mode: "insensitive" } } } },
+        { attributes: { contains: size, mode: "insensitive" } },
+      ],
+    });
+  }
+
+  if (andConditions.length > 0) {
+    where.AND = andConditions;
   }
 
   if (minPrice !== undefined || maxPrice !== undefined) {
@@ -83,6 +133,9 @@ export async function getProducts(params: ProductFilterParams = {}) {
       include: {
         images: { orderBy: { sortOrder: "asc" } },
         category: true,
+        subcategory: true,
+        productType: true,
+        variants: { orderBy: { price: "asc" } },
         brand: true,
         seller: {
           select: {
@@ -110,8 +163,10 @@ export async function getProductBySlug(slug: string) {
     where: { slug },
     include: {
       images: { orderBy: { sortOrder: "asc" } },
-      variants: true,
+      variants: { orderBy: { price: "asc" } },
       category: true,
+      subcategory: true,
+      productType: true,
       brand: true,
       seller: {
         select: {
@@ -138,13 +193,18 @@ export async function getProductBySlug(slug: string) {
 
 export async function getCategories() {
   return prisma.category.findMany({
-    where: { isActive: true, parentId: null },
+    where: { isActive: true },
     include: {
-      children: {
+      subcategories: {
         where: { isActive: true },
         include: {
+          productTypes: {
+            where: { isActive: true },
+            orderBy: { sortOrder: "asc" },
+          },
           _count: { select: { products: true } },
         },
+        orderBy: { sortOrder: "asc" },
       },
       _count: { select: { products: true } },
     },

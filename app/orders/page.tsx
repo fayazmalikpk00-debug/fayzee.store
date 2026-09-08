@@ -42,9 +42,9 @@ export default function OrdersPage() {
   if (!user) {
     return (
       <div className="max-w-md mx-auto px-4 py-20 text-center space-y-4">
-        <h2 className="text-xl font-bold">Please Sign In</h2>
-        <p className="text-xs text-slate-500">You need to be logged in to view your orders and track shipments.</p>
-        <Link href="/login?redirect=/orders" className="inline-block px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold">
+        <h2 className="text-xl font-bold text-[#1C2A39]">Please Sign In</h2>
+        <p className="text-xs text-[#777777]">You need to be logged in to view your orders and track shipments.</p>
+        <Link href="/login?redirect=/orders" className="inline-block px-4 py-2 bg-[#FF5E00] hover:bg-[#FF8C00] text-white rounded-xl text-xs font-bold transition active:scale-98">
           Log In to Account
         </Link>
       </div>
@@ -53,25 +53,25 @@ export default function OrdersPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      <div className="pb-4 border-b border-slate-200">
-        <h1 className="text-2xl sm:text-3xl font-black text-slate-900">Your Orders</h1>
-        <p className="text-xs text-slate-500 mt-1">
+      <div className="pb-4 border-b border-[#DDE2E6]">
+        <h1 className="text-2xl sm:text-3xl font-black text-[#1C2A39]">Your Orders</h1>
+        <p className="text-xs text-[#777777] mt-1">
           Track packages, view receipts, and manage order returns
         </p>
       </div>
 
       {orders.length === 0 ? (
-        <div className="bg-white p-12 rounded-3xl border border-slate-200 text-center space-y-4">
-          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
+        <div className="bg-white p-12 rounded-3xl border border-[#DDE2E6] text-center space-y-4">
+          <div className="w-16 h-16 bg-[#F7F9FA] rounded-full flex items-center justify-center mx-auto text-[#777777] border border-[#DDE2E6]">
             <ShoppingBag className="w-8 h-8" />
           </div>
-          <h3 className="text-base font-bold text-slate-900">No orders placed yet</h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+          <h3 className="text-base font-bold text-[#1C2A39]">No orders placed yet</h3>
+          <p className="text-xs text-[#777777] max-w-sm mx-auto">
             Once you make a purchase on Fayzee, you can track its delivery lifecycle right here.
           </p>
           <Link
             href="/products"
-            className="inline-block px-5 py-2.5 bg-brand-600 text-white text-xs font-bold rounded-xl shadow-sm"
+            className="inline-block px-5 py-2.5 bg-[#FF5E00] hover:bg-[#FF8C00] text-white text-xs font-bold rounded-xl shadow-sm transition active:scale-98"
           >
             Start Shopping
           </Link>
@@ -81,14 +81,14 @@ export default function OrdersPage() {
           {orders.map((order) => (
             <div
               key={order.id}
-              className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4 hover:border-brand-400 transition"
+              className="bg-white rounded-2xl border border-[#DDE2E6] p-5 sm:p-6 shadow-xs space-y-4 hover:border-[#FF5E00] transition"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#DDE2E6] gap-2">
                 <div>
-                  <span className="text-xs font-bold text-slate-900">
+                  <span className="text-xs font-bold text-[#1C2A39]">
                     Order #{order.orderNumber}
                   </span>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-[#777777]">
                     Placed on {formatDate(order.createdAt)}
                   </p>
                 </div>
@@ -105,7 +105,7 @@ export default function OrdersPage() {
                   >
                     {order.status}
                   </span>
-                  <span className="text-xs font-black text-slate-900">
+                  <span className="text-xs font-black text-[#1C2A39]">
                     {formatPrice(order.grandTotal)}
                   </span>
                 </div>
@@ -121,11 +121,11 @@ export default function OrdersPage() {
                         "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100"
                       }
                       alt=""
-                      className="w-12 h-12 object-cover rounded-lg bg-slate-50"
+                      className="w-12 h-12 object-cover rounded-lg bg-[#F7F9FA] border border-[#DDE2E6]"
                     />
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-slate-900 truncate">{item.title}</h4>
-                      <p className="text-[11px] text-slate-500">
+                      <h4 className="font-semibold text-[#1C2A39] truncate">{item.title}</h4>
+                      <p className="text-[11px] text-[#777777]">
                         Qty: {item.quantity} • {formatPrice(item.price)} each
                       </p>
                     </div>
@@ -134,12 +134,12 @@ export default function OrdersPage() {
               </div>
 
               <div className="pt-2 flex items-center justify-between">
-                <span className="text-xs text-slate-500">
-                  Payment: <strong className="text-slate-800">{order.paymentMethod}</strong> ({order.paymentStatus})
+                <span className="text-xs text-[#777777]">
+                  Payment: <strong className="text-[#1C2A39]">{order.paymentMethod}</strong> ({order.paymentStatus})
                 </span>
                 <Link
                   href={`/orders/${order.id}`}
-                  className="text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1"
+                  className="text-xs font-bold text-[#FF5E00] hover:text-[#FF8C00] flex items-center gap-1 transition"
                 >
                   <span>Track & View Details</span>
                   <ArrowRight className="w-3.5 h-3.5" />

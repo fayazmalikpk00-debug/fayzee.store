@@ -111,24 +111,66 @@ model SellerApplication {
 }
 
 model Category {
-  id          String     @id @default(cuid())
+  id          String        @id @default(cuid())
   name        String
-  slug        String     @unique
+  slug        String        @unique
   description String?
   image       String?
   icon        String?
   parentId    String?
-  parent      Category?  @relation("SubCategories", fields: [parentId], references: [id], onDelete: SetNull)
-  children    Category[] @relation("SubCategories")
-  sortOrder   Int        @default(0)
-  isActive    Boolean    @default(true)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  parent      Category?     @relation("SubCategories", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[]    @relation("SubCategories")
+  sortOrder   Int           @default(0)
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
-  products    Product[]
+  subcategories Subcategory[]
+  products      Product[]
 
   @@index([slug])
   @@index([parentId])
+}
+
+model Subcategory {
+  id          String        @id @default(cuid())
+  categoryId  String
+  category    Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name        String
+  slug        String
+  description String?
+  image       String?
+  icon        String?
+  sortOrder   Int           @default(0)
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  productTypes ProductType[]
+  products     Product[]
+
+  @@unique([categoryId, slug])
+  @@index([categoryId])
+  @@index([slug])
+}
+
+model ProductType {
+  id            String      @id @default(cuid())
+  subcategoryId String
+  subcategory   Subcategory @relation(fields: [subcategoryId], references: [id], onDelete: Cascade)
+  name          String
+  slug          String
+  description   String?
+  sortOrder     Int         @default(0)
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  products      Product[]
+
+  @@unique([subcategoryId, slug])
+  @@index([subcategoryId])
+  @@index([slug])
 }
 
 model Brand {
@@ -152,6 +194,10 @@ model Product {
   seller           SellerProfile   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   categoryId       String
   category         Category        @relation(fields: [categoryId], references: [id])
+  subcategoryId    String?
+  subcategory      Subcategory?    @relation(fields: [subcategoryId], references: [id], onDelete: SetNull)
+  productTypeId    String?
+  productType      ProductType?    @relation(fields: [productTypeId], references: [id], onDelete: SetNull)
   brandId          String?
   brand            Brand?          @relation(fields: [brandId], references: [id], onDelete: SetNull)
   
@@ -176,6 +222,7 @@ model Product {
   shippingFee      Float           @default(0.0)
   warrantyInfo     String?
   specifications   String?         // JSON string: {"RAM":"8GB","Storage":"256GB"}
+  attributes       String?         // Dynamic category attributes JSON: {"Brand":"Apple","Color":"Silver","RAM":"8GB"}
   
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
@@ -191,6 +238,8 @@ model Product {
 
   @@index([slug])
   @@index([categoryId])
+  @@index([subcategoryId])
+  @@index([productTypeId])
   @@index([brandId])
   @@index([sellerId])
   @@index([status])
@@ -216,10 +265,12 @@ model ProductVariant {
   product       Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   name          String      // e.g. "8GB / 256GB / Midnight Black"
   sku           String      @unique
+  color         String?     // e.g. "Midnight Black"
+  size          String?     // e.g. "256GB" or "XL"
   price         Float
   salePrice     Float?
   stockQuantity Int         @default(0)
-  attributes    String      // JSON string e.g. {"RAM":"8GB","Storage":"256GB","Color":"Midnight Black"}
+  attributes    String?     // JSON string e.g. {"RAM":"8GB","Storage":"256GB","Color":"Midnight Black"}
   image         String?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
