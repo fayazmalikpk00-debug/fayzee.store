@@ -67,16 +67,35 @@ export async function POST(req: Request) {
       message: "If an account with that email exists, a password reset link has been sent.",
     };
 
-    // Find user
-    const user = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
+    // Find user (case-insensitive search so casing or spaces never cause false negative)
+    const user = await prisma.user.findFirst({
+      where: {
+        email: {
+          equals: normalizedEmail,
+          mode: "insensitive",
+        },
+      },
       select: { id: true, email: true, name: true, status: true },
     });
 
-    // If user does not exist or is suspended, return the generic response
-    if (!user || user.status === "SUSPENDED") {
+    // If user does not exist or is suspended, return the generic response to prevent account enumeration
+    if (!user) {
+      console.log(
+        `ℹ️ [AUTH FORGOT PASSWORD] Account lookup: No account found matching '${normalizedEmail}'. Generic success message returned to client (0 outgoing email requests).`
+      );
       return NextResponse.json(genericResponse, { status: 200 });
     }
+
+    if (user.status === "SUSPENDED") {
+      console.warn(
+        `⚠️ [AUTH FORGOT PASSWORD] Account lookup: Account '${user.email}' is SUSPENDED. Password reset request blocked.`
+      );
+      return NextResponse.json(genericResponse, { status: 200 });
+    }
+
+    console.log(
+      `✅ [AUTH FORGOT PASSWORD] Active account found for '${user.email}' (ID: ${user.id}). Generating 30-min reset token...`
+    );
 
     // 1. Invalidate any existing unused reset tokens for this user
     await prisma.passwordReset.updateMany({
@@ -108,11 +127,32 @@ export async function POST(req: Request) {
     });
 
     // 6. Send email via emailService abstraction (raw token only goes in the reset link)
-    await sendPasswordResetEmail({
+    console.log(
+      `📨 [AUTH FORGOT PASSWORD] Dispatching reset email to Resend for recipient: ${user.email}...`
+    );
+    const emailResult = await sendPasswordResetEmail({
       to: user.email,
       userName: user.name,
       resetToken: rawToken,
     });
+
+    if (!emailResult.success) {
+      console.error(
+        `❌ [AUTH FORGOT PASSWORD] Email delivery failed for ${user.email}:`,
+        emailResult.error
+      );
+      return NextResponse.json(
+        {
+          error:
+            "Unable to send password reset email at this moment. Please verify server email settings or contact support.",
+        },
+        { status: 503 }
+      );
+    }
+
+    console.log(
+      `✅ [AUTH FORGOT PASSWORD] Reset email successfully accepted by Resend (Message ID: ${emailResult.messageId}) for ${user.email}`
+    );
 
     return NextResponse.json(genericResponse, { status: 200 });
   } catch (error) {

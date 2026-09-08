@@ -4,6 +4,8 @@ import { getFlashSaleProducts } from "@/services/productService";
 import { Flame, Zap } from "lucide-react";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export default async function FlashSalePage() {
   const flashSale = await getFlashSaleProducts();
 

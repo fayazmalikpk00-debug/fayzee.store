@@ -1,10 +1,11 @@
 /**
  * FAYZEE Email Service Abstraction
  * 
- * Supports:
- * - Resend API via native fetch (requires RESEND_API_KEY)
- * - Safe development fallback (logs reset link to console in dev/test)
- * - Configurable sender address via EMAIL_FROM
+ * Production-ready email dispatcher supporting:
+ * - Resend REST API (https://resend.com) via native fetch
+ * - Dynamic domain resolution (defaults to https://fayzee.store in production)
+ * - Safe error logging and diagnostics
+ * - HTML and Plaintext multipart templates
  */
 
 interface SendPasswordResetEmailParams {
@@ -13,96 +14,196 @@ interface SendPasswordResetEmailParams {
   resetToken: string;
 }
 
-interface EmailResult {
+export interface EmailResult {
   success: boolean;
   messageId?: string;
   devUrl?: string;
   error?: string;
+  isSimulated?: boolean;
 }
 
+/**
+ * Resolves the authoritative public domain for password reset links.
+ * Always resolves to https://fayzee.store in production / on Vercel unless explicitly overridden.
+ */
+export function getAppBaseUrl(): string {
+  // 1. Explicit user override
+  if (process.env.APP_URL && process.env.APP_URL.trim()) {
+    return process.env.APP_URL.trim().replace(/\/$/, "");
+  }
+
+  // 2. Explicit public app URL if not pointing to localhost
+  if (
+    process.env.NEXT_PUBLIC_APP_URL &&
+    !process.env.NEXT_PUBLIC_APP_URL.includes("localhost")
+  ) {
+    return process.env.NEXT_PUBLIC_APP_URL.trim().replace(/\/$/, "");
+  }
+
+  // 3. Vercel deployment environment or production mode
+  if (process.env.NODE_ENV === "production" || process.env.VERCEL) {
+    return "https://fayzee.store";
+  }
+
+  // 4. Localhost development fallback
+  return (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/$/, "");
+}
+
+/**
+ * Dispatches a password reset email using the configured email provider (Resend API).
+ */
 export async function sendPasswordResetEmail({
   to,
   userName = "Valued Customer",
   resetToken,
 }: SendPasswordResetEmailParams): Promise<EmailResult> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const resetUrl = `${baseUrl.replace(/\/$/, "")}/reset-password?token=${encodeURIComponent(resetToken)}`;
+  const baseUrl = getAppBaseUrl();
+  const resetUrl = `${baseUrl}/reset-password?token=${encodeURIComponent(resetToken)}`;
   const isDev = process.env.NODE_ENV !== "production";
-  const resendApiKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.EMAIL_FROM || "FAYZEE <onboarding@resend.dev>";
+  const resendApiKey = process.env.RESEND_API_KEY?.trim().replace(/^["']|["']$/g, "");
+  
+  // Default sender: once domain fayzee.store is verified on Resend, uses support@fayzee.store or no-reply@fayzee.store.
+  // Resend fallback testing address: onboarding@resend.dev
+  const fromEmail = process.env.EMAIL_FROM?.trim().replace(/^["']|["']$/g, "") || "FAYZEE <onboarding@resend.dev>";
 
-  // Development / Test Fallback: Safe console logging so developers can test without credentials
+  // Diagnostics check: Missing API Key (Never pretend success when key is absent)
   if (!resendApiKey) {
+    const errorMsg = "RESEND_API_KEY is not configured in environment variables.";
+    console.error(
+      "❌ [FAYZEE EMAIL ERROR] Email dispatch blocked: RESEND_API_KEY is missing in environment variables."
+    );
     if (isDev) {
-      console.log("\n==================================================");
-      console.log("📨 [FAYZEE DEV EMAIL SERVICE] Password Reset Dispatched");
-      console.log(`Recipient: ${to} (${userName})`);
-      console.log(`Reset Link: ${resetUrl}`);
-      console.log("Expiry: 30 minutes");
-      console.log("==================================================\n");
-      return { success: true, devUrl: resetUrl };
-    } else {
-      console.warn("⚠️ [FAYZEE EMAIL] No RESEND_API_KEY configured in production. Password reset email could not be dispatched.");
-      return { success: false, error: "Email provider not configured." };
+      console.warn("⚠️ [FAYZEE DEV NOTICE] Local testing reset URL:", resetUrl);
     }
+    return {
+      success: false,
+      error: errorMsg,
+      devUrl: isDev ? resetUrl : undefined,
+    };
   }
 
-  // Production dispatch via Resend REST API
+  // Real dispatch via Resend REST API (POST https://api.resend.com/emails)
   try {
+    console.log(`📨 [FAYZEE EMAIL] Sending password reset email to ${to} via Resend (from: ${fromEmail})...`);
+
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${resendApiKey}`,
       },
+      cache: "no-store",
       body: JSON.stringify({
         from: fromEmail,
         to: [to],
         subject: "Reset Your FAYZEE Password",
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px;">
-            <div style="text-align: center; margin-bottom: 24px;">
-              <h1 style="color: #0f172a; margin: 0; font-size: 24px; font-weight: 800;">FAYZEE</h1>
-              <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Premium Multi-Vendor Marketplace</p>
-            </div>
-            
-            <h2 style="color: #0f172a; font-size: 18px; margin-bottom: 12px;">Password Reset Request</h2>
-            <p style="color: #334155; font-size: 14px; line-height: 1.6;">
-              Hello <strong>${userName}</strong>,
-            </p>
-            <p style="color: #334155; font-size: 14px; line-height: 1.6;">
-              We received a request to reset your password for your FAYZEE account. Click the button below to choose a new password:
-            </p>
-            
-            <div style="text-align: center; margin: 32px 0;">
-              <a href="${resetUrl}" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; font-weight: bold; font-size: 14px; text-decoration: none; border-radius: 12px; display: inline-block;">
-                Reset Password
-              </a>
-            </div>
-            
-            <p style="color: #64748b; font-size: 13px; line-height: 1.5;">
-              This link will expire in <strong>30 minutes</strong>. If you did not request a password reset, you can safely ignore this email — your account remains secure.
-            </p>
-            
-            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-            <p style="color: #94a3b8; font-size: 11px; text-align: center;">
-              &copy; ${new Date().getFullYear()} FAYZEE. All rights reserved.
-            </p>
-          </div>
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Reset Your FAYZEE Password</title>
+          </head>
+          <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc;">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 32px 16px;">
+              <tr>
+                <td align="center">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; background-color: #ffffff; border-radius: 24px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                    <!-- Header -->
+                    <tr>
+                      <td style="background-color: #0b132b; padding: 32px 24px; text-align: center;">
+                        <h1 style="color: #ffffff; font-size: 26px; font-weight: 900; letter-spacing: -0.5px; margin: 0;">FAYZEE</h1>
+                        <p style="color: #ff5722; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin: 6px 0 0 0;">Shop More • Live Better</p>
+                      </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                      <td style="padding: 36px 32px;">
+                        <h2 style="color: #0f172a; font-size: 20px; font-weight: 800; margin: 0 0 16px 0;">Password Reset Request</h2>
+                        <p style="color: #334155; font-size: 14px; line-height: 1.6; margin: 0 0 16px 0;">
+                          Hello <strong>${userName}</strong>,
+                        </p>
+                        <p style="color: #334155; font-size: 14px; line-height: 1.6; margin: 0 0 24px 0;">
+                          We received a request to reset your password for your FAYZEE account. Click the button below to choose a new, secure password:
+                        </p>
+                        
+                        <!-- CTA Button -->
+                        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 28px 0;">
+                          <tr>
+                            <td align="center">
+                              <a href="${resetUrl}" target="_blank" style="background: linear-gradient(135deg, #0b132b 0%, #1d4ed8 100%); color: #ffffff; font-size: 14px; font-weight: 800; text-decoration: none; padding: 14px 32px; border-radius: 14px; display: inline-block; box-shadow: 0 4px 12px rgba(29, 78, 216, 0.25);">
+                                Reset My Password
+                              </a>
+                            </td>
+                          </tr>
+                        </table>
+                        
+                        <!-- Expiration & Security Note -->
+                        <div style="background-color: #f1f5f9; border-radius: 12px; padding: 14px 16px; margin: 24px 0 16px 0; border-left: 4px solid #f59e0b;">
+                          <p style="color: #475569; font-size: 12px; line-height: 1.5; margin: 0;">
+                            ⏳ <strong>Security Notice:</strong> This link will expire in <strong>30 minutes</strong> and can only be used once. If you did not request a password reset, you can safely ignore this email — your account and password remain completely secure.
+                          </p>
+                        </div>
+
+                        <!-- Direct Link Fallback -->
+                        <p style="color: #64748b; font-size: 12px; line-height: 1.5; margin: 20px 0 8px 0;">
+                          Button not working? Copy and paste this URL into your browser:
+                        </p>
+                        <p style="color: #2563eb; font-size: 11px; word-break: break-all; margin: 0; background-color: #f8fafc; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                          <a href="${resetUrl}" style="color: #2563eb; text-decoration: underline;">${resetUrl}</a>
+                        </p>
+                      </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                      <td style="background-color: #f8fafc; padding: 24px 32px; border-top: 1px solid #e2e8f0; text-align: center;">
+                        <p style="color: #94a3b8; font-size: 11px; margin: 0 0 6px 0;">
+                          &copy; ${new Date().getFullYear()} FAYZEE Marketplace. All rights reserved.
+                        </p>
+                        <p style="color: #94a3b8; font-size: 11px; margin: 0;">
+                          Pakistan's Premier Multi-Vendor E-Commerce Platform • <a href="https://fayzee.store" style="color: #64748b; text-decoration: underline;">fayzee.store</a>
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>
         `,
+        text: `FAYZEE - Password Reset Request\n\nHello ${userName},\n\nWe received a request to reset your password for your FAYZEE account. To set a new password, open this link in your browser:\n\n${resetUrl}\n\nThis link expires in 30 minutes and can only be used once.\nIf you did not request this, please ignore this email — your account remains safe.\n\n- The FAYZEE Team\nhttps://fayzee.store`,
       }),
     });
 
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
-      console.error("Resend API error:", errData);
-      return { success: false, error: "Failed to dispatch email via Resend." };
+      const detailedError =
+        errData.message ||
+        errData.error ||
+        response.statusText ||
+        "Resend API rejected the email dispatch request.";
+      console.error("❌ [RESEND API ERROR]:", {
+        status: response.status,
+        statusText: response.statusText,
+        error: errData,
+        recipient: to,
+        sender: fromEmail,
+      });
+      return { success: false, error: detailedError };
     }
 
     const data = await response.json();
+    console.log(`✅ [FAYZEE EMAIL SUCCESS] Dispatched to ${to}, Resend ID: ${data.id}`);
     return { success: true, messageId: data.id };
   } catch (err: any) {
-    console.error("Failed to send reset email:", err);
-    return { success: false, error: err.message };
+    console.error("❌ [EMAIL DISPATCH EXCEPTION]:", err);
+    return {
+      success: false,
+      error: err.message || "Network exception occurred while connecting to email provider.",
+    };
   }
 }

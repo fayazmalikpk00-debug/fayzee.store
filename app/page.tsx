@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-export const revalidate = 60; // ISR cache revalidation every 60s
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const [categories, flashSale, trendingProducts, featuredProducts, topSellers] =
