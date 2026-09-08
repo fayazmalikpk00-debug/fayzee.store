@@ -331,11 +331,11 @@ export function FayzeeAIAssistant() {
   };
 
   const quickPrompts = [
-    "📱 Flagship phone for gaming",
-    "⚖️ Compare S24 Ultra vs iPhone 15",
-    "🎧 Sony WH-1000XM5 headphones",
-    "🍳 Air fryers & kitchen deals",
-    "👟 Nike running sneakers",
+    "📱 Search latest smartphones",
+    "💻 Laptops and computing deals",
+    "🎧 Best noise-canceling headphones",
+    "🍳 Kitchen and home appliances",
+    "👟 Men's and women's footwear",
     "📦 Where is my order?",
     "🛒 Show my cart",
   ];

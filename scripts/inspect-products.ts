@@ -36,6 +36,22 @@ async function main() {
       cartItemsCount: p.cartItems.length,
     }, null, 2));
   }
+
+  const sellers = await prisma.sellerProfile.findMany({
+    include: { user: { select: { email: true, name: true, role: true } } },
+  });
+  console.log(`TOTAL_SELLERS_IN_DB: ${sellers.length}`);
+  for (const s of sellers) {
+    console.log(`  - [${s.storeSlug}] ${s.storeName} (${s.user?.email})`);
+  }
+
+  const users = await prisma.user.findMany({
+    select: { email: true, role: true, name: true },
+  });
+  console.log(`TOTAL_USERS_IN_DB: ${users.length}`);
+  for (const u of users) {
+    console.log(`  - ${u.email} [${u.role}]`);
+  }
 }
 
 main()

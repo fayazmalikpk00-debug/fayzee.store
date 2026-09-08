@@ -85,7 +85,7 @@ export default async function HomePage() {
                     In Stock
                   </span>
                 </div>
-                {trendingProducts[0] && (
+                {trendingProducts[0] ? (
                   <div className="space-y-3">
                     <img
                       src={
@@ -115,6 +115,30 @@ export default async function HomePage() {
                         className="px-4 py-2 bg-[#FF5E00] hover:bg-[#FF8C00] text-white text-xs font-bold rounded-xl transition shadow-sm"
                       >
                         View Product
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="py-8 text-center space-y-3">
+                    <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center mx-auto text-[#FF8C00]">
+                      <Sparkles className="w-6 h-6" />
+                    </div>
+                    <h4 className="font-bold text-white text-base">Fayzee Catalog Ready</h4>
+                    <p className="text-xs text-slate-300 max-w-xs mx-auto leading-relaxed">
+                      18 marketplace departments configured and ready for official seller product listings.
+                    </p>
+                    <div className="pt-2 flex justify-center gap-2">
+                      <Link
+                        href="/products"
+                        className="px-4 py-2 bg-[#FF5E00] hover:bg-[#FF8C00] text-white text-xs font-bold rounded-xl transition shadow-sm"
+                      >
+                        Browse Categories
+                      </Link>
+                      <Link
+                        href="/seller/register"
+                        className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-xl border border-white/20 transition"
+                      >
+                        Become a Seller
                       </Link>
                     </div>
                   </div>
@@ -267,25 +291,45 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-            {trendingProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                id={product.id}
-                title={product.title}
-                slug={product.slug}
-                price={product.price}
-                salePrice={product.salePrice}
-                discountPercent={product.discountPercent}
-                rating={product.rating}
-                reviewCount={product.reviewCount}
-                image={product.images[0]?.url}
-                category={product.category.name}
-                seller={product.seller}
-                inStock={product.stockQuantity > 0}
-              />
-            ))}
-          </div>
+          {trendingProducts.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+              {trendingProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  title={product.title}
+                  slug={product.slug}
+                  price={product.price}
+                  salePrice={product.salePrice}
+                  discountPercent={product.discountPercent}
+                  rating={product.rating}
+                  reviewCount={product.reviewCount}
+                  image={product.images[0]?.url}
+                  category={product.category.name}
+                  seller={product.seller}
+                  inStock={product.stockQuantity > 0}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-3xl p-8 sm:p-12 text-center border border-[#DDE2E6] space-y-3 shadow-2xs">
+              <div className="w-12 h-12 rounded-2xl bg-[#F7F9FA] text-[#FF5E00] flex items-center justify-center mx-auto border border-[#DDE2E6]">
+                <Flame className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-bold text-[#1C2A39]">No products listed yet</h3>
+              <p className="text-xs text-[#777777] max-w-md mx-auto">
+                Verified seller products will appear here as soon as they are added to the catalog.
+              </p>
+              <div className="pt-2">
+                <Link
+                  href="/products"
+                  className="inline-block px-4 py-2 bg-[#FF5E00] hover:bg-[#FF8C00] text-white text-xs font-bold rounded-xl transition shadow-xs"
+                >
+                  Explore Categories
+                </Link>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* 5. Verified Top Sellers */}
@@ -306,41 +350,61 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {topSellers.map((seller) => (
-              <div
-                key={seller.id}
-                className="bg-[#15202B] p-4 rounded-2xl border border-[#2A3B4C] hover:border-[#FF5E00] transition flex flex-col justify-between"
-              >
-                <div className="flex items-center gap-3">
-                  <img
-                    src={seller.logoUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100"}
-                    alt={seller.storeName}
-                    className="w-12 h-12 rounded-xl object-cover border border-[#2A3B4C]"
-                  />
-                  <div>
-                    <h4 className="text-xs font-bold text-white">{seller.storeName}</h4>
-                    <p className="text-[11px] text-slate-300">{seller._count.products} Active Listings</p>
-                    <span className="inline-flex items-center gap-1 text-[10px] text-[#FF8C00] font-semibold">
-                      ⭐ {seller.rating.toFixed(1)} Rating
+          {topSellers.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {topSellers.map((seller) => (
+                <div
+                  key={seller.id}
+                  className="bg-[#15202B] p-4 rounded-2xl border border-[#2A3B4C] hover:border-[#FF5E00] transition flex flex-col justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={seller.logoUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100"}
+                      alt={seller.storeName}
+                      className="w-12 h-12 rounded-xl object-cover border border-[#2A3B4C]"
+                    />
+                    <div>
+                      <h4 className="text-xs font-bold text-white">{seller.storeName}</h4>
+                      <p className="text-[11px] text-slate-300">{seller._count.products} Active Listings</p>
+                      <span className="inline-flex items-center gap-1 text-[10px] text-[#FF8C00] font-semibold">
+                        ⭐ {seller.rating.toFixed(1)} Rating
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-[#2A3B4C] flex items-center justify-between">
+                    <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3" /> Verified Official
                     </span>
+                    <Link
+                      href={`/sellers/${seller.storeSlug}`}
+                      className="text-xs text-[#FF8C00] hover:underline font-medium"
+                    >
+                      Visit Store
+                    </Link>
                   </div>
                 </div>
-
-                <div className="mt-4 pt-3 border-t border-[#2A3B4C] flex items-center justify-between">
-                  <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3" /> Verified Official
-                  </span>
-                  <Link
-                    href={`/sellers/${seller.storeSlug}`}
-                    className="text-xs text-[#FF8C00] hover:underline font-medium"
-                  >
-                    Visit Store
-                  </Link>
-                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-[#15202B] rounded-2xl border border-[#2A3B4C] p-8 text-center space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mx-auto text-[#FF8C00]">
+                <Store className="w-6 h-6" />
               </div>
-            ))}
-          </div>
+              <h3 className="text-sm font-bold text-white">Certified Sellers & Brand Stores Opening Soon</h3>
+              <p className="text-xs text-slate-300 max-w-md mx-auto">
+                Apply today to sell on Fayzee.store and launch your official store to verified buyers nationwide.
+              </p>
+              <div className="pt-1">
+                <Link
+                  href="/seller/register"
+                  className="inline-block px-4 py-2 bg-[#FF5E00] hover:bg-[#FF8C00] text-white text-xs font-bold rounded-xl transition"
+                >
+                  Apply as Seller
+                </Link>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* 6. Active Coupons Banner */}

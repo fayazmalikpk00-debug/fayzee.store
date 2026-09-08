@@ -8,26 +8,7 @@ import { useState } from "react";
 
 export default function WishlistPage() {
   const { addToCart } = useCart();
-  const [wishlistItems, setWishlistItems] = useState<any[]>([
-    {
-      id: "w-1",
-      productId: "clv123",
-      title: "Samsung Galaxy S24 Ultra 5G (12GB RAM, 256GB Storage)",
-      slug: "samsung-galaxy-s24-ultra-5g-256gb",
-      price: 369999,
-      image: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=400",
-      inStock: true,
-    },
-    {
-      id: "w-2",
-      productId: "clv124",
-      title: "Sony WH-1000XM5 Wireless Industry-Leading Noise Canceling Headphones",
-      slug: "sony-wh-1000xm5-wireless-noise-canceling-headphones",
-      price: 74999,
-      image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
-      inStock: true,
-    },
-  ]);
+  const [wishlistItems, setWishlistItems] = useState<any[]>([]);
 
   const handleMoveToCart = async (item: any) => {
     await addToCart(item.productId, undefined, 1);
