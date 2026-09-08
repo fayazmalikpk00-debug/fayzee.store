@@ -52,10 +52,12 @@ export default function RegisterPage() {
   return (
     <div className="max-w-md mx-auto px-4 py-16 space-y-6">
       <div className="text-center space-y-2">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-fayzee-dark to-brand-600 flex items-center justify-center text-white font-black text-2xl mx-auto shadow-md">
-          F
-        </div>
-        <h1 className="text-2xl font-black text-slate-900">Create Fayzee Account</h1>
+        <Link href="/" className="inline-block group">
+          <div className="w-16 h-16 rounded-2xl bg-white p-1.5 shadow-md mx-auto flex items-center justify-center border border-slate-200/80 group-hover:scale-105 transition-transform">
+            <img src="/logo.png" alt="FAYZEE" className="w-full h-full object-contain" />
+          </div>
+        </Link>
+        <h1 className="text-2xl font-black text-slate-900">Create FAYZEE Account</h1>
         <p className="text-xs text-slate-500">Join millions shopping smart and easy</p>
       </div>
 

@@ -122,9 +122,9 @@ export default function CheckoutPage() {
 
   if (!cart || cart.items.length === 0) {
     return (
-      <div className="max-w-md mx-auto px-4 py-20 text-center space-y-4">
+      <div className="max-w-md mx-auto px-4 py-16 sm:py-20 text-center space-y-4">
         <h2 className="text-xl font-bold">No Items to Checkout</h2>
-        <Link href="/products" className="inline-block px-4 py-2 bg-brand-600 text-white rounded-xl text-xs">
+        <Link href="/products" className="inline-block px-5 py-2.5 bg-brand-600 text-white rounded-xl text-xs font-semibold">
           Return to Marketplace
         </Link>
       </div>
@@ -132,44 +132,44 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      <div className="pb-4 border-b border-slate-200">
-        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 flex items-center gap-2">
-          <Lock className="w-6 h-6 text-emerald-600" />
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8 w-full max-w-full overflow-x-hidden">
+      <div className="pb-3 sm:pb-4 border-b border-slate-200">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 flex items-center gap-2">
+          <Lock className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 shrink-0" />
           <span>Secure Checkout</span>
         </h1>
-        <p className="text-xs text-slate-500 mt-1">
+        <p className="text-xs text-slate-500 mt-0.5">
           Review your items, delivery details, and select a verified payment method
         </p>
       </div>
 
       {!user && (
-        <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-800 flex items-center justify-between">
+        <div className="p-3.5 sm:p-4 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <span>You are checking out as a guest. Log in to save orders to your profile.</span>
-          <Link href="/login?redirect=/checkout" className="font-bold underline text-amber-900">
+          <Link href="/login?redirect=/checkout" className="font-bold underline text-amber-900 shrink-0">
             Sign In Now
           </Link>
         </div>
       )}
 
       {errorMsg && (
-        <div className="p-4 bg-red-50 rounded-2xl border border-red-200 text-xs text-red-700 flex items-center gap-2">
+        <div className="p-3.5 sm:p-4 bg-red-50 rounded-2xl border border-red-200 text-xs text-red-700 flex items-center gap-2">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{errorMsg}</span>
         </div>
       )}
 
-      <form onSubmit={handlePlaceOrder} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <form onSubmit={handlePlaceOrder} className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
         {/* Left Column: Address & Payment Method */}
-        <div className="lg:col-span-8 space-y-6">
+        <div className="lg:col-span-8 space-y-5 sm:space-y-6">
           {/* Step 1: Shipping Address */}
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
-            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <Truck className="w-5 h-5 text-brand-600" />
+          <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-xs space-y-4">
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+              <Truck className="w-5 h-5 text-brand-600 shrink-0" />
               <span>1. Delivery Address</span>
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs">
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">Full Name</label>
                 <input
@@ -178,7 +178,7 @@ export default function CheckoutPage() {
                   value={address.fullName}
                   onChange={(e) => setAddress({ ...address, fullName: e.target.value })}
                   placeholder="Enter full name"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 text-xs"
                 />
               </div>
 
@@ -190,7 +190,7 @@ export default function CheckoutPage() {
                   value={address.phone}
                   onChange={(e) => setAddress({ ...address, phone: e.target.value })}
                   placeholder="+92 3XX XXXXXXX"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 text-xs"
                 />
               </div>
 
@@ -202,7 +202,7 @@ export default function CheckoutPage() {
                   value={address.street}
                   onChange={(e) => setAddress({ ...address, street: e.target.value })}
                   placeholder="House / Apartment #, Street, Area"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 text-xs"
                 />
               </div>
 
@@ -214,7 +214,7 @@ export default function CheckoutPage() {
                   value={address.city}
                   onChange={(e) => setAddress({ ...address, city: e.target.value })}
                   placeholder="e.g. Lahore, Karachi, Islamabad"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 text-xs"
                 />
               </div>
 
@@ -226,24 +226,24 @@ export default function CheckoutPage() {
                   value={address.state}
                   onChange={(e) => setAddress({ ...address, state: e.target.value })}
                   placeholder="e.g. Punjab, Sindh, KPK"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 text-xs"
                 />
               </div>
             </div>
           </div>
 
           {/* Step 2: Payment Method */}
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
-            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-brand-600" />
+          <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-xs space-y-4">
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-brand-600 shrink-0" />
               <span>2. Payment Method</span>
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {/* Cash On Delivery Option */}
               <div
                 onClick={() => setPaymentMethod("COD")}
-                className={`p-4 rounded-2xl border-2 cursor-pointer transition flex flex-col justify-between ${
+                className={`p-3.5 sm:p-4 rounded-2xl border-2 cursor-pointer transition flex flex-col justify-between min-h-[90px] ${
                   paymentMethod === "COD"
                     ? "border-brand-600 bg-brand-50/50"
                     : "border-slate-200 hover:border-slate-300"
@@ -266,14 +266,14 @@ export default function CheckoutPage() {
               {/* Online Payment Option */}
               <div
                 onClick={() => setPaymentMethod("ONLINE_CARD")}
-                className={`p-4 rounded-2xl border-2 cursor-pointer transition flex flex-col justify-between ${
+                className={`p-3.5 sm:p-4 rounded-2xl border-2 cursor-pointer transition flex flex-col justify-between min-h-[90px] ${
                   paymentMethod === "ONLINE_CARD"
                     ? "border-brand-600 bg-brand-50/50"
                     : "border-slate-200 hover:border-slate-300"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-900">Debit / Credit Card (Online)</span>
+                  <span className="text-xs font-bold text-slate-900">Debit / Credit Card</span>
                   <input
                     type="radio"
                     checked={paymentMethod === "ONLINE_CARD"}
@@ -282,7 +282,7 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <p className="text-[11px] text-slate-500 mt-2">
-                  Instant secure payment via Visa, Mastercard, or UnionPay with 3D Secure.
+                  Instant secure payment via Visa, Mastercard, or UnionPay.
                 </p>
               </div>
             </div>
@@ -290,14 +290,14 @@ export default function CheckoutPage() {
         </div>
 
         {/* Right Column: Order Review & Coupon */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+        <div className="lg:col-span-4 space-y-5 sm:space-y-6">
+          <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-sm space-y-5 sm:space-y-6 lg:sticky lg:top-24">
             <h3 className="text-base font-bold text-slate-900 border-b pb-3">
               Order Summary ({cartCount} Items)
             </h3>
 
             {/* Item list preview */}
-            <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
+            <div className="space-y-2.5 max-h-52 overflow-y-auto pr-1 -mr-1">
               {cart.items.map((item) => {
                 const price =
                   item.variant?.salePrice ??
@@ -306,20 +306,20 @@ export default function CheckoutPage() {
                   item.product?.price ??
                   0;
                 return (
-                  <div key={item.id} className="flex items-center gap-3 text-xs">
+                  <div key={item.id} className="flex items-center gap-2.5 text-xs">
                     <img
                       src={
                         item.product.images[0]?.url ||
                         "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100"
                       }
                       alt=""
-                      className="w-10 h-10 object-cover rounded-lg bg-slate-50"
+                      className="w-10 h-10 object-cover rounded-lg bg-slate-50 shrink-0"
                     />
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-slate-900 truncate">{item.product.title}</p>
                       <p className="text-[10px] text-slate-400">Qty: {item.quantity}</p>
                     </div>
-                    <span className="font-bold text-slate-800">{formatPrice(price * item.quantity)}</span>
+                    <span className="font-bold text-slate-800 shrink-0">{formatPrice(price * item.quantity)}</span>
                   </div>
                 );
               })}
@@ -328,7 +328,7 @@ export default function CheckoutPage() {
             {/* Coupon Code Input */}
             <div className="pt-2 border-t border-slate-100 space-y-2">
               <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
-                <Tag className="w-3.5 h-3.5 text-brand-600" /> Have a Coupon Code?
+                <Tag className="w-3.5 h-3.5 text-brand-600 shrink-0" /> Have a Coupon Code?
               </label>
               <div className="flex gap-2">
                 <input
@@ -336,12 +336,12 @@ export default function CheckoutPage() {
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value)}
                   placeholder="e.g. FAYZEE10"
-                  className="flex-1 px-3 py-2 text-xs bg-slate-50 rounded-xl border border-slate-200 uppercase font-mono"
+                  className="flex-1 px-3 py-2 text-xs bg-slate-50 rounded-xl border border-slate-200 uppercase font-mono min-w-0"
                 />
                 <button
                   type="button"
                   onClick={handleApplyCoupon}
-                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl"
+                  className="px-3.5 sm:px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shrink-0 transition"
                 >
                   Apply
                 </button>
@@ -356,7 +356,7 @@ export default function CheckoutPage() {
             </div>
 
             {/* Price Calculations */}
-            <div className="space-y-2.5 text-xs pt-2 border-t border-slate-100">
+            <div className="space-y-2 text-xs pt-2 border-t border-slate-100">
               <div className="flex justify-between text-slate-600">
                 <span>Items Subtotal</span>
                 <span className="font-bold text-slate-900">{formatPrice(cartSubtotal)}</span>
@@ -373,7 +373,7 @@ export default function CheckoutPage() {
                   {shippingTotal === 0 ? "FREE" : formatPrice(shippingTotal)}
                 </span>
               </div>
-              <div className="border-t pt-3 flex justify-between text-sm font-black text-slate-900">
+              <div className="border-t pt-2.5 flex justify-between text-sm font-black text-slate-900">
                 <span>Grand Total</span>
                 <span className="text-brand-700 text-base">{formatPrice(grandTotal)}</span>
               </div>
@@ -382,20 +382,20 @@ export default function CheckoutPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-3.5 px-4 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-3.5 px-3 sm:px-4 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-1.5 flex-wrap text-center disabled:opacity-50 min-h-[46px]"
             >
               {submitting ? (
-                <span>Validating & Placing Order...</span>
+                <span>Placing Order...</span>
               ) : (
                 <>
                   <span>Confirm Order & Pay {formatPrice(grandTotal)}</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 shrink-0" />
                 </>
               )}
             </button>
 
-            <div className="flex items-center gap-2 text-[11px] text-slate-500 justify-center">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-500 justify-center text-center">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>Authoritative Server-Validated Pricing</span>
             </div>
           </div>

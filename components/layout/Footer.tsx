@@ -6,9 +6,9 @@ export function Footer() {
     <footer className="bg-fayzee-dark text-slate-400 mt-20 border-t border-slate-800">
       {/* Trust Badges Banner */}
       <div className="border-b border-slate-800/80 bg-[#080d1e]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
           <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-400 shrink-0">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-400 shrink-0">
               <Truck className="w-5 h-5" />
             </div>
             <div>
@@ -18,7 +18,7 @@ export function Footer() {
           </div>
 
           <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
@@ -28,7 +28,7 @@ export function Footer() {
           </div>
 
           <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
               <RotateCcw className="w-5 h-5" />
             </div>
             <div>
@@ -38,7 +38,7 @@ export function Footer() {
           </div>
 
           <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shrink-0">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shrink-0">
               <Headphones className="w-5 h-5" />
             </div>
             <div>
@@ -50,18 +50,29 @@ export function Footer() {
       </div>
 
       {/* Main Footer Links */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-5 gap-8">
-        <div className="md:col-span-2 space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-fayzee-coral flex items-center justify-center text-white font-bold text-lg">
-              F
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8">
+        <div className="sm:col-span-2 md:col-span-2 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-white p-1 shadow-md flex items-center justify-center shrink-0">
+              <img
+                src="/logo.png"
+                alt="FAYZEE"
+                className="w-full h-full object-contain rounded-xl"
+              />
             </div>
-            <span className="text-2xl font-extrabold text-white tracking-tight">Fayzee</span>
+            <div>
+              <span className="text-2xl font-black text-white tracking-tight block leading-none">
+                FAYZEE
+              </span>
+              <span className="text-[10px] font-bold text-brand-400 tracking-wider uppercase mt-1 block">
+                Shop More • Live Better
+              </span>
+            </div>
           </div>
           <p className="text-xs leading-relaxed text-slate-400 max-w-sm">
             Fayzee is Pakistan's premier multi-vendor commerce platform, connecting authentic sellers with millions of customers with transparent pricing, guaranteed authenticity, and next-gen AI shopping.
           </p>
-          <div className="pt-2 flex items-center gap-3">
+          <div className="pt-2 flex flex-wrap items-center gap-2 sm:gap-3">
             <span className="px-3 py-1 bg-slate-800 text-slate-300 text-xs rounded-full border border-slate-700">
               🇵🇰 Pakistan Official
             </span>

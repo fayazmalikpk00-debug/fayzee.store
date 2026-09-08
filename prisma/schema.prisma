@@ -34,6 +34,7 @@ model User {
   recentlyViewed RecentlyViewed[]
   auditLogs     AuditLog[]
   couponUsages  CouponUsage[]
+  passwordResets PasswordReset[]
 
   @@index([email])
   @@index([role])
@@ -523,4 +524,18 @@ model AuditLog {
   @@index([actorId])
   @@index([action])
   @@index([targetType])
+}
+
+model PasswordReset {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([expiresAt])
 }

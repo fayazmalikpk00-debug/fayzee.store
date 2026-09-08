@@ -53,10 +53,12 @@ function LoginForm() {
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-fayzee-dark to-brand-600 flex items-center justify-center text-white font-black text-2xl mx-auto shadow-md">
-          F
-        </div>
-        <h1 className="text-2xl font-black text-slate-900">Sign in to Fayzee</h1>
+        <Link href="/" className="inline-block group">
+          <div className="w-16 h-16 rounded-2xl bg-white p-1.5 shadow-md mx-auto flex items-center justify-center border border-slate-200/80 group-hover:scale-105 transition-transform">
+            <img src="/logo.png" alt="FAYZEE" className="w-full h-full object-contain" />
+          </div>
+        </Link>
+        <h1 className="text-2xl font-black text-slate-900">Sign in to FAYZEE</h1>
         <p className="text-xs text-slate-500">
           Enter your email and password to access your account
         </p>
@@ -86,7 +88,15 @@ function LoginForm() {
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Password</label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-xs font-bold text-slate-700">Password</label>
+            <Link
+              href="/forgot-password"
+              className="text-[11px] font-semibold text-brand-600 hover:underline"
+            >
+              Forgot Password?
+            </Link>
+          </div>
           <div className="relative">
             <input
               type="password"

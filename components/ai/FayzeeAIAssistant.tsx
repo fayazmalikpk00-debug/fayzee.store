@@ -7,24 +7,47 @@ import {
   Bot,
   Check,
   ChevronDown,
+  Copy,
   ExternalLink,
-  MessageSquare,
-  Plus,
+  Loader2,
+  Maximize2,
+  Minimize2,
+  RefreshCw,
   Send,
   ShoppingBag,
   Sparkles,
+  Star,
+  Tag,
   Trash2,
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+
+interface ProductCardData {
+  id: string;
+  title: string;
+  slug: string;
+  price: number;
+  originalPrice: number | null;
+  discountPercent: number | null;
+  stockQuantity: number;
+  inStock: boolean;
+  rating: number;
+  reviewCount: number;
+  category: string;
+  brand?: string | null;
+  seller: string;
+  image?: string;
+  shortDescription?: string | null;
+}
 
 interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
   metadata?: {
-    products?: any[];
+    products?: ProductCardData[];
     comparison?: {
       products: any[];
       highlights: string[];
@@ -33,36 +56,173 @@ interface Message {
       success: boolean;
       productTitle: string;
       quantity: number;
+      price?: number;
+      cartTotal?: number;
+      cartItemCount?: number;
+    };
+    cartContents?: {
+      items: Array<{
+        id: string;
+        title: string;
+        quantity: number;
+        price: number;
+        image?: string;
+      }>;
+      totalAmount: number;
+      totalItems: number;
     };
     orders?: any[];
+    configNotice?: string;
   };
+  createdAt?: string | Date;
 }
 
+// -----------------------------------------------------------------------------
+// Lightweight Zero-Dependency Markdown Formatter
+// -----------------------------------------------------------------------------
+function MarkdownContent({ text }: { text: string }) {
+  // Process lines for bullet points, headers, bold, italics, links, and code
+  const lines = text.split("\n");
+
+  return (
+    <div className="space-y-1.5 text-xs leading-relaxed break-words">
+      {lines.map((line, idx) => {
+        const trimmed = line.trim();
+
+        // Empty line spacer
+        if (!trimmed) {
+          return <div key={idx} className="h-1" />;
+        }
+
+        // Bullet point
+        if (trimmed.startsWith("•") || trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+          const content = trimmed.replace(/^[•\-\*]\s*/, "");
+          return (
+            <div key={idx} className="flex items-start gap-1.5 pl-1">
+              <span className="text-brand-500 font-black mt-0.5">•</span>
+              <span className="flex-1">{formatInlineMarkdown(content)}</span>
+            </div>
+          );
+        }
+
+        // Regular line
+        return <p key={idx}>{formatInlineMarkdown(line)}</p>;
+      })}
+    </div>
+  );
+}
+
+function formatInlineMarkdown(str: string): React.ReactNode[] {
+  // Regex to detect **bold**, *italic*, `code`, and [link](url)
+  const tokens = str.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`|\[.*?\]\(.*?\))/g);
+
+  return tokens.map((tok, i) => {
+    if (tok.startsWith("**") && tok.endsWith("**") && tok.length >= 4) {
+      return (
+        <strong key={i} className="font-bold text-slate-900">
+          {tok.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (tok.startsWith("*") && tok.endsWith("*") && tok.length >= 2) {
+      return <em key={i} className="italic">{tok.slice(1, -1)}</em>;
+    }
+    if (tok.startsWith("`") && tok.endsWith("`") && tok.length >= 2) {
+      return (
+        <code
+          key={i}
+          className="px-1.5 py-0.5 bg-slate-100 text-brand-700 font-mono text-[11px] rounded"
+        >
+          {tok.slice(1, -1)}
+        </code>
+      );
+    }
+    const linkMatch = tok.match(/^\[(.*?)\]\((.*?)\)$/);
+    if (linkMatch) {
+      return (
+        <Link
+          key={i}
+          href={linkMatch[2]}
+          className="text-brand-600 underline hover:text-brand-800 font-medium inline-flex items-center gap-0.5"
+        >
+          {linkMatch[1]}
+        </Link>
+      );
+    }
+    return tok;
+  });
+}
+
+// -----------------------------------------------------------------------------
+// Main Component
+// -----------------------------------------------------------------------------
 export function FayzeeAIAssistant() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [addingCartId, setAddingCartId] = useState<string | null>(null);
   const [addedIds, setAddedIds] = useState<Record<string, boolean>>({});
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
   const { addToCart } = useCart();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      content:
-        "👋 Welcome to Fayzee! I'm **Fayzee AI**, your intelligent shopping co-pilot. Ask me for recommendations, specs comparisons, budget finds, or order tracking.",
-    },
-  ]);
+  const defaultWelcomeMessage: Message = {
+    id: "welcome",
+    role: "assistant",
+    content:
+      "👋 Welcome to Fayzee! I'm **Fayzee AI**, your intelligent shopping co-pilot.\n\n" +
+      "Ask me anything:\n" +
+      "• Compare phones or laptops side-by-side\n" +
+      "• Find best products within your budget\n" +
+      "• Ask in English or Roman Urdu (*'50 hazar ke andar acha phone'*)\n" +
+      "• Add items directly to your cart or track your orders!",
+  };
 
+  const [messages, setMessages] = useState<Message[]>([defaultWelcomeMessage]);
+
+  // Load conversation history on initial open
+  useEffect(() => {
+    let isMounted = true;
+    async function loadHistory() {
+      try {
+        setHistoryLoading(true);
+        const res = await fetch("/api/ai/history");
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.messages && data.messages.length > 0) {
+            setMessages(data.messages);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load AI history:", err);
+      } finally {
+        if (isMounted) setHistoryLoading(false);
+      }
+    }
+
+    if (isOpen) {
+      loadHistory();
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
+
+  // Auto scroll to bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
-    if (isOpen) scrollToBottom();
-  }, [messages, isOpen]);
+    if (isOpen) {
+      scrollToBottom();
+    }
+  }, [messages, loading, isOpen]);
 
+  // Send query
   const handleSend = async (queryText?: string) => {
     const text = queryText || input;
     if (!text.trim() || loading) return;
@@ -71,6 +231,7 @@ export function FayzeeAIAssistant() {
       id: `user-${Date.now()}`,
       role: "user",
       content: text,
+      createdAt: new Date(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -97,6 +258,7 @@ export function FayzeeAIAssistant() {
           role: "assistant",
           content: data.content,
           metadata: data.metadata,
+          createdAt: new Date(),
         },
       ]);
     } catch (e) {
@@ -105,7 +267,7 @@ export function FayzeeAIAssistant() {
         {
           id: `err-${Date.now()}`,
           role: "assistant",
-          content: "Sorry, I had trouble reaching the Fayzee servers. Please try again!",
+          content: "Sorry, I ran into a network issue reaching the Fayzee servers. Please try again in a moment.",
         },
       ]);
     } finally {
@@ -113,19 +275,69 @@ export function FayzeeAIAssistant() {
     }
   };
 
-  const handleQuickAdd = async (productId: string) => {
-    setAddedIds((prev) => ({ ...prev, [productId]: true }));
-    await addToCart(productId, undefined, 1);
-    setTimeout(() => {
-      setAddedIds((prev) => ({ ...prev, [productId]: false }));
-    }, 2500);
+  // Clear chat history
+  const handleClearChat = async () => {
+    try {
+      await fetch("/api/ai/history", { method: "DELETE" });
+    } catch (e) {
+      console.warn("Could not clear AI history:", e);
+    }
+    setMessages([
+      {
+        id: `welcome-${Date.now()}`,
+        role: "assistant",
+        content: "Chat cleared. What authentic products are you looking for today?",
+      },
+    ]);
+  };
+
+  // Quick Add to Cart from rich product card
+  const handleQuickAdd = async (product: ProductCardData) => {
+    try {
+      setAddingCartId(product.id);
+      await addToCart(product.id, undefined, 1);
+      setAddedIds((prev) => ({ ...prev, [product.id]: true }));
+      setTimeout(() => {
+        setAddedIds((prev) => ({ ...prev, [product.id]: false }));
+      }, 3000);
+    } catch (err) {
+      console.error("Failed to add product to cart:", err);
+    } finally {
+      setAddingCartId(null);
+    }
+  };
+
+  // Copy response text
+  const handleCopy = (id: string, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  // Regenerate last response
+  const handleRegenerate = () => {
+    const lastUser = [...messages].reverse().find((m) => m.role === "user");
+    if (lastUser) {
+      // Remove last assistant response if present
+      setMessages((prev) => {
+        const lastIdx = prev.length - 1;
+        if (prev[lastIdx]?.role === "assistant") {
+          return prev.slice(0, lastIdx);
+        }
+        return prev;
+      });
+      handleSend(lastUser.content);
+    }
   };
 
   const quickPrompts = [
-    "📱 Flagship phone for gaming & photography",
-    "👟 Show me Nike sneakers",
-    "⚖️ Compare S24 Ultra vs iPhone 15 Pro",
+    "📱 Flagship phone for gaming",
+    "⚖️ Compare S24 Ultra vs iPhone 15",
+    "🎧 Sony WH-1000XM5 headphones",
+    "🍳 Air fryers & kitchen deals",
+    "👟 Nike running sneakers",
     "📦 Where is my order?",
+    "🛒 Show my cart",
   ];
 
   return (
@@ -133,190 +345,416 @@ export function FayzeeAIAssistant() {
       {/* Floating Entry Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-to-r from-brand-600 via-fayzee-cyan to-indigo-700 text-white font-bold text-sm shadow-floating hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 border border-white/20 backdrop-blur-md"
+        className="fixed bottom-4 sm:bottom-6 right-3 sm:right-6 z-40 flex items-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 rounded-full bg-gradient-to-r from-brand-600 via-fayzee-cyan to-indigo-700 text-white font-bold text-xs sm:text-sm shadow-floating hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 border border-white/20 backdrop-blur-md group"
+        aria-label="Open Fayzee AI Shopping Assistant"
       >
-        <Sparkles className="w-5 h-5 animate-spin-slow text-yellow-300" />
-        <span>Fayzee AI</span>
-        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+        <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-300 shrink-0 group-hover:rotate-12 transition-transform" />
+        <span className="font-extrabold tracking-tight">Fayzee AI</span>
+        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
       </button>
 
       {/* Slide-in Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-24 right-4 sm:right-6 w-[94vw] sm:w-[440px] h-[600px] max-h-[82vh] bg-white rounded-3xl shadow-2xl border border-slate-200/80 z-50 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-200">
+        <div className="fixed bottom-16 sm:bottom-24 right-2 sm:right-6 w-[calc(100vw-16px)] sm:w-[440px] max-w-[440px] h-[calc(100dvh-95px)] sm:h-[620px] max-h-[85vh] bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200/90 z-50 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200">
           {/* Header */}
-          <div className="bg-gradient-to-r from-fayzee-dark to-brand-900 p-4 text-white flex items-center justify-between shadow-md">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-fayzee-cyan to-brand-500 flex items-center justify-center shadow-inner">
+          <div className="bg-gradient-to-r from-[#0B132B] via-[#1C2541] to-brand-900 p-3.5 sm:p-4 text-white flex items-center justify-between shadow-md shrink-0 border-b border-white/10">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-fayzee-cyan to-brand-500 flex items-center justify-center shadow-inner shrink-0 ring-2 ring-white/20">
                 <Bot className="w-5 h-5 text-white" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <h3 className="font-bold text-sm">Fayzee AI Assistant</h3>
-                  <span className="px-1.5 py-0.2 text-[9px] font-extrabold uppercase bg-emerald-500/20 text-emerald-300 rounded border border-emerald-500/30">
+                  <h3 className="font-black text-sm text-white tracking-tight truncate">
+                    Fayzee AI Co-Pilot
+                  </h3>
+                  <span className="px-1.5 py-0.2 text-[9px] font-extrabold uppercase bg-emerald-500/20 text-emerald-300 rounded border border-emerald-500/30 shrink-0">
                     Live
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-300">Connected to authentic database inventory</p>
+                <p className="text-[10px] sm:text-[11px] text-slate-300 truncate">
+                  Grounded in authentic marketplace inventory
+                </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 shrink-0">
               <button
-                onClick={() =>
-                  setMessages([
-                    {
-                      id: "welcome",
-                      role: "assistant",
-                      content: "Chat cleared. What can I help you find on Fayzee today?",
-                    },
-                  ])
-                }
+                onClick={handleClearChat}
                 title="Clear conversation"
-                className="p-1.5 text-slate-400 hover:text-white rounded-lg transition"
+                className="p-1.5 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg transition"
+                aria-label="Clear chat"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-white rounded-lg transition"
+                className="p-1.5 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg transition"
+                aria-label="Close chat"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
           </div>
 
-          {/* Chat Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
-            {messages.map((m) => (
-              <div
-                key={m.id}
-                className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"}`}
-              >
-                <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-sm ${
-                    m.role === "user"
-                      ? "bg-brand-600 text-white rounded-tr-none"
-                      : "bg-white text-slate-800 border border-slate-200/80 rounded-tl-none"
-                  }`}
-                >
-                  <p className="whitespace-pre-line">{m.content}</p>
+          {/* Messages Container */}
+          <div
+            ref={chatContainerRef}
+            className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3.5 bg-slate-50/70"
+          >
+            {historyLoading && (
+              <div className="flex justify-center py-2">
+                <div className="flex items-center gap-2 text-[11px] text-slate-400 bg-white/80 px-3 py-1.5 rounded-full border border-slate-200">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-600" />
+                  <span>Loading conversation history...</span>
                 </div>
-
-                {/* Rich metadata cards: Products */}
-                {m.metadata?.products && m.metadata.products.length > 0 && (
-                  <div className="mt-2.5 w-full space-y-2">
-                    <p className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
-                      Verified Matching Products
-                    </p>
-                    <div className="space-y-2">
-                      {m.metadata.products.map((prod) => (
-                        <div
-                          key={prod.id}
-                          className="flex items-center gap-3 p-2.5 bg-white rounded-xl border border-slate-200 hover:border-brand-400 transition shadow-xs group"
-                        >
-                          <img
-                            src={prod.image || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200"}
-                            alt={prod.title}
-                            className="w-14 h-14 object-cover rounded-lg shrink-0 bg-slate-100"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <Link
-                              href={`/products/${prod.slug}`}
-                              onClick={() => setIsOpen(false)}
-                              className="text-xs font-semibold text-slate-900 hover:text-brand-600 truncate block"
-                            >
-                              {prod.title}
-                            </Link>
-                            <p className="text-[11px] text-slate-500 truncate">
-                              Seller: <span className="font-medium text-slate-700">{prod.seller}</span>
-                            </p>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-xs font-bold text-brand-700">
-                                {formatPrice(prod.price)}
-                              </span>
-                              {prod.originalPrice && (
-                                <span className="text-[10px] text-slate-400 line-through">
-                                  {formatPrice(prod.originalPrice)}
-                                </span>
-                              )}
-                              <span className="text-[9px] px-1 py-0.2 bg-emerald-100 text-emerald-700 rounded font-bold">
-                                In Stock
-                              </span>
-                            </div>
-                          </div>
-
-                          <button
-                            onClick={() => handleQuickAdd(prod.id)}
-                            className={`p-2 rounded-xl text-xs font-medium transition shrink-0 ${
-                              addedIds[prod.id]
-                                ? "bg-emerald-600 text-white"
-                                : "bg-brand-50 hover:bg-brand-600 text-brand-700 hover:text-white"
-                            }`}
-                            title="Add to Cart"
-                          >
-                            {addedIds[prod.id] ? (
-                              <Check className="w-4 h-4" />
-                            ) : (
-                              <ShoppingBag className="w-4 h-4" />
-                            )}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Rich metadata cards: Comparison */}
-                {m.metadata?.comparison && (
-                  <div className="mt-2.5 w-full bg-white p-3 rounded-2xl border border-slate-200 text-xs space-y-2">
-                    <p className="text-[11px] font-bold text-brand-700">Specification Comparison</p>
-                    <div className="grid grid-cols-2 gap-2 text-[11px]">
-                      {m.metadata.comparison.products.map((p) => (
-                        <div key={p.id} className="p-2 bg-slate-50 rounded-xl border border-slate-100">
-                          <img src={p.image} alt={p.title} className="w-full h-16 object-cover rounded mb-1" />
-                          <p className="font-bold text-slate-900 truncate">{p.title}</p>
-                          <p className="text-brand-600 font-bold">{formatPrice(p.price)}</p>
-                          <p className="text-[10px] text-slate-500">⭐ {p.rating} / 5.0</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Orders snapshot */}
-                {m.metadata?.orders && (
-                  <div className="mt-2 w-full space-y-1.5">
-                    {m.metadata.orders.map((o) => (
-                      <div key={o.orderNumber} className="p-2.5 bg-white rounded-xl border border-slate-200 text-xs">
-                        <div className="flex justify-between font-semibold">
-                          <span>Order #{o.orderNumber}</span>
-                          <span className="text-emerald-600">{o.status}</span>
-                        </div>
-                        <p className="text-[11px] text-slate-500">Total: {formatPrice(o.grandTotal)}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-
-            {loading && (
-              <div className="flex items-center gap-2 p-3 bg-white rounded-2xl border border-slate-200 text-xs text-slate-500 w-fit">
-                <Bot className="w-4 h-4 animate-bounce text-brand-600" />
-                <span>Searching Fayzee catalog & reasoning...</span>
               </div>
             )}
+
+            {messages.map((m, index) => {
+              const isUser = m.role === "user";
+              const isLastAssistant = !isUser && index === messages.length - 1;
+
+              return (
+                <div
+                  key={m.id}
+                  className={`flex flex-col ${isUser ? "items-end" : "items-start"}`}
+                >
+                  {/* Bubble */}
+                  <div
+                    className={`max-w-[88%] sm:max-w-[85%] rounded-2xl px-3.5 py-2.5 shadow-xs relative group ${
+                      isUser
+                        ? "bg-gradient-to-r from-brand-600 to-brand-700 text-white rounded-tr-xs"
+                        : "bg-white text-slate-800 border border-slate-200/90 rounded-tl-xs"
+                    }`}
+                  >
+                    <MarkdownContent text={m.content} />
+
+                    {/* Copy & Regenerate Actions */}
+                    {!isUser && (
+                      <div className="flex items-center justify-end gap-1 mt-1 pt-1 border-t border-slate-100/80 text-[10px] text-slate-400">
+                        <button
+                          onClick={() => handleCopy(m.id, m.content)}
+                          className="hover:text-brand-600 flex items-center gap-1 transition px-1 py-0.5 rounded"
+                          title="Copy response"
+                        >
+                          {copiedId === m.id ? (
+                            <>
+                              <Check className="w-3 h-3 text-emerald-600" />
+                              <span className="text-emerald-600 font-semibold">Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3 h-3" />
+                              <span>Copy</span>
+                            </>
+                          )}
+                        </button>
+
+                        {isLastAssistant && (
+                          <button
+                            onClick={handleRegenerate}
+                            disabled={loading}
+                            className="hover:text-brand-600 flex items-center gap-1 transition px-1 py-0.5 rounded ml-1"
+                            title="Regenerate response"
+                          >
+                            <RefreshCw className="w-3 h-3" />
+                            <span>Retry</span>
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Configuration notice banner if API key is not configured */}
+                  {m.metadata?.configNotice && (
+                    <div className="mt-1.5 w-full max-w-[88%] sm:max-w-[85%] p-2 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-800 flex items-start gap-2">
+                      <Tag className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-semibold text-amber-900">Gemini Setup Notice</p>
+                        <p className="text-[10px] text-amber-700 leading-tight">
+                          Set <code className="bg-amber-100 px-1 rounded font-mono">GEMINI_API_KEY</code> in <code className="bg-amber-100 px-1 rounded font-mono">.env</code> to activate full generative LLM capability.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Rich Metadata: Product Cards */}
+                  {m.metadata?.products && m.metadata.products.length > 0 && (
+                    <div className="mt-2.5 w-full space-y-2">
+                      <div className="flex items-center justify-between px-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+                        <span>Authentic Database Matches ({m.metadata.products.length})</span>
+                        <span className="text-brand-600 font-bold">100% Genuine</span>
+                      </div>
+
+                      <div className="space-y-2">
+                        {m.metadata.products.map((prod) => (
+                          <div
+                            key={prod.id}
+                            className="p-2.5 bg-white rounded-xl border border-slate-200/90 hover:border-brand-400 hover:shadow-sm transition-all flex gap-3 group"
+                          >
+                            {/* Image */}
+                            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg bg-slate-100 overflow-hidden shrink-0 relative border border-slate-100">
+                              <img
+                                src={prod.image || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200"}
+                                alt={prod.title}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            </div>
+
+                            {/* Details */}
+                            <div className="flex-1 min-w-0 flex flex-col justify-between">
+                              <div>
+                                <Link
+                                  href={`/products/${prod.slug}`}
+                                  onClick={() => setIsOpen(false)}
+                                  className="text-xs font-bold text-slate-900 hover:text-brand-600 line-clamp-1 block leading-snug"
+                                >
+                                  {prod.title}
+                                </Link>
+                                <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-500">
+                                  <span>Seller: <strong className="text-slate-700">{prod.seller}</strong></span>
+                                  <span>•</span>
+                                  <span className="flex items-center gap-0.5 text-amber-500 font-semibold">
+                                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                                    {prod.rating.toFixed(1)}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-slate-100">
+                                <div className="flex items-baseline gap-1.5">
+                                  <span className="text-xs font-black text-brand-700">
+                                    {formatPrice(prod.price)}
+                                  </span>
+                                  {prod.originalPrice && (
+                                    <span className="text-[10px] text-slate-400 line-through">
+                                      {formatPrice(prod.originalPrice)}
+                                    </span>
+                                  )}
+                                  {prod.discountPercent && (
+                                    <span className="text-[9px] font-bold text-fayzee-coral bg-orange-50 px-1 rounded">
+                                      -{prod.discountPercent}%
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center gap-1.5">
+                                  <Link
+                                    href={`/products/${prod.slug}`}
+                                    onClick={() => setIsOpen(false)}
+                                    className="px-2 py-1 text-[10px] font-bold text-slate-600 hover:text-brand-600 rounded hover:bg-slate-50 transition"
+                                  >
+                                    View
+                                  </Link>
+
+                                  <button
+                                    onClick={() => handleQuickAdd(prod)}
+                                    disabled={addingCartId === prod.id}
+                                    className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition flex items-center gap-1 min-h-[28px] ${
+                                      addedIds[prod.id]
+                                        ? "bg-emerald-600 text-white"
+                                        : "bg-brand-600 hover:bg-brand-700 text-white shadow-xs"
+                                    }`}
+                                    aria-label="Add product to cart"
+                                  >
+                                    {addingCartId === prod.id ? (
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                    ) : addedIds[prod.id] ? (
+                                      <>
+                                        <Check className="w-3 h-3" />
+                                        <span>Added</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <ShoppingBag className="w-3 h-3" />
+                                        <span>Add</span>
+                                      </>
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Rich Metadata: Comparison Card */}
+                  {m.metadata?.comparison && m.metadata.comparison.products.length >= 2 && (
+                    <div className="mt-2.5 w-full bg-white p-3 rounded-2xl border border-slate-200 shadow-xs text-xs space-y-2.5">
+                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-100">
+                        <span className="font-extrabold text-xs text-slate-900 flex items-center gap-1.5">
+                          <span>⚖️ Side-by-Side Comparison</span>
+                        </span>
+                        <span className="text-[10px] font-semibold text-brand-600">
+                          {m.metadata.comparison.products.length} Products
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        {m.metadata.comparison.products.map((p) => (
+                          <div
+                            key={p.id}
+                            className="p-2.5 bg-slate-50/80 rounded-xl border border-slate-200/80 flex flex-col justify-between"
+                          >
+                            <div>
+                              <img
+                                src={p.image || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200"}
+                                alt={p.title}
+                                className="w-full h-20 object-cover rounded-lg mb-2 bg-white border border-slate-100"
+                              />
+                              <h5 className="font-bold text-slate-900 text-xs line-clamp-2 leading-snug">
+                                {p.title}
+                              </h5>
+                              <p className="text-brand-700 font-extrabold text-xs mt-1">
+                                {formatPrice(p.price)}
+                              </p>
+                              <p className="text-[10px] text-slate-500 mt-0.5">
+                                ⭐ {p.rating.toFixed(1)} / 5.0
+                              </p>
+                            </div>
+
+                            <div className="mt-2 pt-2 border-t border-slate-200/60 flex items-center justify-between">
+                              <Link
+                                href={`/products/${p.slug}`}
+                                onClick={() => setIsOpen(false)}
+                                className="text-[10px] font-bold text-brand-600 hover:underline"
+                              >
+                                View Specs
+                              </Link>
+                              <button
+                                onClick={() => handleQuickAdd(p)}
+                                className="px-2 py-0.8 bg-brand-600 text-white rounded text-[10px] font-bold hover:bg-brand-700 transition"
+                              >
+                                {addedIds[p.id] ? "Added!" : "Cart +"}
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {m.metadata.comparison.highlights && m.metadata.comparison.highlights.length > 0 && (
+                        <div className="p-2 bg-brand-50/70 rounded-xl border border-brand-100 text-[11px] space-y-1 text-slate-700">
+                          {m.metadata.comparison.highlights.map((h, i) => (
+                            <p key={i} className="leading-snug">
+                              {formatInlineMarkdown(h)}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Rich Metadata: Cart Action Toast */}
+                  {m.metadata?.cartAction && (
+                    <div className="mt-2 w-full p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-2 text-xs text-emerald-900">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                          <ShoppingBag className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-emerald-900 truncate">
+                            {m.metadata.cartAction.productTitle}
+                          </p>
+                          <p className="text-[10px] text-emerald-700">
+                            Added to your cart • Total: Rs. {m.metadata.cartAction.cartTotal?.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+
+                      <Link
+                        href="/cart"
+                        onClick={() => setIsOpen(false)}
+                        className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white text-[10px] font-bold rounded-lg shrink-0 transition"
+                      >
+                        View Cart →
+                      </Link>
+                    </div>
+                  )}
+
+                  {/* Rich Metadata: Cart Contents Snapshot */}
+                  {m.metadata?.cartContents && m.metadata.cartContents.items.length > 0 && (
+                    <div className="mt-2 w-full p-3 bg-white rounded-2xl border border-slate-200 shadow-xs text-xs space-y-2">
+                      <div className="flex justify-between items-center pb-1 border-b border-slate-100 font-bold text-slate-900">
+                        <span>🛒 Your Current Cart</span>
+                        <span className="text-brand-600">{m.metadata.cartContents.totalItems} Items</span>
+                      </div>
+                      <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                        {m.metadata.cartContents.items.map((item) => (
+                          <div key={item.id} className="flex justify-between text-[11px] text-slate-700 py-0.5">
+                            <span className="truncate pr-2">{item.title} × {item.quantity}</span>
+                            <span className="font-bold shrink-0">{formatPrice(item.price * item.quantity)}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] text-slate-400 block">Subtotal</span>
+                          <span className="text-xs font-black text-slate-900">
+                            {formatPrice(m.metadata.cartContents.totalAmount)}
+                          </span>
+                        </div>
+                        <Link
+                          href="/checkout"
+                          onClick={() => setIsOpen(false)}
+                          className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-[11px] font-bold rounded-lg transition"
+                        >
+                          Checkout →
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Rich Metadata: Orders Snapshot */}
+                  {m.metadata?.orders && m.metadata.orders.length > 0 && (
+                    <div className="mt-2 w-full space-y-1.5">
+                      {m.metadata.orders.map((o) => (
+                        <div
+                          key={o.orderNumber}
+                          className="p-3 bg-white rounded-2xl border border-slate-200 text-xs shadow-xs space-y-1.5"
+                        >
+                          <div className="flex justify-between items-center font-bold">
+                            <span className="text-slate-900 truncate">Order #{o.orderNumber}</span>
+                            <span className="px-2 py-0.5 text-[9px] font-black uppercase rounded-full bg-emerald-100 text-emerald-800">
+                              {o.status}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-[11px] text-slate-500">
+                            <span>Placed: {o.date}</span>
+                            <span className="font-bold text-slate-800">{formatPrice(o.grandTotal)}</span>
+                          </div>
+                          {o.items && o.items[0] && (
+                            <p className="text-[10px] text-slate-600 truncate border-t border-slate-100 pt-1">
+                              Item: {o.items[0].title} ({o.items[0].quantity}x)
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {loading && (
+              <div className="flex items-center gap-2.5 p-3 bg-white rounded-2xl border border-slate-200/90 text-xs text-slate-600 w-fit shadow-xs animate-in fade-in">
+                <Bot className="w-4 h-4 text-brand-600 animate-spin" />
+                <span className="font-medium">Searching catalog & reasoning...</span>
+              </div>
+            )}
+
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick Prompts Bar */}
-          {messages.length <= 2 && (
-            <div className="p-2 bg-slate-100 border-t border-slate-200/80 flex items-center gap-1.5 overflow-x-auto text-[11px]">
+          {/* Quick Prompts Carousel */}
+          {messages.length <= 3 && (
+            <div className="p-2 bg-slate-100/90 border-t border-slate-200/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-[11px] shrink-0">
               {quickPrompts.map((q, i) => (
                 <button
                   key={i}
                   onClick={() => handleSend(q)}
-                  className="px-2.5 py-1 bg-white hover:bg-brand-50 hover:text-brand-600 text-slate-700 font-medium rounded-full border border-slate-200 shrink-0 transition"
+                  className="px-2.5 py-1 bg-white hover:bg-brand-50 hover:text-brand-600 text-slate-700 font-medium rounded-full border border-slate-200/80 shrink-0 transition whitespace-nowrap active:scale-95 shadow-2xs"
                 >
                   {q}
                 </button>
@@ -324,25 +762,27 @@ export function FayzeeAIAssistant() {
             </div>
           )}
 
-          {/* Input form */}
+          {/* Input Form */}
           <form
             onSubmit={(e) => {
               e.preventDefault();
               handleSend();
             }}
-            className="p-3 bg-white border-t border-slate-200 flex items-center gap-2"
+            className="p-2.5 sm:p-3 bg-white border-t border-slate-200 flex items-center gap-2 shrink-0"
           >
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask Fayzee AI (e.g. phone for PUBG, track order)..."
-              className="flex-1 px-3.5 py-2 text-xs bg-slate-50 rounded-full border border-slate-200 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10"
+              placeholder="Ask Fayzee AI (e.g. phone under 50k, compare S24 vs iPhone)..."
+              disabled={loading}
+              className="flex-1 px-3.5 py-2 text-xs bg-slate-50 rounded-full border border-slate-200 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 min-w-0"
             />
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className="p-2.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white rounded-full transition shadow-sm"
+              className="p-2 sm:p-2.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-40 text-white rounded-full transition shadow-sm shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center active:scale-95"
+              aria-label="Send query"
             >
               <Send className="w-3.5 h-3.5" />
             </button>

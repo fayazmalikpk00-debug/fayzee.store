@@ -50,13 +50,15 @@ export default async function ProductsPage({
         </div>
 
         {/* Sort selector */}
-        <div className="flex items-center gap-2">
-          <SlidersHorizontal className="w-4 h-4 text-slate-400" />
-          <span className="text-xs font-semibold text-slate-700">Sort By:</span>
-          <div className="flex items-center gap-1.5 text-xs">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full pb-1">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 shrink-0">
+            <SlidersHorizontal className="w-4 h-4 text-slate-400" />
+            <span className="hidden sm:inline">Sort By:</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs shrink-0">
             <Link
               href={{ query: { ...searchParams, sort: "newest" } }}
-              className={`px-3 py-1.5 rounded-lg font-medium transition ${
+              className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition ${
                 sortBy === "newest" ? "bg-brand-600 text-white" : "bg-white text-slate-700 border hover:bg-slate-50"
               }`}
             >
@@ -64,7 +66,7 @@ export default async function ProductsPage({
             </Link>
             <Link
               href={{ query: { ...searchParams, sort: "price_asc" } }}
-              className={`px-3 py-1.5 rounded-lg font-medium transition ${
+              className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition ${
                 sortBy === "price_asc" ? "bg-brand-600 text-white" : "bg-white text-slate-700 border hover:bg-slate-50"
               }`}
             >
@@ -72,7 +74,7 @@ export default async function ProductsPage({
             </Link>
             <Link
               href={{ query: { ...searchParams, sort: "price_desc" } }}
-              className={`px-3 py-1.5 rounded-lg font-medium transition ${
+              className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition ${
                 sortBy === "price_desc" ? "bg-brand-600 text-white" : "bg-white text-slate-700 border hover:bg-slate-50"
               }`}
             >
@@ -80,7 +82,7 @@ export default async function ProductsPage({
             </Link>
             <Link
               href={{ query: { ...searchParams, sort: "rating" } }}
-              className={`px-3 py-1.5 rounded-lg font-medium transition ${
+              className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition ${
                 sortBy === "rating" ? "bg-brand-600 text-white" : "bg-white text-slate-700 border hover:bg-slate-50"
               }`}
             >

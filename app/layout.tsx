@@ -7,13 +7,26 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Fayzee — Shop Smart. Shop Easy | Pakistan's Premier Multi-Vendor Marketplace",
+  title: "FAYZEE — Shop More. Live Better | Pakistan's Premier Multi-Vendor Marketplace",
   description:
     "Discover, compare, and purchase 100% authentic tech, fashion, and lifestyle products from verified sellers with 24/7 AI shopping assistance.",
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
   openGraph: {
-    title: "Fayzee — Shop Smart. Shop Easy",
+    title: "FAYZEE — Shop More. Live Better",
     description: "Multi-vendor marketplace with verified authentic sellers and Fayzee AI assistant.",
-    siteName: "Fayzee",
+    siteName: "FAYZEE",
+    images: [
+      {
+        url: "/logo.png",
+        width: 800,
+        height: 800,
+        alt: "FAYZEE Official Logo",
+      },
+    ],
   },
 };
 
@@ -28,7 +41,7 @@ export default function RootLayout({
         <AuthProvider>
           <CartProvider>
             <Navbar />
-            <main className="flex-1">{children}</main>
+            <main className="flex-1 w-full max-w-full overflow-x-hidden min-w-0">{children}</main>
             <Footer />
             <FayzeeAIAssistant />
           </CartProvider>

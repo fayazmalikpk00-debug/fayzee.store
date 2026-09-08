@@ -1,3 +1,6 @@
+import dns from "dns";
+dns.setDefaultResultOrder("ipv4first");
+
 import { PrismaClient } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
 
@@ -22,6 +25,18 @@ async function runTests() {
   }
 
   try {
+    // 0. Ensure database connection (handles Neon serverless compute cold-starts)
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        await prisma.$queryRawUnsafe('SELECT 1');
+        break;
+      } catch {
+        if (attempt === 3) throw new Error("Could not reach database server after 3 attempts.");
+        console.log(`Connecting to database (attempt ${attempt}/3)...`);
+        await new Promise((resolve) => setTimeout(resolve, 2500));
+      }
+    }
+
     // 1. Database & Seed Verification
     console.log("\n[1] Verifying Seeded Database Models & Relations...");
     const userCount = await prisma.user.count();
@@ -70,6 +85,8 @@ async function runTests() {
 
     // 4. Cart Creation & Stock Limit Verification
     console.log("\n[4] Verifying Cart Persistence & Stock Rules...");
+    await prisma.cartItem.deleteMany({ where: { cart: { userId: customer.id } } });
+    await prisma.cart.deleteMany({ where: { userId: customer.id } });
     const testCart = await prisma.cart.create({
       data: { userId: customer.id },
     });
@@ -136,7 +153,7 @@ async function runTests() {
       });
 
       return order;
-    });
+    }, { maxWait: 15000, timeout: 25000 });
 
     assert(testOrder.status === "CONFIRMED", "Order created in transaction");
     assert(testOrder.items.length === 1, "Order items recorded with seller reference");

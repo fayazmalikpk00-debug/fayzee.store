@@ -90,12 +90,12 @@ export function ProductCard({
       </Link>
 
       {/* Content */}
-      <div className="p-4 flex-1 flex flex-col justify-between">
+      <div className="p-3 sm:p-4 flex-1 flex flex-col justify-between">
         <div>
           {seller && (
             <Link
               href={`/sellers/${seller.storeSlug}`}
-              className="text-[11px] font-medium text-slate-500 hover:text-brand-600 truncate block mb-1"
+              className="text-[10px] sm:text-[11px] font-medium text-slate-500 hover:text-brand-600 truncate block mb-1"
             >
               Store: {seller.storeName}
             </Link>
@@ -108,23 +108,23 @@ export function ProductCard({
           </Link>
 
           {/* Rating */}
-          <div className="flex items-center gap-1.5 mt-2">
+          <div className="flex items-center gap-1.5 mt-1.5 sm:mt-2">
             <div className="flex items-center text-amber-400">
-              <Star className="w-3.5 h-3.5 fill-amber-400" />
+              <Star className="w-3 sm:w-3.5 h-3 sm:h-3.5 fill-amber-400" />
             </div>
-            <span className="text-xs font-bold text-slate-800">{rating.toFixed(1)}</span>
-            <span className="text-[11px] text-slate-400">({reviewCount})</span>
+            <span className="text-[11px] sm:text-xs font-bold text-slate-800">{rating.toFixed(1)}</span>
+            <span className="text-[10px] sm:text-[11px] text-slate-400">({reviewCount})</span>
           </div>
         </div>
 
         {/* Pricing & Add to Cart button */}
-        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-          <div>
-            <div className="text-sm sm:text-base font-extrabold text-slate-900">
+        <div className="mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-slate-100 flex items-center justify-between gap-1.5 sm:gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="text-xs xs:text-sm sm:text-base font-extrabold text-slate-900 truncate">
               {formatPrice(displayPrice)}
             </div>
             {originalPrice && (
-              <div className="text-xs text-slate-400 line-through">
+              <div className="text-[10px] sm:text-xs text-slate-400 line-through truncate">
                 {formatPrice(originalPrice)}
               </div>
             )}
@@ -133,7 +133,7 @@ export function ProductCard({
           <button
             onClick={handleAddToCart}
             disabled={!inStock}
-            className={`p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition ${
+            className={`p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shrink-0 min-w-[34px] min-h-[34px] ${
               added
                 ? "bg-emerald-600 text-white"
                 : inStock
@@ -141,19 +141,20 @@ export function ProductCard({
                 : "bg-slate-100 text-slate-400 cursor-not-allowed"
             }`}
             title={inStock ? "Add to Cart" : "Out of Stock"}
+            aria-label={inStock ? "Add to Cart" : "Out of Stock"}
           >
             {added ? (
               <>
-                <Check className="w-4 h-4" />
+                <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Added</span>
               </>
             ) : inStock ? (
               <>
-                <ShoppingBag className="w-4 h-4" />
+                <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Add</span>
               </>
             ) : (
-              <span>Sold Out</span>
+              <span className="text-[10px]">Sold Out</span>
             )}
           </button>
         </div>
