@@ -87,7 +87,10 @@ export default function SellerDashboardPage() {
     }
   }, [user, authLoading]);
 
-  // Handle image upload from device
+  // Handle image upload from device (Production Cloudinary)
+  const MAX_PRODUCT_IMAGES = 8;
+  const MAX_IMAGE_SIZE_BYTES = 60 * 1024 * 1024; // 60MB
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -95,15 +98,39 @@ export default function SellerDashboardPage() {
     setUploadError("");
     setFormError("");
 
+    if (uploadedImages.length + files.length > MAX_PRODUCT_IMAGES) {
+      setUploadError(
+        `You can upload a maximum of ${MAX_PRODUCT_IMAGES} images per product. You currently have ${uploadedImages.length}.`
+      );
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    const allowedMimes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/heic",
+      "image/heif",
+      "image/avif",
+      "image/jpg",
+    ];
+    const allowedExtensions = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".avif"];
+
     const validFiles: File[] = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      if (file.size > 5 * 1024 * 1024) {
-        setUploadError(`Image "${file.name}" exceeds the 5MB size limit. Please choose a smaller file.`);
+      if (file.size > MAX_IMAGE_SIZE_BYTES) {
+        setUploadError(`Image "${file.name}" exceeds the 60MB limit. Please choose a smaller file.`);
+        if (fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
-      if (!["image/jpeg", "image/png", "image/webp", "image/jpg"].includes(file.type)) {
-        setUploadError(`File "${file.name}" is not a supported format. Please upload JPG, PNG, or WebP.`);
+      const ext = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
+      if (!allowedMimes.includes(file.type) && !allowedExtensions.includes(ext)) {
+        setUploadError(
+          `File "${file.name}" is not a supported format. Please upload JPG, PNG, WebP, HEIC, HEIF, or AVIF.`
+        );
+        if (fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
       validFiles.push(file);
@@ -791,7 +818,7 @@ export default function SellerDashboardPage() {
                   type="file"
                   ref={fileInputRef}
                   onChange={handleFileSelect}
-                  accept="image/jpeg,image/png,image/webp"
+                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/avif,.heic,.heif"
                   multiple
                   className="hidden"
                   id="seller-file-upload"
@@ -831,7 +858,7 @@ export default function SellerDashboardPage() {
                             Click or tap to upload product images
                           </p>
                           <p className="text-[10px] text-slate-400 mt-0.5">
-                            Supports JPG, PNG, WebP up to 5MB • Windows, Mac, Android, iOS
+                            Supports JPG, PNG, WebP, HEIC, HEIF, AVIF up to 60MB (up to 8 images)
                           </p>
                         </div>
                         <button

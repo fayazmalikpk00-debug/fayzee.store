@@ -1,6 +1,7 @@
 import { getSessionUser } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { slugify } from "@/lib/utils";
+import { deleteCloudinaryAsset, extractCloudinaryPublicId } from "@/services/cloudinaryService";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +31,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  let body: any = null;
   try {
     const user = await getSessionUser();
     if (!user || user.role !== "SELLER" || !user.sellerProfile) {
@@ -46,7 +48,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const body = await req.json();
+    body = await req.json();
     const {
       title,
       categoryId,
@@ -159,10 +161,17 @@ export async function POST(req: Request) {
       });
     }
 
-    // Ensure at least one image is provided
+    // Ensure at least one image is provided, and no more than 8
     if (imageRecords.length === 0) {
       return NextResponse.json(
         { error: "Please upload at least one product image." },
+        { status: 400 }
+      );
+    }
+
+    if (imageRecords.length > 8) {
+      return NextResponse.json(
+        { error: "A product can have a maximum of 8 images. Please remove excess images." },
         { status: 400 }
       );
     }
@@ -219,6 +228,19 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("Create product error:", error);
 
+    // Rollback / cleanup newly submitted Cloudinary images if creation failed
+    if (Array.isArray(body?.images)) {
+      for (const img of body.images) {
+        const url = typeof img === "string" ? img : img?.url;
+        if (url) {
+          const publicId = extractCloudinaryPublicId(url);
+          if (publicId) {
+            deleteCloudinaryAsset(publicId).catch(() => {});
+          }
+        }
+      }
+    }
+
     // Intercept Prisma foreign key constraint errors
     if (error?.code === "P2003") {
       return NextResponse.json(
@@ -262,6 +284,7 @@ export async function DELETE(req: Request) {
     // STRICT SELLER OWNERSHIP VERIFICATION
     const product = await prisma.product.findUnique({
       where: { id: productId },
+      include: { images: true },
     });
 
     if (!product || product.sellerId !== user.sellerProfile.id) {
@@ -269,6 +292,16 @@ export async function DELETE(req: Request) {
         { error: "Product not found or you do not have permission to delete it." },
         { status: 403 }
       );
+    }
+
+    // Clean up associated Cloudinary images if any
+    if (product.images && product.images.length > 0) {
+      for (const img of product.images) {
+        const publicId = extractCloudinaryPublicId(img.url);
+        if (publicId) {
+          await deleteCloudinaryAsset(publicId).catch(() => {});
+        }
+      }
     }
 
     await prisma.product.delete({ where: { id: productId } });
