@@ -1,11 +1,21 @@
 import dns from "dns";
 dns.setDefaultResultOrder("ipv4first");
 
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "../lib/db";
 
 async function main() {
+  // Warmup connection
+  for (let i = 1; i <= 6; i++) {
+    try {
+      await prisma.$queryRawUnsafe("SELECT 1");
+      break;
+    } catch (err) {
+      if (i === 6) throw err;
+      console.log(`Waiting for DB (attempt ${i}/6)...`);
+      await new Promise((r) => setTimeout(r, 3000));
+    }
+  }
+
   const products = await prisma.product.findMany({
     include: {
       seller: true,
