@@ -146,12 +146,62 @@ export function ProductDetailView({ product }: { product: any }) {
     getMatchingVariant(availableColors[0] || "", availableSizes[0] || "") || variants[0] || null
   );
 
-  const handleColorSelect = (color: string) => {
+  // Helper to find the best image URL for a color
+  const getImageForColor = (color: string): string | null => {
+    if (!color) return null;
+    const colorLower = color.toLowerCase().trim();
+
+    // 1. Check if any variant of this color has an explicit image
+    const vWithImg = variants.find(
+      (v: any) =>
+        v.image &&
+        v.color &&
+        v.color.toLowerCase().trim() === colorLower
+    );
+    if (vWithImg?.image) return vWithImg.image;
+
+    // 2. Check product.images where alt matches color
+    const imgByAlt = product.images?.find((img: any) => {
+      if (!img.alt) return false;
+      const altLower = img.alt.toLowerCase().trim();
+      return (
+        altLower === colorLower ||
+        altLower.includes(colorLower) ||
+        colorLower.includes(altLower)
+      );
+    });
+    if (imgByAlt?.url) return imgByAlt.url;
+
+    // 3. Fallback: intelligent distribution across product.images
+    const colorIdx = availableColors.findIndex(
+      (c) => c.toLowerCase().trim() === colorLower
+    );
+    if (colorIdx !== -1 && product.images && product.images.length > 0) {
+      const imgIdx = Math.min(
+        product.images.length - 1,
+        Math.floor((colorIdx * product.images.length) / availableColors.length)
+      );
+      if (product.images[imgIdx]?.url) {
+        return product.images[imgIdx].url;
+      }
+    }
+
+    return null;
+  };
+
+  const handleColorSelect = (color: string, updateImage = true) => {
     setSelectedColor(color);
     const matched = getMatchingVariant(color, selectedSize);
     if (matched) {
       setSelectedVariant(matched);
-      if (matched.image) setSelectedImage(matched.image);
+    }
+    if (updateImage) {
+      const colorImg = getImageForColor(color);
+      if (colorImg) {
+        setSelectedImage(colorImg);
+      } else if (matched?.image) {
+        setSelectedImage(matched.image);
+      }
     }
   };
 
@@ -165,9 +215,55 @@ export function ProductDetailView({ product }: { product: any }) {
     }
   };
 
-  const [selectedImage, setSelectedImage] = useState<string>(
-    product.images[0]?.url || "/images/product-placeholder.svg"
-  );
+  const handleThumbnailSelect = (img: any) => {
+    setSelectedImage(img.url);
+
+    // 1. Check if any variant with this image has a color
+    const vMatch = variants.find((v: any) => v.image === img.url);
+    if (vMatch?.color) {
+      handleColorSelect(vMatch.color, false);
+      return;
+    }
+
+    // 2. Check if img.alt matches any available color
+    if (img.alt) {
+      const altLower = img.alt.toLowerCase().trim();
+      const colorMatch = availableColors.find(
+        (c) =>
+          c.toLowerCase().trim() === altLower ||
+          altLower.includes(c.toLowerCase().trim())
+      );
+      if (colorMatch) {
+        handleColorSelect(colorMatch, false);
+        return;
+      }
+    }
+
+    // 3. Index mapping fallback
+    const imgIdx = product.images?.findIndex((i: any) => i.url === img.url);
+    if (
+      imgIdx !== undefined &&
+      imgIdx !== -1 &&
+      availableColors.length > 0 &&
+      product.images
+    ) {
+      const colorIdx = Math.min(
+        availableColors.length - 1,
+        Math.floor((imgIdx * availableColors.length) / product.images.length)
+      );
+      if (availableColors[colorIdx]) {
+        handleColorSelect(availableColors[colorIdx], false);
+      }
+    }
+  };
+
+  const [selectedImage, setSelectedImage] = useState<string>(() => {
+    if (availableColors[0]) {
+      const initialColorImg = getImageForColor(availableColors[0]);
+      if (initialColorImg) return initialColorImg;
+    }
+    return product.images[0]?.url || "/images/product-placeholder.svg";
+  });
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -297,7 +393,7 @@ export function ProductDetailView({ product }: { product: any }) {
             <img
               src={selectedImage}
               alt={product.title}
-              className="w-full h-full object-cover object-center"
+              className="w-full h-full object-cover object-center transition-all duration-300 ease-in-out"
             />
             {product.discountPercent && product.discountPercent > 0 ? (
               <span className="absolute top-3 left-3 sm:top-4 sm:left-4 px-2.5 py-1 bg-[#FF5E00] text-white text-[11px] sm:text-xs font-black rounded-lg shadow-md">
@@ -312,15 +408,16 @@ export function ProductDetailView({ product }: { product: any }) {
               {product.images.map((img: any) => (
                 <button
                   key={img.id}
-                  onClick={() => setSelectedImage(img.url)}
+                  type="button"
+                  onClick={() => handleThumbnailSelect(img)}
                   className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl overflow-hidden border-2 transition shrink-0 min-w-[64px] min-h-[64px] ${
                     selectedImage === img.url
-                      ? "border-[#FF5E00] ring-2 ring-[#FF5E00]/20"
-                      : "border-slate-200 hover:border-slate-300"
+                      ? "border-[#FF5E00] ring-2 ring-[#FF5E00]/20 scale-105"
+                      : "border-slate-200 hover:border-slate-300 opacity-80 hover:opacity-100"
                   }`}
                   aria-label="View product image"
                 >
-                  <img src={img.url} alt="" className="w-full h-full object-cover" />
+                  <img src={img.url} alt={img.alt || product.title} className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
@@ -387,7 +484,7 @@ export function ProductDetailView({ product }: { product: any }) {
 
           {/* Color & Size Selectors */}
           <div className="space-y-4 pt-1">
-            {/* COLOR SELECTOR */}
+            {/* COLOR SELECTOR WITH DIRECT PICTURES */}
             {availableColors.length > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
@@ -395,30 +492,46 @@ export function ProductDetailView({ product }: { product: any }) {
                     Color: <span className="text-[#FF5E00] font-black">{selectedColor}</span>
                   </span>
                   <span className="text-[#777777] text-[11px] font-medium">
-                    {availableColors.length} {availableColors.length === 1 ? "color" : "colors"}
+                    {availableColors.length} {availableColors.length === 1 ? "color" : "colors"} available
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   {availableColors.map((color) => {
                     const isSelected = selectedColor.toLowerCase() === color.toLowerCase();
+                    const colorImg = getImageForColor(color);
                     return (
                       <button
                         key={color}
                         type="button"
                         onClick={() => handleColorSelect(color)}
-                        className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-2 min-h-[40px] ${
+                        className={`p-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-2.5 text-left ${
                           isSelected
-                            ? "border-[#FF5E00] bg-orange-50/80 text-[#FF5E00] ring-2 ring-[#FF5E00]/30 shadow-xs"
+                            ? "border-[#FF5E00] bg-orange-50/70 text-[#FF5E00] ring-2 ring-[#FF5E00]/30 shadow-sm"
                             : "border-[#DDE2E6] bg-white hover:border-[#FF5E00] text-[#1C2A39]"
                         }`}
+                        title={`Select ${color}`}
                       >
-                        {/* Swatch color dot */}
-                        <span
-                          className="w-3.5 h-3.5 rounded-full border border-slate-300 shrink-0 shadow-2xs"
-                          style={{ backgroundColor: getColorHex(color) }}
-                        />
-                        <span>{color}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-[#FF5E00] stroke-[2.5]" />}
+                        {/* Direct shoe picture thumbnail */}
+                        {colorImg ? (
+                          <img
+                            src={colorImg}
+                            alt={color}
+                            className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg object-cover border border-slate-200 shrink-0 bg-white"
+                          />
+                        ) : (
+                          <span
+                            className="w-4 h-4 rounded-full border border-slate-300 shrink-0 shadow-2xs"
+                            style={{ backgroundColor: getColorHex(color) }}
+                          />
+                        )}
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className="truncate leading-tight font-bold">{color}</span>
+                          {isSelected && (
+                            <span className="text-[10px] text-[#FF5E00] flex items-center gap-0.5 font-extrabold mt-0.5">
+                              <Check className="w-3 h-3 stroke-[2.5]" /> Selected
+                            </span>
+                          )}
+                        </div>
                       </button>
                     );
                   })}
