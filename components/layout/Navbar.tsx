@@ -96,8 +96,8 @@ export function Navbar() {
       {/* 2. Main Navbar Row - LEFT: Branding | CENTER: Search | RIGHT: Profile | Wishlist | Cart */}
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex items-center justify-between gap-3 sm:gap-4">
         {/* LEFT: FAYZEE Branding */}
-        <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group shrink-0" aria-label="FAYZEE Home">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white p-1 border border-white/20 shadow-xs flex items-center justify-center group-hover:scale-105 transition-all shrink-0">
+        <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0" aria-label="FAYZEE Home">
+          <div className="w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-xl bg-white p-1 border border-white/20 shadow-xs flex items-center justify-center group-hover:scale-105 transition-all shrink-0">
             <img
               src="/logo.png"
               alt="FAYZEE"
@@ -105,10 +105,10 @@ export function Navbar() {
             />
           </div>
           <div className="flex flex-col">
-            <span className="text-2xl sm:text-3xl font-black tracking-tight text-white group-hover:text-[#FF8C00] transition-colors leading-none">
+            <span className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white group-hover:text-[#FF8C00] transition-colors leading-none">
               FAYZEE
             </span>
-            <span className="text-[10px] sm:text-xs font-bold tracking-wider text-[#FF5E00] uppercase mt-1">
+            <span className="text-[9px] sm:text-[11px] md:text-xs font-bold tracking-wider text-[#FF5E00] uppercase mt-0.5 sm:mt-1 whitespace-nowrap">
               Shop More • Live Better
             </span>
           </div>
@@ -138,9 +138,9 @@ export function Navbar() {
         </form>
 
         {/* RIGHT: Profile / Account | Wishlist | Shopping Cart */}
-        <div className="flex items-center space-x-2 sm:space-x-4 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-3 shrink-0">
           {/* 1. Profile / Account */}
-          <div className="relative">
+          <div className="relative shrink-0">
             {user ? (
               <div className="relative">
                 <button
@@ -148,7 +148,7 @@ export function Navbar() {
                   className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-2 rounded-full border border-white/20 hover:border-[#FF5E00] hover:bg-white/10 transition focus:outline-none bg-white/5"
                   title="Profile / Account"
                 >
-                  <div className="w-8 h-8 rounded-full bg-[#FF5E00] text-white flex items-center justify-center text-sm font-bold uppercase overflow-hidden shrink-0">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#FF5E00] text-white flex items-center justify-center text-xs sm:text-sm font-bold uppercase overflow-hidden shrink-0">
                     {user.avatar ? (
                       <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                     ) : (
@@ -219,10 +219,10 @@ export function Navbar() {
                 )}
               </div>
             ) : (
-              <div className="flex items-center space-x-1 sm:space-x-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 <Link
                   href="/login"
-                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-bold text-white hover:text-[#FF8C00] hover:bg-white/10 rounded-full transition"
+                  className="flex items-center gap-1 p-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-bold text-white hover:text-[#FF8C00] hover:bg-white/10 rounded-full transition"
                   title="Profile / Account"
                 >
                   <UserIcon className="w-5 h-5 shrink-0" />
@@ -230,7 +230,7 @@ export function Navbar() {
                 </Link>
                 <Link
                   href="/register"
-                  className="hidden sm:inline-block px-4 py-2 text-sm font-bold bg-[#FF5E00] text-white hover:bg-[#FF8C00] rounded-full transition shadow-sm shrink-0"
+                  className="hidden sm:inline-block px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#FF5E00] text-white hover:bg-[#FF8C00] rounded-full transition shadow-sm shrink-0"
                 >
                   Join
                 </Link>
@@ -241,7 +241,7 @@ export function Navbar() {
           {/* 2. Wishlist */}
           <Link
             href="/wishlist"
-            className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 text-white hover:text-[#FF8C00] hover:bg-white/10 rounded-full transition relative"
+            className="flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-2 text-white hover:text-[#FF8C00] hover:bg-white/10 rounded-full transition relative shrink-0"
             title="Wishlist"
           >
             <Heart className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
@@ -251,13 +251,13 @@ export function Navbar() {
           {/* 3. Shopping Cart */}
           <Link
             href="/cart"
-            className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 text-white hover:text-[#FF8C00] hover:bg-white/10 rounded-full transition relative"
+            className="flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-2 text-white hover:text-[#FF8C00] hover:bg-white/10 rounded-full transition relative shrink-0"
             title="Shopping Cart"
           >
             <div className="relative">
               <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
               {cartCount > 0 && (
-                <span className="absolute -top-1.5 -right-2 bg-[#FF5E00] text-white text-xs font-bold rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center shadow-md animate-pulse">
+                <span className="absolute -top-1.5 -right-2 bg-[#FF5E00] text-white text-[10px] sm:text-xs font-bold rounded-full min-w-[18px] sm:min-w-[20px] h-4 sm:h-5 px-1 flex items-center justify-center shadow-md animate-pulse">
                   {cartCount}
                 </span>
               )}
@@ -268,7 +268,7 @@ export function Navbar() {
           {/* Mobile menu hamburger */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 text-white hover:text-[#FF8C00] md:hidden rounded-lg hover:bg-white/10 flex items-center justify-center min-w-[38px] min-h-[38px]"
+            className="p-1.5 text-white hover:text-[#FF8C00] md:hidden rounded-lg hover:bg-white/10 flex items-center justify-center min-w-[36px] min-h-[36px] shrink-0"
             aria-label="Toggle Navigation Menu"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}

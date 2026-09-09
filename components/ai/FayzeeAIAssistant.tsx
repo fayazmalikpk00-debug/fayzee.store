@@ -363,7 +363,7 @@ export function FayzeeAIAssistant() {
 
       {/* Slide-in Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-16 sm:bottom-24 right-2 sm:right-6 w-[calc(100vw-16px)] sm:w-[440px] max-w-[440px] h-[calc(100dvh-95px)] sm:h-[620px] max-h-[85vh] bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-[#DDE2E6] z-50 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200">
+        <div className="fixed bottom-16 sm:bottom-24 left-2 right-2 sm:left-auto sm:right-6 sm:w-[420px] max-w-full sm:max-w-[420px] h-[calc(100dvh-95px)] sm:h-[620px] max-h-[85vh] bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-[#DDE2E6] z-50 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200">
           {/* Header */}
           <div className="bg-[#1C2A39] p-3.5 sm:p-4 text-white flex items-center justify-between shadow-md shrink-0 border-b border-white/10">
             <div className="flex items-center gap-2.5 min-w-0">

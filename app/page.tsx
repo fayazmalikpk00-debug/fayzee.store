@@ -49,28 +49,28 @@ export default async function HomePage() {
                 <span className="text-white">Powered by Fayzee AI Shopping Intelligence</span>
               </div>
 
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[64px] font-black tracking-tight leading-[1.08] text-white">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[64px] font-black tracking-tight leading-[1.1] text-white break-words">
                 Shop Smart. <br />
                 <span className="text-[#FF5E00]">
                   Shop Easy.
                 </span>
               </h1>
 
-              <p className="text-base sm:text-lg md:text-xl text-slate-200 max-w-2xl leading-relaxed font-normal">
+              <p className="text-sm sm:text-base md:text-lg lg:text-xl text-slate-200 max-w-2xl leading-relaxed font-normal">
                 Explore thousands of verified authentic electronics, footwear, and home appliances directly from certified sellers with 100% genuine guarantees.
               </p>
 
-              <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-2">
                 <Link
                   href="/products"
-                  className="px-7 py-3.5 bg-[#FF5E00] hover:bg-[#FF8C00] text-white font-bold text-base sm:text-lg rounded-full shadow-lg shadow-orange-950/30 transition flex items-center gap-2 active:scale-98"
+                  className="px-6 sm:px-7 py-3 sm:py-3.5 bg-[#FF5E00] hover:bg-[#FF8C00] text-white font-bold text-base sm:text-lg rounded-full shadow-lg shadow-orange-950/30 transition flex items-center justify-center gap-2 active:scale-98 text-center"
                 >
                   <span>Explore Catalog</span>
                   <ArrowRight className="w-5 h-5" />
                 </Link>
                 <Link
                   href="/flash-sale"
-                  className="px-7 py-3.5 bg-white/10 hover:bg-white/20 text-white font-bold text-base sm:text-lg rounded-full border border-white/30 backdrop-blur-md transition flex items-center gap-2 active:scale-98"
+                  className="px-6 sm:px-7 py-3 sm:py-3.5 bg-white/10 hover:bg-white/20 text-white font-bold text-base sm:text-lg rounded-full border border-white/30 backdrop-blur-md transition flex items-center justify-center gap-2 active:scale-98 text-center"
                 >
                   <Zap className="w-5 h-5 text-[#FF8C00]" />
                   <span>View Flash Deals</span>
