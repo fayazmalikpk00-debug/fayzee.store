@@ -15,8 +15,10 @@ import {
   PenSquare,
   Plus,
   RotateCcw,
+  Ruler,
   ShieldCheck,
   ShoppingBag,
+  Sparkles,
   Star,
   Store,
   Truck,
@@ -28,14 +30,143 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+function getColorHex(colorName: string): string {
+  const lower = colorName.toLowerCase();
+  if (lower.includes("navy")) return "#1B2A47";
+  if (lower.includes("blue")) return "#2563EB";
+  if (lower.includes("light brown") || lower.includes("tan")) return "#C4A482";
+  if (lower.includes("brown")) return "#8B4513";
+  if (lower.includes("off-white") || lower.includes("cream")) return "#FDF6E2";
+  if (lower.includes("white")) return "#FFFFFF";
+  if (lower.includes("black")) return "#111827";
+  if (lower.includes("grey") || lower.includes("gray")) return "#9CA3AF";
+  if (lower.includes("red")) return "#DC2626";
+  if (lower.includes("green")) return "#16A34A";
+  if (lower.includes("yellow")) return "#EAB308";
+  if (lower.includes("pink")) return "#EC4899";
+  if (lower.includes("orange")) return "#FF5E00";
+  return "#D1D5DB";
+}
+
 export function ProductDetailView({ product }: { product: any }) {
   const router = useRouter();
   const { addToCart } = useCart();
+  const variants = product.variants || [];
+
+  // Extract available colors
+  const rawColors: string[] = [];
+  variants.forEach((v: any) => {
+    if (v.color && typeof v.color === "string" && v.color.trim()) {
+      rawColors.push(v.color.trim());
+    } else if (v.name && v.name.includes("/")) {
+      const parts = v.name.split("/").map((s: string) => s.trim());
+      if (parts[0]) rawColors.push(parts[0]);
+    }
+  });
+  const availableColors = Array.from(new Set(rawColors));
+
+  // Extract available sizes
+  const rawSizes: string[] = [];
+  variants.forEach((v: any) => {
+    if (v.size && typeof v.size === "string" && v.size.trim()) {
+      const parts = v.size
+        .split(/[,/]/)
+        .map((s: string) => s.trim().replace(/^size\s+/i, ""))
+        .filter(Boolean);
+      rawSizes.push(...parts);
+    } else if (v.name && v.name.toLowerCase().includes("size")) {
+      const match = v.name.match(/size\s*([0-9a-zA-Z]+)/i);
+      if (match && match[1]) rawSizes.push(match[1]);
+    }
+  });
+
+  // Also check specifications or attributes if size not found in variants
+  if (rawSizes.length === 0 && product.attributes) {
+    try {
+      const attrs = typeof product.attributes === "string" ? JSON.parse(product.attributes) : product.attributes;
+      if (attrs?.size && typeof attrs.size === "string") {
+        const parts = attrs.size.split(/[,/]/).map((s: string) => s.trim()).filter(Boolean);
+        rawSizes.push(...parts);
+      }
+    } catch (_) {}
+  }
+  const availableSizes = Array.from(new Set(rawSizes));
+
+  const [selectedColor, setSelectedColor] = useState<string>(
+    availableColors[0] || variants[0]?.color || ""
+  );
+  const [selectedSize, setSelectedSize] = useState<string>(
+    availableSizes[0] || variants[0]?.size || ""
+  );
+  const [sizeError, setSizeError] = useState<string>("");
+  const [showSizeGuide, setShowSizeGuide] = useState<boolean>(false);
+
+  // Helper to find best matching variant for color + size
+  const getMatchingVariant = (color: string, size: string) => {
+    if (!variants || variants.length === 0) return null;
+
+    if (color && size) {
+      const match = variants.find((v: any) => {
+        const cMatch = v.color && v.color.toLowerCase() === color.toLowerCase();
+        const sMatch =
+          v.size &&
+          (v.size.toLowerCase() === size.toLowerCase() ||
+            v.size.toLowerCase().includes(size.toLowerCase()));
+        const nameMatch =
+          v.name &&
+          v.name.toLowerCase().includes(color.toLowerCase()) &&
+          v.name.toLowerCase().includes(size.toLowerCase());
+        return (cMatch && sMatch) || nameMatch;
+      });
+      if (match) return match;
+    }
+
+    if (color) {
+      const match = variants.find(
+        (v: any) =>
+          (v.color && v.color.toLowerCase() === color.toLowerCase()) ||
+          (v.name && v.name.toLowerCase().includes(color.toLowerCase()))
+      );
+      if (match) return match;
+    }
+
+    if (size) {
+      const match = variants.find(
+        (v: any) =>
+          (v.size && v.size.toLowerCase() === size.toLowerCase()) ||
+          (v.name && v.name.toLowerCase().includes(size.toLowerCase()))
+      );
+      if (match) return match;
+    }
+
+    return variants[0] || null;
+  };
+
+  const [selectedVariant, setSelectedVariant] = useState<any>(() =>
+    getMatchingVariant(availableColors[0] || "", availableSizes[0] || "") || variants[0] || null
+  );
+
+  const handleColorSelect = (color: string) => {
+    setSelectedColor(color);
+    const matched = getMatchingVariant(color, selectedSize);
+    if (matched) {
+      setSelectedVariant(matched);
+      if (matched.image) setSelectedImage(matched.image);
+    }
+  };
+
+  const handleSizeSelect = (size: string) => {
+    setSelectedSize(size);
+    setSizeError("");
+    const matched = getMatchingVariant(selectedColor, size);
+    if (matched) {
+      setSelectedVariant(matched);
+      if (matched.image) setSelectedImage(matched.image);
+    }
+  };
+
   const [selectedImage, setSelectedImage] = useState<string>(
     product.images[0]?.url || "/images/product-placeholder.svg"
-  );
-  const [selectedVariant, setSelectedVariant] = useState<any>(
-    product.variants[0] || null
   );
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
@@ -47,7 +178,12 @@ export function ProductDetailView({ product }: { product: any }) {
   const currentStock = selectedVariant ? selectedVariant.stockQuantity : product.stockQuantity;
 
   const handleAddToCart = async () => {
-    const ok = await addToCart(product.id, selectedVariant?.id, quantity);
+    if (availableSizes.length > 0 && !selectedSize) {
+      setSizeError("Please select a size before adding to cart.");
+      return;
+    }
+    const targetVariant = getMatchingVariant(selectedColor, selectedSize) || selectedVariant;
+    const ok = await addToCart(product.id, targetVariant?.id, quantity);
     if (ok) {
       setAdded(true);
       setTimeout(() => setAdded(false), 2500);
@@ -55,7 +191,12 @@ export function ProductDetailView({ product }: { product: any }) {
   };
 
   const handleBuyNow = async () => {
-    const ok = await addToCart(product.id, selectedVariant?.id, quantity);
+    if (availableSizes.length > 0 && !selectedSize) {
+      setSizeError("Please select a size before buying.");
+      return;
+    }
+    const targetVariant = getMatchingVariant(selectedColor, selectedSize) || selectedVariant;
+    const ok = await addToCart(product.id, targetVariant?.id, quantity);
     if (ok) {
       router.push("/checkout");
     }
@@ -244,29 +385,133 @@ export function ProductDetailView({ product }: { product: any }) {
             </span>
           </div>
 
-          {/* Variant Selector */}
-          {product.variants.length > 0 && (
-            <div className="space-y-2.5">
-              <label className="text-xs font-bold text-[#1C2A39] uppercase tracking-wider block">
-                Select Option / Variant:
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {product.variants.map((v: any) => (
-                  <button
-                    key={v.id}
-                    onClick={() => setSelectedVariant(v)}
-                    className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-semibold border transition min-h-[42px] flex items-center justify-center ${
-                      selectedVariant?.id === v.id
-                        ? "border-[#FF5E00] bg-orange-50/50 text-[#FF5E00] ring-2 ring-[#FF5E00]/20 font-bold"
-                        : "border-[#DDE2E6] bg-white hover:border-[#FF5E00] text-[#333333]"
-                    }`}
-                  >
-                    {v.name}
-                  </button>
-                ))}
+          {/* Color & Size Selectors */}
+          <div className="space-y-4 pt-1">
+            {/* COLOR SELECTOR */}
+            {availableColors.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-[#1C2A39]">
+                    Color: <span className="text-[#FF5E00] font-black">{selectedColor}</span>
+                  </span>
+                  <span className="text-[#777777] text-[11px] font-medium">
+                    {availableColors.length} {availableColors.length === 1 ? "color" : "colors"}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {availableColors.map((color) => {
+                    const isSelected = selectedColor.toLowerCase() === color.toLowerCase();
+                    return (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => handleColorSelect(color)}
+                        className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-2 min-h-[40px] ${
+                          isSelected
+                            ? "border-[#FF5E00] bg-orange-50/80 text-[#FF5E00] ring-2 ring-[#FF5E00]/30 shadow-xs"
+                            : "border-[#DDE2E6] bg-white hover:border-[#FF5E00] text-[#1C2A39]"
+                        }`}
+                      >
+                        {/* Swatch color dot */}
+                        <span
+                          className="w-3.5 h-3.5 rounded-full border border-slate-300 shrink-0 shadow-2xs"
+                          style={{ backgroundColor: getColorHex(color) }}
+                        />
+                        <span>{color}</span>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-[#FF5E00] stroke-[2.5]" />}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+
+            {/* SIZE SELECTOR */}
+            {availableSizes.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-[#1C2A39]">
+                    Select Size:{" "}
+                    <span className="text-[#FF5E00] font-black">
+                      {selectedSize ? `EU ${selectedSize}` : "Please Select"}
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowSizeGuide(true)}
+                    className="text-[11px] font-bold text-[#FF5E00] hover:text-[#e05300] flex items-center gap-1 transition underline underline-offset-2"
+                  >
+                    <Ruler className="w-3.5 h-3.5" />
+                    <span>Size Guide</span>
+                  </button>
+                </div>
+
+                {sizeError && (
+                  <p className="text-xs text-red-600 font-bold flex items-center gap-1.5 p-2 bg-red-50 rounded-lg border border-red-200">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    {sizeError}
+                  </p>
+                )}
+
+                {/* Interactive Size Chips */}
+                <div className="flex flex-wrap gap-2 sm:gap-2.5">
+                  {availableSizes.map((sz) => {
+                    const isSelected = selectedSize.toLowerCase() === sz.toLowerCase();
+                    // Check stock for this specific size
+                    const sizeVariant = getMatchingVariant(selectedColor, sz);
+                    const isOutOfStock = sizeVariant && sizeVariant.stockQuantity <= 0;
+
+                    return (
+                      <button
+                        key={sz}
+                        type="button"
+                        disabled={isOutOfStock}
+                        onClick={() => handleSizeSelect(sz)}
+                        className={`min-w-[50px] h-11 px-3.5 rounded-xl text-xs font-black border transition-all flex items-center justify-center ${
+                          isSelected
+                            ? "border-[#FF5E00] bg-[#FF5E00] text-white shadow-md ring-2 ring-orange-300 scale-105"
+                            : isOutOfStock
+                            ? "border-slate-200 bg-slate-100 text-slate-400 line-through cursor-not-allowed"
+                            : "border-[#DDE2E6] bg-white text-[#1C2A39] hover:border-[#FF5E00] hover:text-[#FF5E00]"
+                        }`}
+                        title={isOutOfStock ? `Size ${sz} is Out of Stock` : `Select Size ${sz}`}
+                      >
+                        {sz}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-[11px] text-[#777777]">
+                  All sizes are standard European (EU) sizing. Click <strong>Size Guide</strong> for UK & US conversions.
+                </p>
+              </div>
+            )}
+
+            {/* General Fallback Variant Selector (if no separate colors/sizes identified) */}
+            {availableColors.length === 0 && availableSizes.length === 0 && variants.length > 0 && (
+              <div className="space-y-2.5">
+                <label className="text-xs font-bold text-[#1C2A39] uppercase tracking-wider block">
+                  Select Option / Variant:
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {variants.map((v: any) => (
+                    <button
+                      key={v.id}
+                      type="button"
+                      onClick={() => setSelectedVariant(v)}
+                      className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-semibold border transition min-h-[42px] flex items-center justify-center ${
+                        selectedVariant?.id === v.id
+                          ? "border-[#FF5E00] bg-orange-50/50 text-[#FF5E00] ring-2 ring-[#FF5E00]/20 font-bold"
+                          : "border-[#DDE2E6] bg-white hover:border-[#FF5E00] text-[#333333]"
+                      }`}
+                    >
+                      {v.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Quantity & In-page Action Buttons (Hidden on mobile when sticky bar is active, visible on md+) */}
           <div className="space-y-4 pt-1">
@@ -721,7 +966,9 @@ export function ProductDetailView({ product }: { product: any }) {
       {/* Mobile Sticky Bottom Action Bar (visible on screens < md) */}
       <div className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-[#DDE2E6] p-3 md:hidden shadow-2xl safe-bottom flex items-center gap-2">
         <div className="min-w-0 flex-1 pl-1">
-          <span className="text-[10px] text-[#777777] block leading-none">Price</span>
+          <span className="text-[10px] font-bold text-[#777777] block leading-none truncate">
+            {selectedSize ? `Size: ${selectedSize}` : selectedColor ? `Color: ${selectedColor}` : "Price"}
+          </span>
           <span className="text-base font-black text-[#FF5E00] truncate block">
             {formatPrice(currentPrice)}
           </span>
@@ -751,6 +998,121 @@ export function ProductDetailView({ product }: { product: any }) {
           <span>Buy Now</span>
         </button>
       </div>
+
+      {/* Size Guide Modal */}
+      {showSizeGuide && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+          <div
+            className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-2xl max-w-xl w-full p-5 sm:p-7 max-h-[90vh] overflow-y-auto space-y-5"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-orange-50 text-[#FF5E00] flex items-center justify-center border border-orange-100">
+                  <Ruler className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-black text-[#1C2A39]">
+                    Size Guide & Fit Chart
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Standard Pakistani (PK) & European (EU) Footwear Conversions
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSizeGuide(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition"
+                aria-label="Close size guide"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Sizing Table */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold text-[#1C2A39] uppercase tracking-wider">
+                Footwear / Shoes Sizing Reference
+              </h4>
+              <div className="overflow-x-auto rounded-xl border border-slate-200">
+                <table className="w-full text-xs text-center border-collapse">
+                  <thead>
+                    <tr className="bg-slate-100 text-[#1C2A39] font-bold border-b border-slate-200">
+                      <th className="py-2.5 px-3">EU Size</th>
+                      <th className="py-2.5 px-3">UK / PK</th>
+                      <th className="py-2.5 px-3">US Men</th>
+                      <th className="py-2.5 px-3">Foot Length (CM)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
+                    {[
+                      { eu: "39", uk: "5.5", us: "6.5", cm: "24.5 cm" },
+                      { eu: "40", uk: "6.5", us: "7.5", cm: "25.0 cm" },
+                      { eu: "41", uk: "7.5", us: "8.5", cm: "26.0 cm" },
+                      { eu: "42", uk: "8.5", us: "9.5", cm: "26.5 cm" },
+                      { eu: "43", uk: "9.5", us: "10.5", cm: "27.5 cm" },
+                      { eu: "44", uk: "10.5", us: "11.5", cm: "28.0 cm" },
+                      { eu: "45", uk: "11.5", us: "12.5", cm: "29.0 cm" },
+                    ].map((row, idx) => (
+                      <tr
+                        key={row.eu}
+                        onClick={() => {
+                          handleSizeSelect(row.eu);
+                          setShowSizeGuide(false);
+                        }}
+                        className={`cursor-pointer hover:bg-orange-50/70 transition ${
+                          selectedSize === row.eu
+                            ? "bg-orange-50 font-bold text-[#FF5E00]"
+                            : idx % 2 === 0
+                            ? "bg-white"
+                            : "bg-slate-50/50"
+                        }`}
+                      >
+                        <td className="py-2.5 px-3 font-bold">{row.eu}</td>
+                        <td className="py-2.5 px-3">{row.uk}</td>
+                        <td className="py-2.5 px-3">{row.us}</td>
+                        <td className="py-2.5 px-3">{row.cm}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-[11px] text-slate-500 italic">
+                * Click on any row to immediately select that shoe size.
+              </p>
+            </div>
+
+            {/* Measurement Tips */}
+            <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 text-xs text-slate-600 space-y-2">
+              <p className="font-bold text-[#1C2A39] flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#FF5E00]" />
+                How to measure your feet:
+              </p>
+              <ol className="list-decimal list-inside space-y-1 pl-1 text-[11px] leading-relaxed">
+                <li>Place your foot firmly on a piece of paper on a flat floor against the wall.</li>
+                <li>Draw a line at the tip of your longest toe and measure the distance in cm.</li>
+                <li>Compare with the chart above to choose your ideal EU shoe size.</li>
+              </ol>
+              <div className="text-[11px] text-amber-800 bg-amber-50 p-2.5 rounded-lg border border-amber-200 mt-2 font-semibold flex items-center gap-1.5">
+                <span>💡</span>
+                <span>If you prefer a relaxed fit or have wider feet, we recommend picking 1 size up.</span>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setShowSizeGuide(false)}
+                className="px-5 py-2.5 bg-[#1C2A39] hover:bg-[#2A3B4C] text-white font-bold text-xs rounded-xl transition shadow-xs"
+              >
+                Got It, Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

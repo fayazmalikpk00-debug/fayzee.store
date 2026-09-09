@@ -20,6 +20,8 @@ export interface CartItemType {
   variant?: {
     id: string;
     name: string;
+    color?: string | null;
+    size?: string | null;
     price: number;
     salePrice?: number | null;
     stockQuantity: number;

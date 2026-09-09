@@ -1398,16 +1398,42 @@ export default function SellerDashboardPage() {
                               />
                             </div>
                             <div>
-                              <label className="block text-[10px] font-bold text-slate-600 mb-0.5">
-                                Size / Spec
-                              </label>
+                              <div className="flex items-center justify-between mb-0.5">
+                                <label className="block text-[10px] font-bold text-slate-600">
+                                  Size / Spec
+                                </label>
+                              </div>
                               <input
                                 type="text"
                                 value={v.size}
                                 onChange={(e) => handleUpdateVariant(v.id, "size", e.target.value)}
-                                placeholder="e.g. 256GB / XL / 42 EU"
+                                placeholder="e.g. 42 (or 40, 41, 42, 43, 44)"
                                 className="w-full px-2 py-1.5 bg-slate-50 rounded-lg border border-slate-200 text-xs focus:ring-1 focus:ring-brand-500"
                               />
+                              <div className="flex items-center gap-1 mt-1 flex-wrap">
+                                <span className="text-[9px] text-slate-400 font-bold">Quick:</span>
+                                {["40", "41", "42", "43", "44"].map((sz) => (
+                                  <button
+                                    key={sz}
+                                    type="button"
+                                    onClick={() => {
+                                      const current = v.size.trim();
+                                      const next = current ? (current.includes(sz) ? current : `${current}, ${sz}`) : sz;
+                                      handleUpdateVariant(v.id, "size", next);
+                                    }}
+                                    className="px-1 py-0.5 bg-slate-100 hover:bg-orange-100 text-slate-700 hover:text-[#FF5E00] text-[9px] font-bold rounded border border-slate-200 transition"
+                                  >
+                                    +{sz}
+                                  </button>
+                                ))}
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateVariant(v.id, "size", "40, 41, 42, 43, 44")}
+                                  className="px-1.5 py-0.5 bg-orange-50 hover:bg-orange-100 text-[#FF5E00] text-[9px] font-black rounded border border-orange-200 transition"
+                                >
+                                  40-44 Set
+                                </button>
+                              </div>
                             </div>
                             <div>
                               <label className="block text-[10px] font-bold text-slate-600 mb-0.5">

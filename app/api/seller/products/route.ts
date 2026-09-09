@@ -246,6 +246,7 @@ export async function POST(req: Request) {
     }> = [];
 
     if (Array.isArray(variants) && variants.length > 0) {
+      let vCounter = 1;
       variants.forEach((v: any, index: number) => {
         const vPrice = Number(v.price) > 0 ? Number(v.price) : numericPrice;
         const vSalePrice = v.salePrice ? Number(v.salePrice) : numericSalePrice;
@@ -253,26 +254,57 @@ export async function POST(req: Request) {
           typeof v.stockQuantity === "number" && !isNaN(v.stockQuantity)
             ? v.stockQuantity
             : Number(stockQuantity) || 0;
-        const vSku = v.sku?.trim() || `${sku}-V${index + 1}`;
-        const vName =
-          v.name?.trim() ||
-          [v.color, v.size].filter(Boolean).join(" / ") ||
-          `Variant ${index + 1}`;
 
-        variantRecords.push({
-          name: vName,
-          sku: vSku,
-          color: v.color?.trim() || null,
-          size: v.size?.trim() || null,
-          price: vPrice,
-          salePrice: vSalePrice,
-          stockQuantity: vStock,
-          attributes: v.attributes
-            ? typeof v.attributes === "string"
-              ? v.attributes
-              : JSON.stringify(v.attributes)
-            : null,
-        });
+        // If size contains multiple comma-separated sizes (e.g. "40, 41, 42, 43, 44" or "S, M, L")
+        if (v.size && typeof v.size === "string" && v.size.includes(",")) {
+          const splitSizes = v.size
+            .split(/[,/]/)
+            .map((s: string) => s.trim())
+            .filter(Boolean);
+
+          const stockPerSize = Math.max(1, Math.floor(vStock / (splitSizes.length || 1)));
+
+          splitSizes.forEach((singleSize: string) => {
+            const vSku = `${sku}-V${vCounter++}`;
+            const vName = [v.color?.trim(), `Size ${singleSize}`].filter(Boolean).join(" / ");
+
+            variantRecords.push({
+              name: vName,
+              sku: vSku,
+              color: v.color?.trim() || null,
+              size: singleSize,
+              price: vPrice,
+              salePrice: vSalePrice,
+              stockQuantity: stockPerSize,
+              attributes: v.attributes
+                ? typeof v.attributes === "string"
+                  ? v.attributes
+                  : JSON.stringify(v.attributes)
+                : null,
+            });
+          });
+        } else {
+          const vSku = v.sku?.trim() || `${sku}-V${vCounter++}`;
+          const vName =
+            v.name?.trim() ||
+            [v.color?.trim(), v.size?.trim()].filter(Boolean).join(" / ") ||
+            `Variant ${index + 1}`;
+
+          variantRecords.push({
+            name: vName,
+            sku: vSku,
+            color: v.color?.trim() || null,
+            size: v.size?.trim() || null,
+            price: vPrice,
+            salePrice: vSalePrice,
+            stockQuantity: vStock,
+            attributes: v.attributes
+              ? typeof v.attributes === "string"
+                ? v.attributes
+                : JSON.stringify(v.attributes)
+              : null,
+          });
+        }
       });
     }
 

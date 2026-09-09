@@ -73,7 +73,7 @@ export async function createOrder(input: CreateOrderInput) {
       productId: product.id,
       variantId: variant?.id || null,
       sellerId: product.sellerId,
-      title: product.title,
+      title: variant?.name ? `${product.title} (${variant.name})` : product.title,
       sku: variant?.sku || product.sku,
       price: itemPrice,
       quantity,

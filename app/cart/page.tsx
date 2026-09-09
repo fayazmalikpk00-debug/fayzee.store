@@ -118,9 +118,25 @@ export default function CartPage() {
                     </div>
 
                     {item.variant && (
-                      <span className="inline-block mt-1 px-1.5 py-0.5 bg-[#F7F9FA] border border-[#DDE2E6] text-[#333333] text-[10px] font-semibold rounded truncate max-w-full">
-                        Variant: {item.variant.name}
-                      </span>
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                        {item.variant.size && (
+                          <span className="px-2 py-0.5 bg-orange-50 border border-orange-200 text-[#FF5E00] text-[10px] font-black rounded-md flex items-center gap-1">
+                            <span>Size:</span>
+                            <span>{item.variant.size}</span>
+                          </span>
+                        )}
+                        {item.variant.color && (
+                          <span className="px-2 py-0.5 bg-[#F7F9FA] border border-[#DDE2E6] text-slate-700 text-[10px] font-bold rounded-md flex items-center gap-1">
+                            <span>Color:</span>
+                            <span>{item.variant.color}</span>
+                          </span>
+                        )}
+                        {!item.variant.size && !item.variant.color && (
+                          <span className="px-2 py-0.5 bg-[#F7F9FA] border border-[#DDE2E6] text-[#333333] text-[10px] font-semibold rounded-md truncate max-w-full">
+                            Variant: {item.variant.name}
+                          </span>
+                        )}
+                      </div>
                     )}
                     <div className="text-xs font-extrabold text-[#FF5E00] mt-1">
                       {formatPrice(price)}

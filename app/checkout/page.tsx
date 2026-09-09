@@ -317,6 +317,14 @@ export default function CheckoutPage() {
                     />
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-[#1C2A39] truncate">{item.product.title}</p>
+                      {item.variant && (
+                        <p className="text-[10px] text-[#FF5E00] font-bold truncate">
+                          {item.variant.size ? `Size: ${item.variant.size}` : ""}
+                          {item.variant.size && item.variant.color ? " • " : ""}
+                          {item.variant.color ? `Color: ${item.variant.color}` : ""}
+                          {!item.variant.size && !item.variant.color ? item.variant.name : ""}
+                        </p>
+                      )}
                       <p className="text-[10px] text-[#777777]">Qty: {item.quantity}</p>
                     </div>
                     <span className="font-bold text-[#1C2A39] shrink-0">{formatPrice(price * item.quantity)}</span>
