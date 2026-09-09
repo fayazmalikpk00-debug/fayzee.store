@@ -66,58 +66,58 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-40 bg-[#1C2A39] border-b border-[#243345] shadow-subtle w-full max-w-full">
       {/* 1. Top micro-announcement bar */}
-      <div className="bg-[#15202B] text-slate-300 text-[11px] sm:text-xs py-1.5 px-3 sm:px-6 lg:px-8 border-b border-[#243345]">
+      <div className="bg-[#15202B] text-slate-300 text-xs sm:text-sm py-1.5 px-3 sm:px-6 lg:px-8 border-b border-[#243345]">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center space-x-2 truncate">
-            <span className="text-[#FF5E00] font-semibold flex items-center gap-1 shrink-0">
+            <span className="text-[#FF5E00] font-bold flex items-center gap-1 shrink-0">
               ⚡ Flash Deals Live Now!
             </span>
             <span className="hidden md:inline text-slate-500">|</span>
             <span className="hidden md:inline text-slate-300">Shop Smart. Shop Easy.</span>
           </div>
 
-          <div className="flex items-center space-x-3 shrink-0 text-[11px]">
+          <div className="flex items-center space-x-3 shrink-0 text-xs sm:text-sm">
             <Link
               href="/seller/register"
-              className="hover:text-white transition flex items-center gap-1 text-slate-300 hover:text-[#FF8C00]"
+              className="hover:text-white transition flex items-center gap-1 text-slate-300 hover:text-[#FF8C00] font-medium"
             >
-              <Store className="w-3.5 h-3.5 text-[#FF5E00] shrink-0" />
+              <Store className="w-4 h-4 text-[#FF5E00] shrink-0" />
               <span className="hidden xs:inline sm:inline">Become a Seller</span>
               <span className="xs:hidden sm:hidden">Sell</span>
             </Link>
             <span className="text-slate-600">|</span>
-            <Link href="/help" className="hover:text-white transition text-slate-300 hover:text-[#FF8C00]">
+            <Link href="/help" className="hover:text-white transition text-slate-300 hover:text-[#FF8C00] font-medium">
               Help
             </Link>
           </div>
         </div>
       </div>
 
-      {/* 2. Main Navbar Row */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex items-center justify-between gap-2 sm:gap-4">
-        {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group shrink-0 min-w-0" aria-label="FAYZEE Home">
-          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-white p-0.5 border border-white/20 shadow-xs flex items-center justify-center group-hover:scale-105 group-hover:shadow-md transition-all shrink-0">
+      {/* 2. Main Navbar Row - LEFT: Branding | CENTER: Search | RIGHT: Profile | Wishlist | Cart */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex items-center justify-between gap-3 sm:gap-4">
+        {/* LEFT: FAYZEE Branding */}
+        <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group shrink-0" aria-label="FAYZEE Home">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white p-1 border border-white/20 shadow-xs flex items-center justify-center group-hover:scale-105 transition-all shrink-0">
             <img
               src="/logo.png"
               alt="FAYZEE"
               className="w-full h-full object-contain rounded-lg"
             />
           </div>
-          <div>
-            <span className="text-xl sm:text-2xl font-black tracking-tight text-white group-hover:text-[#FF8C00] transition-colors block leading-tight">
+          <div className="flex flex-col">
+            <span className="text-2xl sm:text-3xl font-black tracking-tight text-white group-hover:text-[#FF8C00] transition-colors leading-none">
               FAYZEE
             </span>
-            <span className="hidden sm:block text-[8px] sm:text-[9px] font-bold tracking-wider text-[#FF5E00] uppercase">
+            <span className="text-[10px] sm:text-xs font-bold tracking-wider text-[#FF5E00] uppercase mt-1">
               Shop More • Live Better
             </span>
           </div>
         </Link>
 
-        {/* Desktop Global Search Bar */}
+        {/* CENTER: Desktop Global Search Bar */}
         <form
           onSubmit={handleSearch}
-          className="flex-1 max-w-2xl relative hidden md:block"
+          className="flex-1 max-w-2xl mx-3 lg:mx-6 relative hidden md:block"
         >
           <div className="relative">
             <input
@@ -125,61 +125,40 @@ export function Navbar() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search across 10,000+ authentic electronics, fashion, and home goods..."
-              className="w-full pl-11 pr-24 py-2.5 bg-white text-sm text-[#333333] placeholder:text-slate-400 rounded-full border border-[#DDE2E6] focus:border-[#FF5E00] focus:outline-none focus:ring-4 focus:ring-[#FF5E00]/15 transition shadow-inner"
+              className="w-full pl-12 pr-28 py-2.5 sm:py-3 bg-white text-sm sm:text-base text-[#333333] placeholder:text-slate-400 rounded-full border border-[#DDE2E6] focus:border-[#FF5E00] focus:outline-none focus:ring-4 focus:ring-[#FF5E00]/15 transition shadow-inner"
             />
-            <Search className="w-4 h-4 text-[#333333]/70 absolute left-4 top-1/2 -translate-y-1/2" />
+            <Search className="w-5 h-5 text-[#333333]/70 absolute left-4 top-1/2 -translate-y-1/2" />
             <button
               type="submit"
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-[#FF5E00] hover:bg-[#FF8C00] text-white text-xs font-bold rounded-full shadow-sm transition"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 px-5 py-2 bg-[#FF5E00] hover:bg-[#FF8C00] text-white text-sm font-bold rounded-full shadow-sm transition"
             >
               Search
             </button>
           </div>
         </form>
 
-        {/* Action icons */}
-        <div className="flex items-center space-x-1 sm:space-x-3 shrink-0">
-          {/* Wishlist */}
-          <Link
-            href="/wishlist"
-            className="p-2 sm:p-2.5 text-white hover:text-[#FF8C00] hover:bg-white/10 rounded-full transition relative flex items-center justify-center min-w-[38px] min-h-[38px]"
-            title="Wishlist"
-          >
-            <Heart className="w-5 h-5" />
-          </Link>
-
-          {/* Cart with dynamic badge */}
-          <Link
-            href="/cart"
-            className="p-2 sm:p-2.5 text-white hover:text-[#FF8C00] hover:bg-white/10 rounded-full transition relative flex items-center justify-center min-w-[38px] min-h-[38px]"
-            title="Shopping Cart"
-          >
-            <ShoppingBag className="w-5 h-5" />
-            {cartCount > 0 && (
-              <span className="absolute 0 top-0.5 right-0.5 bg-[#FF5E00] text-white text-[10px] font-bold rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center shadow-sm animate-pulse">
-                {cartCount}
-              </span>
-            )}
-          </Link>
-
-          {/* User Profile / Auth State */}
+        {/* RIGHT: Profile / Account | Wishlist | Shopping Cart */}
+        <div className="flex items-center space-x-2 sm:space-x-4 shrink-0">
+          {/* 1. Profile / Account */}
           <div className="relative">
             {user ? (
               <div className="relative">
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-1.5 p-1 rounded-full border border-white/20 hover:border-[#FF5E00] transition focus:outline-none bg-white/10 min-w-[36px] min-h-[36px]"
+                  className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-2 rounded-full border border-white/20 hover:border-[#FF5E00] hover:bg-white/10 transition focus:outline-none bg-white/5"
+                  title="Profile / Account"
                 >
-                  <div className="w-7 h-7 rounded-full bg-[#FF5E00] text-white flex items-center justify-center text-xs font-bold uppercase overflow-hidden">
+                  <div className="w-8 h-8 rounded-full bg-[#FF5E00] text-white flex items-center justify-center text-sm font-bold uppercase overflow-hidden shrink-0">
                     {user.avatar ? (
                       <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                     ) : (
                       user.name.charAt(0)
                     )}
                   </div>
-                  <span className="hidden lg:inline text-xs font-medium text-white pr-1 truncate max-w-[100px]">
+                  <span className="hidden lg:inline text-sm font-bold text-white pr-1 truncate max-w-[100px]">
                     {user.name.split(" ")[0]}
                   </span>
+                  <ChevronDown className="w-4 h-4 text-slate-300 hidden lg:block" />
                 </button>
 
                 {userDropdownOpen && (
@@ -188,9 +167,9 @@ export function Navbar() {
                     onMouseLeave={() => setUserDropdownOpen(false)}
                   >
                     <div className="px-4 py-2 border-b border-slate-100">
-                      <p className="text-xs font-bold text-[#1C2A39] truncate">{user.name}</p>
-                      <p className="text-[11px] text-[#777777] truncate">{user.email}</p>
-                      <span className="inline-block mt-1 px-2 py-0.5 bg-orange-50 text-[#FF5E00] rounded text-[10px] font-bold uppercase">
+                      <p className="text-sm font-bold text-[#1C2A39] truncate">{user.name}</p>
+                      <p className="text-xs text-[#777777] truncate">{user.email}</p>
+                      <span className="inline-block mt-1 px-2.5 py-0.5 bg-orange-50 text-[#FF5E00] rounded text-xs font-bold uppercase">
                         {user.role}
                       </span>
                     </div>
@@ -198,14 +177,14 @@ export function Navbar() {
                     <Link
                       href="/account"
                       onClick={() => setUserDropdownOpen(false)}
-                      className="block px-4 py-2 text-xs text-[#333333] hover:bg-slate-50 font-medium"
+                      className="block px-4 py-2 text-sm text-[#333333] hover:bg-slate-50 font-medium"
                     >
                       My Profile
                     </Link>
                     <Link
                       href="/orders"
                       onClick={() => setUserDropdownOpen(false)}
-                      className="block px-4 py-2 text-xs text-[#333333] hover:bg-slate-50 font-medium"
+                      className="block px-4 py-2 text-sm text-[#333333] hover:bg-slate-50 font-medium"
                     >
                       My Orders
                     </Link>
@@ -214,7 +193,7 @@ export function Navbar() {
                       <Link
                         href="/seller/dashboard"
                         onClick={() => setUserDropdownOpen(false)}
-                        className="block px-4 py-2 text-xs text-[#FF5E00] hover:bg-orange-50 font-bold"
+                        className="block px-4 py-2 text-sm text-[#FF5E00] hover:bg-orange-50 font-bold"
                       >
                         Seller Dashboard
                       </Link>
@@ -224,7 +203,7 @@ export function Navbar() {
                       <Link
                         href="/admin/dashboard"
                         onClick={() => setUserDropdownOpen(false)}
-                        className="block px-4 py-2 text-xs text-[#1C2A39] hover:bg-slate-100 font-bold"
+                        className="block px-4 py-2 text-sm text-[#1C2A39] hover:bg-slate-100 font-bold"
                       >
                         Admin Dashboard
                       </Link>
@@ -232,7 +211,7 @@ export function Navbar() {
 
                     <button
                       onClick={logout}
-                      className="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-50 font-medium"
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium"
                     >
                       Sign Out
                     </button>
@@ -243,13 +222,15 @@ export function Navbar() {
               <div className="flex items-center space-x-1 sm:space-x-2">
                 <Link
                   href="/login"
-                  className="px-2.5 sm:px-3.5 py-1.5 text-xs font-semibold text-white hover:text-[#FF8C00] transition"
+                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-bold text-white hover:text-[#FF8C00] hover:bg-white/10 rounded-full transition"
+                  title="Profile / Account"
                 >
-                  Sign In
+                  <UserIcon className="w-5 h-5 shrink-0" />
+                  <span className="hidden sm:inline">Sign In</span>
                 </Link>
                 <Link
                   href="/register"
-                  className="hidden sm:inline-block px-3.5 py-1.5 text-xs font-bold bg-[#FF5E00] text-white hover:bg-[#FF8C00] rounded-full transition shadow-sm shrink-0"
+                  className="hidden sm:inline-block px-4 py-2 text-sm font-bold bg-[#FF5E00] text-white hover:bg-[#FF8C00] rounded-full transition shadow-sm shrink-0"
                 >
                   Join
                 </Link>
@@ -257,31 +238,58 @@ export function Navbar() {
             )}
           </div>
 
+          {/* 2. Wishlist */}
+          <Link
+            href="/wishlist"
+            className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 text-white hover:text-[#FF8C00] hover:bg-white/10 rounded-full transition relative"
+            title="Wishlist"
+          >
+            <Heart className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
+            <span className="hidden xl:inline text-sm font-bold">Wishlist</span>
+          </Link>
+
+          {/* 3. Shopping Cart */}
+          <Link
+            href="/cart"
+            className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 text-white hover:text-[#FF8C00] hover:bg-white/10 rounded-full transition relative"
+            title="Shopping Cart"
+          >
+            <div className="relative">
+              <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1.5 -right-2 bg-[#FF5E00] text-white text-xs font-bold rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center shadow-md animate-pulse">
+                  {cartCount}
+                </span>
+              )}
+            </div>
+            <span className="hidden xl:inline text-sm font-bold">Cart</span>
+          </Link>
+
           {/* Mobile menu hamburger */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="p-2 text-white hover:text-[#FF8C00] md:hidden rounded-lg hover:bg-white/10 flex items-center justify-center min-w-[38px] min-h-[38px]"
             aria-label="Toggle Navigation Menu"
           >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </div>
 
       {/* 3. Mobile Dedicated Always-Accessible Search Bar */}
-      <div className="px-3 pb-2.5 md:hidden">
+      <div className="px-3 pb-3 md:hidden">
         <form onSubmit={handleSearch} className="relative">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search products, brands, categories..."
-            className="w-full pl-9 pr-18 py-2 bg-white text-xs text-[#333333] placeholder:text-slate-400 rounded-full border border-[#DDE2E6] focus:border-[#FF5E00] focus:outline-none focus:ring-2 focus:ring-[#FF5E00]/20 transition shadow-inner"
+            className="w-full pl-10 pr-20 py-2.5 bg-white text-sm text-[#333333] placeholder:text-slate-400 rounded-full border border-[#DDE2E6] focus:border-[#FF5E00] focus:outline-none focus:ring-2 focus:ring-[#FF5E00]/20 transition shadow-inner"
           />
-          <Search className="w-4 h-4 text-[#333333]/70 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[#333333]/70 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <button
             type="submit"
-            className="absolute right-1 top-1/2 -translate-y-1/2 px-3 py-1 bg-[#FF5E00] hover:bg-[#FF8C00] text-white text-[11px] font-bold rounded-full shadow-sm transition"
+            className="absolute right-1 top-1/2 -translate-y-1/2 px-3.5 py-1.5 bg-[#FF5E00] hover:bg-[#FF8C00] text-white text-xs font-bold rounded-full shadow-sm transition"
           >
             Search
           </button>
@@ -290,7 +298,7 @@ export function Navbar() {
 
       {/* 4. Subcategory Quick Bar & All Categories Mega Menu (Daraz / Amazon Style) */}
       <div className="relative border-t border-[#243345] bg-[#1C2A39] w-full">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-1.5 flex items-center justify-between text-xs font-medium text-white/90">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 flex items-center justify-between text-sm font-medium text-white/90">
           <div className="flex items-center space-x-2 sm:space-x-3 overflow-x-auto no-scrollbar py-0.5 w-full md:w-auto -mx-1 px-1">
             {/* Mega Menu Toggle Button */}
             <div
@@ -301,16 +309,16 @@ export function Navbar() {
               <button
                 type="button"
                 onClick={() => setMegaMenuOpen(!megaMenuOpen)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-black text-xs transition ${
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-bold text-sm transition ${
                   megaMenuOpen
                     ? "bg-[#FF5E00] text-white shadow-xs"
                     : "bg-white/10 text-white hover:bg-[#FF5E00]"
                 }`}
               >
-                <Layers className="w-3.5 h-3.5" />
+                <Layers className="w-4 h-4" />
                 <span>All Categories</span>
                 <ChevronDown
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                  className={`w-4 h-4 transition-transform duration-200 ${
                     megaMenuOpen ? "rotate-180" : ""
                   }`}
                 />
@@ -445,54 +453,54 @@ export function Navbar() {
             {/* Quick Links across major departments */}
             <Link
               href="/products"
-              className="hover:text-[#FF8C00] font-bold text-white shrink-0 px-2.5 py-1 rounded-full hover:bg-white/10 transition text-xs"
+              className="hover:text-[#FF8C00] font-bold text-white shrink-0 px-3 py-1 rounded-full hover:bg-white/10 transition text-sm"
             >
               All Products
             </Link>
             <Link
               href="/category/electronics"
-              className="hover:text-[#FF8C00] shrink-0 px-2.5 py-1 rounded-full hover:bg-white/10 transition text-xs text-white/90"
+              className="hover:text-[#FF8C00] font-medium shrink-0 px-3 py-1 rounded-full hover:bg-white/10 transition text-sm text-white/90"
             >
               Electronics
             </Link>
             <Link
               href="/category/mens-fashion"
-              className="hover:text-[#FF8C00] shrink-0 px-2.5 py-1 rounded-full hover:bg-white/10 transition text-xs text-white/90"
+              className="hover:text-[#FF8C00] font-medium shrink-0 px-3 py-1 rounded-full hover:bg-white/10 transition text-sm text-white/90"
             >
               Men&apos;s Fashion
             </Link>
             <Link
               href="/category/womens-fashion"
-              className="hover:text-[#FF8C00] shrink-0 px-2.5 py-1 rounded-full hover:bg-white/10 transition text-xs text-white/90"
+              className="hover:text-[#FF8C00] font-medium shrink-0 px-3 py-1 rounded-full hover:bg-white/10 transition text-sm text-white/90"
             >
               Women&apos;s Fashion
             </Link>
             <Link
               href="/category/home-kitchen"
-              className="hover:text-[#FF8C00] shrink-0 px-2.5 py-1 rounded-full hover:bg-white/10 transition text-xs text-white/90"
+              className="hover:text-[#FF8C00] font-medium shrink-0 px-3 py-1 rounded-full hover:bg-white/10 transition text-sm text-white/90"
             >
               Home & Kitchen
             </Link>
             <Link
               href="/category/beauty-personal-care"
-              className="hover:text-[#FF8C00] shrink-0 px-2.5 py-1 rounded-full hover:bg-white/10 transition text-xs text-white/90"
+              className="hover:text-[#FF8C00] font-medium shrink-0 px-3 py-1 rounded-full hover:bg-white/10 transition text-sm text-white/90"
             >
               Beauty
             </Link>
             <Link
               href="/category/groceries-pets"
-              className="hover:text-[#FF8C00] shrink-0 px-2.5 py-1 rounded-full hover:bg-white/10 transition text-xs text-white/90"
+              className="hover:text-[#FF8C00] font-medium shrink-0 px-3 py-1 rounded-full hover:bg-white/10 transition text-sm text-white/90"
             >
               Groceries
             </Link>
             <Link
               href="/flash-sale"
-              className="text-[#FF8C00] hover:text-[#FF5E00] font-extrabold flex items-center gap-1 shrink-0 px-2.5 py-1 rounded-full hover:bg-white/10 transition text-xs"
+              className="text-[#FF8C00] hover:text-[#FF5E00] font-bold flex items-center gap-1 shrink-0 px-3 py-1 rounded-full hover:bg-white/10 transition text-sm"
             >
               <span>⚡ Flash Sale</span>
             </Link>
           </div>
-          <div className="hidden lg:block shrink-0 font-semibold text-slate-400 text-[11px]">
+          <div className="hidden lg:block shrink-0 font-semibold text-slate-300 text-xs">
             18 Departments • Verified Sellers
           </div>
         </div>

@@ -64,27 +64,27 @@ export function Footer() {
               <span className="text-2xl font-black text-white tracking-tight block leading-none">
                 FAYZEE
               </span>
-              <span className="text-[10px] font-bold text-[#FF5E00] tracking-wider uppercase mt-1 block">
+              <span className="text-xs font-bold text-[#FF5E00] tracking-wider uppercase mt-1 block">
                 Shop More • Live Better
               </span>
             </div>
           </div>
-          <p className="text-xs leading-relaxed text-[#E8EDF2]/80 max-w-sm">
+          <p className="text-sm leading-relaxed text-[#E8EDF2]/90 max-w-sm">
             Fayzee is Pakistan's premier multi-vendor commerce platform, connecting authentic sellers with millions of customers with transparent pricing, guaranteed authenticity, and next-gen AI shopping.
           </p>
           <div className="pt-2 flex flex-wrap items-center gap-2 sm:gap-3">
-            <span className="px-3 py-1 bg-slate-800 text-slate-200 text-xs rounded-full border border-slate-700">
+            <span className="px-3 py-1 bg-slate-800 text-slate-200 text-xs sm:text-sm rounded-full border border-slate-700">
               🇵🇰 Pakistan Official
             </span>
-            <span className="px-3 py-1 bg-emerald-950/60 text-emerald-400 text-xs rounded-full border border-emerald-800/40 flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" /> PTA Approved Tech
+            <span className="px-3 py-1 bg-emerald-950/60 text-emerald-400 text-xs sm:text-sm rounded-full border border-emerald-800/40 flex items-center gap-1">
+              <CheckCircle2 className="w-4 h-4" /> PTA Approved Tech
             </span>
           </div>
         </div>
 
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-3.5">Explore Categories</h4>
-          <ul className="space-y-2 text-xs">
+          <h4 className="text-sm font-bold uppercase tracking-wider text-white mb-3.5">Explore Categories</h4>
+          <ul className="space-y-2.5 text-sm">
             <li><Link href="/category/smartphones-tablets" className="text-[#E8EDF2] hover:text-[#FF8C00] transition">Smartphones & Tablets</Link></li>
             <li><Link href="/category/laptops-computers" className="text-[#E8EDF2] hover:text-[#FF8C00] transition">Laptops & Computers</Link></li>
             <li><Link href="/category/audio-headphones" className="text-[#E8EDF2] hover:text-[#FF8C00] transition">Audio & Headphones</Link></li>
@@ -94,8 +94,8 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-3.5">Customer Care</h4>
-          <ul className="space-y-2 text-xs">
+          <h4 className="text-sm font-bold uppercase tracking-wider text-white mb-3.5">Customer Care</h4>
+          <ul className="space-y-2.5 text-sm">
             <li><Link href="/help" className="text-[#E8EDF2] hover:text-[#FF8C00] transition">Help Center & FAQ</Link></li>
             <li><Link href="/orders" className="text-[#E8EDF2] hover:text-[#FF8C00] transition">Track Your Order</Link></li>
             <li><Link href="/help" className="text-[#E8EDF2] hover:text-[#FF8C00] transition">Returns & Refunds</Link></li>
@@ -105,8 +105,8 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-3.5">Sell on Fayzee</h4>
-          <ul className="space-y-2 text-xs">
+          <h4 className="text-sm font-bold uppercase tracking-wider text-white mb-3.5">Sell on Fayzee</h4>
+          <ul className="space-y-2.5 text-sm">
             <li><Link href="/seller/register" className="text-[#FF5E00] font-bold hover:text-[#FF8C00] hover:underline">Register Store</Link></li>
             <li><Link href="/seller/dashboard" className="text-[#E8EDF2] hover:text-[#FF8C00] transition">Seller Center Login</Link></li>
             <li><Link href="/help" className="text-[#E8EDF2] hover:text-[#FF8C00] transition">Seller Guidelines</Link></li>
@@ -115,9 +115,9 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-[#243345] py-6 text-xs text-[#E8EDF2]/70 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+      <div className="border-t border-[#243345] py-6 text-sm text-[#E8EDF2]/80 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
         <p>© {new Date().getFullYear()} Fayzee Inc. All rights reserved. Shop Smart. Shop Easy.</p>
-        <div className="flex items-center gap-3 text-[11px] text-[#E8EDF2]/60">
+        <div className="flex items-center gap-3 text-xs text-[#E8EDF2]/70">
           <Link href="/seller/dashboard" className="hover:text-[#FF8C00] transition">Seller Center</Link>
           <span>•</span>
           <Link href="/admin/login" className="hover:text-[#FF8C00] transition">Admin Portal</Link>
