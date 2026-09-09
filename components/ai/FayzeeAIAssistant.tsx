@@ -168,6 +168,19 @@ export function FayzeeAIAssistant() {
   const { addToCart } = useCart();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const hasEverFocusedInputRef = useRef(false);
+
+  // Helper to safely focus the input without scroll jumps
+  const focusInput = () => {
+    if (typeof window !== "undefined") {
+      requestAnimationFrame(() => {
+        if (inputRef.current) {
+          inputRef.current.focus({ preventScroll: true });
+        }
+      });
+    }
+  };
 
   const defaultWelcomeMessage: Message = {
     id: "welcome",
@@ -182,6 +195,28 @@ export function FayzeeAIAssistant() {
   };
 
   const [messages, setMessages] = useState<Message[]>([defaultWelcomeMessage]);
+
+  // Auto focus input when chat is opened
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        focusInput();
+      }, 150);
+      return () => clearTimeout(timer);
+    } else {
+      hasEverFocusedInputRef.current = false;
+    }
+  }, [isOpen]);
+
+  // Auto focus input whenever AI finishes responding (loading becomes false)
+  useEffect(() => {
+    if (!loading && isOpen) {
+      const timer = setTimeout(() => {
+        focusInput();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, isOpen]);
 
   // Load conversation history on initial open
   useEffect(() => {
@@ -227,6 +262,8 @@ export function FayzeeAIAssistant() {
     const text = queryText || input;
     if (!text.trim() || loading) return;
 
+    hasEverFocusedInputRef.current = true;
+
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       role: "user",
@@ -237,6 +274,9 @@ export function FayzeeAIAssistant() {
     setMessages((prev) => [...prev, userMessage]);
     if (!queryText) setInput("");
     setLoading(true);
+
+    // Keep input immediately focused after user sends
+    focusInput();
 
     try {
       const chatHistory = messages.map((m) => ({
@@ -280,6 +320,10 @@ export function FayzeeAIAssistant() {
       ]);
     } finally {
       setLoading(false);
+      // Automatically refocus input right when reply arrives
+      setTimeout(() => {
+        focusInput();
+      }, 50);
     }
   };
 
@@ -297,6 +341,7 @@ export function FayzeeAIAssistant() {
         content: "Chat cleared. What authentic products are you looking for today?",
       },
     ]);
+    focusInput();
   };
 
   // Quick Add to Cart from rich product card
@@ -335,6 +380,7 @@ export function FayzeeAIAssistant() {
         return prev;
       });
       handleSend(lastUser.content);
+      focusInput();
     }
   };
 
@@ -718,7 +764,11 @@ export function FayzeeAIAssistant() {
               {quickPrompts.map((q, i) => (
                 <button
                   key={i}
-                  onClick={() => handleSend(q)}
+                  type="button"
+                  onClick={() => {
+                    handleSend(q);
+                    focusInput();
+                  }}
                   className="px-2.5 py-1 bg-white hover:bg-orange-50 hover:text-[#FF5E00] hover:border-[#FF5E00] text-[#333333] font-medium rounded-full border border-slate-200/80 shrink-0 transition whitespace-nowrap active:scale-95 shadow-2xs"
                 >
                   {q}
@@ -733,15 +783,26 @@ export function FayzeeAIAssistant() {
               e.preventDefault();
               handleSend();
             }}
-            className="p-2.5 sm:p-3 bg-white border-t border-slate-200 flex items-center gap-2 shrink-0"
+            onClick={() => focusInput()}
+            className="p-2.5 sm:p-3 bg-white border-t border-slate-200 flex items-center gap-2 shrink-0 cursor-text"
           >
             <input
+              ref={inputRef}
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask Fayzee AI (e.g. phone under 50k, compare S24 vs iPhone)..."
-              disabled={loading}
-              className="flex-1 px-3.5 py-2 text-xs bg-slate-50 rounded-full border border-slate-200 focus:outline-none focus:border-[#FF5E00] focus:ring-2 focus:ring-[#FF5E00]/15 min-w-0"
+              onFocus={() => {
+                hasEverFocusedInputRef.current = true;
+              }}
+              placeholder={
+                loading
+                  ? "Fayzee AI is thinking..."
+                  : "Ask Fayzee AI (e.g. phone under 50k, compare S24 vs iPhone)..."
+              }
+              readOnly={loading}
+              className={`flex-1 px-3.5 py-2 text-xs bg-slate-50 rounded-full border border-slate-200 focus:outline-none focus:border-[#FF5E00] focus:ring-2 focus:ring-[#FF5E00]/15 min-w-0 transition-all ${
+                loading ? "opacity-75 cursor-wait" : ""
+              }`}
             />
             <button
               type="submit"
@@ -749,7 +810,11 @@ export function FayzeeAIAssistant() {
               className="p-2 sm:p-2.5 bg-[#FF5E00] hover:bg-[#FF8C00] disabled:opacity-40 text-white rounded-full transition shadow-sm shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center active:scale-95"
               aria-label="Send query"
             >
-              <Send className="w-3.5 h-3.5" />
+              {loading ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Send className="w-3.5 h-3.5" />
+              )}
             </button>
           </form>
         </div>
