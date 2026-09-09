@@ -25,8 +25,22 @@ export default async function SellerStorePage({
     notFound();
   }
 
+  // Fetch reviews across all products of this seller
+  const sellerReviews = await prisma.review.findMany({
+    where: {
+      product: { sellerId: seller.id },
+      isApproved: true,
+    },
+    include: {
+      user: { select: { name: true, avatar: true } },
+      product: { select: { title: true, slug: true } },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 12,
+  });
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
       {/* Store Banner & Profile Header */}
       <div className="relative rounded-3xl overflow-hidden bg-[#1C2A39] text-white shadow-md border border-[#2A3B4C]">
         <div className="h-44 sm:h-56 w-full relative">
@@ -71,7 +85,7 @@ export default async function SellerStorePage({
               <span className="text-[#FF8C00] font-extrabold flex items-center justify-center gap-1">
                 <Star className="w-3.5 h-3.5 fill-[#FF8C00]" /> {seller.rating.toFixed(1)}
               </span>
-              <span className="text-[10px] text-white/70">Positive Rating</span>
+              <span className="text-[10px] text-white/70 block">({seller.reviewCount} Ratings)</span>
             </div>
             <div className="h-6 w-px bg-white/20" />
             <div className="text-center">
@@ -111,6 +125,85 @@ export default async function SellerStorePage({
                 seller={{ storeName: seller.storeName, storeSlug: seller.storeSlug }}
                 inStock={product.stockQuantity > 0}
               />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Store Customer Reviews Section */}
+      <div className="bg-white rounded-3xl border border-[#DDE2E6] p-6 sm:p-8 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#DDE2E6] pb-4">
+          <div>
+            <h2 className="text-lg sm:text-xl font-black text-[#1C2A39] flex items-center gap-2">
+              <Star className="w-5 h-5 text-[#FF8C00] fill-[#FF8C00]" />
+              <span>Customer Reviews for {seller.storeName}</span>
+            </h2>
+            <p className="text-xs text-[#777777] mt-0.5">
+              Verified customer feedback and store satisfaction ratings
+            </p>
+          </div>
+          <div className="flex items-center gap-1.5 text-base sm:text-lg font-black text-[#FF5E00]">
+            <Star className="w-5 h-5 fill-[#FF8C00] text-[#FF8C00]" />
+            <span>{seller.rating.toFixed(1)} / 5.0</span>
+            <span className="text-xs text-[#777777] font-normal">({seller.reviewCount} total reviews)</span>
+          </div>
+        </div>
+
+        {sellerReviews.length === 0 ? (
+          <div className="py-8 text-center text-xs text-[#777777]">
+            No reviews yet for products from this store. When buyers submit reviews, they will appear here.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {sellerReviews.map((r) => (
+              <div
+                key={r.id}
+                className="p-4 bg-[#F7F9FA] rounded-2xl border border-[#DDE2E6] space-y-2 hover:border-[#FF5E00]/40 transition"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-7 h-7 rounded-full bg-[#1C2A39] text-white flex items-center justify-center text-xs font-bold uppercase shrink-0">
+                      {r.user.name.charAt(0)}
+                    </div>
+                    <span className="text-xs font-bold text-[#1C2A39] truncate">{r.user.name}</span>
+                    {r.isVerifiedPurchase && (
+                      <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 text-[9px] font-bold rounded-full shrink-0">
+                        ✓ Verified
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex text-[#FF8C00] shrink-0">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star
+                        key={s}
+                        className={`w-3 h-3 ${
+                          s <= r.rating ? "fill-[#FF8C00]" : "text-slate-300 fill-slate-200"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="text-[11px] text-[#777777]">
+                  <span>Product: </span>
+                  <a
+                    href={`/products/${r.product.slug}`}
+                    className="text-[#1C2A39] hover:text-[#FF5E00] font-semibold underline"
+                  >
+                    {r.product.title}
+                  </a>
+                </div>
+
+                {r.title && <h4 className="text-xs font-bold text-[#1C2A39]">{r.title}</h4>}
+                <p className="text-xs text-[#333333] leading-relaxed">{r.comment}</p>
+
+                {r.sellerResponse && (
+                  <div className="mt-2 p-2.5 bg-white rounded-xl border border-orange-200 text-[11px] text-slate-700">
+                    <span className="font-bold text-[#FF5E00]">Seller Response: </span>
+                    {r.sellerResponse}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         )}

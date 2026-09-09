@@ -15,6 +15,7 @@ import {
   Image as ImageIcon,
   Layers,
   Loader2,
+  MessageSquare,
   Package,
   Plus,
   Search,
@@ -50,12 +51,18 @@ interface VariantFormItem {
 
 export default function SellerDashboardPage() {
   const { user, loading: authLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState<"overview" | "products" | "orders">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "products" | "orders" | "reviews">("overview");
 
   const [products, setProducts] = useState<any[]>([]);
   const [orderItems, setOrderItems] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [sellerReviews, setSellerReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Reviews Reply state
+  const [replyingReviewId, setReplyingReviewId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [submittingReply, setSubmittingReply] = useState(false);
 
   // Add Product Modal State (3-Tier Category + Attributes + Variants)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -83,23 +90,51 @@ export default function SellerDashboardPage() {
 
   const fetchSellerData = async () => {
     try {
-      const [prodRes, orderRes, catRes] = await Promise.all([
+      const [prodRes, orderRes, catRes, revRes] = await Promise.all([
         fetch("/api/seller/products"),
         fetch("/api/seller/orders"),
         fetch("/api/categories"),
+        fetch("/api/seller/reviews"),
       ]);
 
       const prodData = await prodRes.json();
       const orderData = await orderRes.json();
       const catData = await catRes.json();
+      const revData = await revRes.json();
 
       if (prodData.products) setProducts(prodData.products);
       if (orderData.orderItems) setOrderItems(orderData.orderItems);
       if (catData.categories) setCategories(catData.categories);
+      if (revData.reviews) setSellerReviews(revData.reviews);
     } catch (e) {
       console.error("Fetch seller data error:", e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleReplySubmit = async (reviewId: string) => {
+    if (!replyText.trim() || replyText.trim().length < 2) return;
+    setSubmittingReply(true);
+    try {
+      const res = await fetch("/api/seller/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviewId, sellerResponse: replyText.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to submit response");
+      setSellerReviews((prev) =>
+        prev.map((r) => (r.id === reviewId ? { ...r, sellerResponse: replyText.trim() } : r))
+      );
+      setReplyingReviewId(null);
+      setReplyText("");
+      setSuccessToast("Your official response has been published!");
+      setTimeout(() => setSuccessToast(""), 4000);
+    } catch (err: any) {
+      alert(err.message || "Failed to submit response");
+    } finally {
+      setSubmittingReply(false);
     }
   };
 
@@ -477,10 +512,10 @@ export default function SellerDashboardPage() {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex border-b border-[#DDE2E6] gap-8 text-sm font-bold">
+      <div className="flex border-b border-[#DDE2E6] gap-6 sm:gap-8 text-sm font-bold overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab("overview")}
-          className={`pb-3 transition relative ${
+          className={`pb-3 transition relative whitespace-nowrap ${
             activeTab === "overview"
               ? "text-[#FF5E00] border-b-2 border-[#FF5E00]"
               : "text-[#777777] hover:text-[#1C2A39]"
@@ -490,7 +525,7 @@ export default function SellerDashboardPage() {
         </button>
         <button
           onClick={() => setActiveTab("products")}
-          className={`pb-3 transition relative ${
+          className={`pb-3 transition relative whitespace-nowrap ${
             activeTab === "products"
               ? "text-[#FF5E00] border-b-2 border-[#FF5E00]"
               : "text-[#777777] hover:text-[#1C2A39]"
@@ -500,13 +535,28 @@ export default function SellerDashboardPage() {
         </button>
         <button
           onClick={() => setActiveTab("orders")}
-          className={`pb-3 transition relative ${
+          className={`pb-3 transition relative whitespace-nowrap ${
             activeTab === "orders"
               ? "text-[#FF5E00] border-b-2 border-[#FF5E00]"
               : "text-[#777777] hover:text-[#1C2A39]"
           }`}
         >
           Customer Orders ({orderItems.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("reviews")}
+          className={`pb-3 transition relative whitespace-nowrap flex items-center gap-1.5 ${
+            activeTab === "reviews"
+              ? "text-[#FF5E00] border-b-2 border-[#FF5E00]"
+              : "text-[#777777] hover:text-[#1C2A39]"
+          }`}
+        >
+          <span>Customer Reviews</span>
+          <span className={`px-2 py-0.5 rounded-full text-xs ${
+            activeTab === "reviews" ? "bg-orange-100 text-[#FF5E00]" : "bg-slate-100 text-slate-600"
+          }`}>
+            {sellerReviews.length}
+          </span>
         </button>
       </div>
 
@@ -781,6 +831,226 @@ export default function SellerDashboardPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 4: Customer Reviews on Seller's Catalog */}
+      {activeTab === "reviews" && (
+        <div className="space-y-6">
+          {/* Reviews Summary Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+              <div className="flex items-center justify-between text-slate-500">
+                <span className="text-xs font-bold">Overall Store Rating</span>
+                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+              </div>
+              <p className="text-2xl font-black text-slate-900 mt-2">
+                {user.sellerProfile?.rating?.toFixed(1) || "5.0"}
+              </p>
+              <span className="text-[10px] text-slate-400">Calculated across verified reviews</span>
+            </div>
+
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+              <div className="flex items-center justify-between text-slate-500">
+                <span className="text-xs font-bold">Total Reviews</span>
+                <MessageSquare className="w-4 h-4 text-blue-600" />
+              </div>
+              <p className="text-2xl font-black text-slate-900 mt-2">{sellerReviews.length}</p>
+              <span className="text-[10px] text-slate-400">Customer feedback submissions</span>
+            </div>
+
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+              <div className="flex items-center justify-between text-slate-500">
+                <span className="text-xs font-bold">5-Star Feedback</span>
+                <Star className="w-4 h-4 fill-[#FF5E00] text-[#FF5E00]" />
+              </div>
+              <p className="text-2xl font-black text-slate-900 mt-2">
+                {sellerReviews.filter((r) => r.rating === 5).length}
+              </p>
+              <span className="text-[10px] text-slate-400">Top-rated customer experiences</span>
+            </div>
+
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+              <div className="flex items-center justify-between text-slate-500">
+                <span className="text-xs font-bold">Responded</span>
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              </div>
+              <p className="text-2xl font-black text-slate-900 mt-2">
+                {sellerReviews.filter((r) => r.sellerResponse).length}
+              </p>
+              <span className="text-[10px] text-slate-400">Official seller replies</span>
+            </div>
+          </div>
+
+          {/* Customer Reviews List */}
+          <div className="space-y-4">
+            <h3 className="text-base font-bold text-slate-900">
+              Customer Reviews for Your Products
+            </h3>
+
+            {sellerReviews.length === 0 ? (
+              <div className="bg-white rounded-3xl p-10 border border-slate-200 text-center space-y-2">
+                <MessageSquare className="w-10 h-10 text-slate-300 mx-auto" />
+                <h4 className="text-sm font-bold text-slate-800">No customer reviews yet</h4>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  When customers purchase your products and submit ratings, their reviews and comments will appear here.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {sellerReviews.map((r) => (
+                  <div
+                    key={r.id}
+                    className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3"
+                  >
+                    {/* Review Top: Customer info & Product link */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-[#1C2A39] text-white flex items-center justify-center text-xs font-bold uppercase shrink-0">
+                          {r.user?.avatar ? (
+                            <img src={r.user.avatar} alt={r.user.name} className="w-full h-full object-cover rounded-full" />
+                          ) : (
+                            (r.user?.name || "Customer").charAt(0)
+                          )}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-slate-900">{r.user?.name || "Customer"}</span>
+                            {r.isVerifiedPurchase && (
+                              <span className="px-1.5 py-0.2 bg-emerald-100 text-emerald-800 text-[9px] font-bold rounded-full">
+                                ✓ Verified Buyer
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-slate-400">
+                            {r.createdAt ? formatDate(r.createdAt) : "Recently"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 self-start sm:self-auto">
+                        <div className="flex text-[#FF8C00]">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star
+                              key={s}
+                              className={`w-3.5 h-3.5 ${
+                                s <= r.rating ? "fill-[#FF8C00]" : "text-slate-300 fill-slate-200"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-xs font-black text-[#1C2A39]">{r.rating}.0 / 5.0</span>
+                      </div>
+                    </div>
+
+                    {/* Product Context */}
+                    {r.product && (
+                      <div className="flex items-center gap-2 text-xs bg-slate-50 p-2 rounded-xl border border-slate-100">
+                        {r.product.images?.[0]?.url && (
+                          <img
+                            src={r.product.images[0].url}
+                            alt=""
+                            className="w-8 h-8 rounded-lg object-cover shrink-0 border border-slate-200"
+                          />
+                        )}
+                        <span className="text-slate-500 truncate">Reviewed item:</span>
+                        <Link
+                          href={`/products/${r.product.slug}`}
+                          target="_blank"
+                          className="font-bold text-[#1C2A39] hover:text-[#FF5E00] underline truncate"
+                        >
+                          {r.product.title}
+                        </Link>
+                      </div>
+                    )}
+
+                    {/* Review Content */}
+                    <div>
+                      {r.title && <h4 className="text-xs font-bold text-slate-900 mb-0.5">{r.title}</h4>}
+                      <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-line">{r.comment}</p>
+                    </div>
+
+                    {/* Seller Reply Box / Action */}
+                    {r.sellerResponse && replyingReviewId !== r.id && (
+                      <div className="bg-orange-50/70 p-3 rounded-xl border border-orange-200/80 space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-[#FF5E00] flex items-center gap-1">
+                            <Store className="w-3.5 h-3.5" /> Your Official Response:
+                          </span>
+                          <button
+                            onClick={() => {
+                              setReplyingReviewId(r.id);
+                              setReplyText(r.sellerResponse);
+                            }}
+                            className="text-[10px] text-slate-500 hover:text-slate-800 underline font-medium"
+                          >
+                            Edit Reply
+                          </button>
+                        </div>
+                        <p className="text-xs text-slate-800 pl-4">{r.sellerResponse}</p>
+                      </div>
+                    )}
+
+                    {/* Reply Form */}
+                    {replyingReviewId === r.id ? (
+                      <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
+                        <label className="text-xs font-bold text-slate-800 block">
+                          Write an Official Response to this Customer:
+                        </label>
+                        <textarea
+                          rows={3}
+                          value={replyText}
+                          onChange={(e) => setReplyText(e.target.value)}
+                          placeholder="Thank the customer for their feedback or address their concern professionally..."
+                          className="w-full px-3 py-2 text-xs bg-white rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#FF5E00]"
+                        />
+                        <div className="flex items-center justify-end gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setReplyingReviewId(null);
+                              setReplyText("");
+                            }}
+                            className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-900"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleReplySubmit(r.id)}
+                            disabled={submittingReply || !replyText.trim()}
+                            className="px-4 py-1.5 bg-[#FF5E00] hover:bg-[#FF8C00] disabled:opacity-50 text-white text-xs font-bold rounded-lg transition shadow-xs flex items-center gap-1.5"
+                          >
+                            {submittingReply ? (
+                              <>
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                <span>Posting...</span>
+                              </>
+                            ) : (
+                              <span>Post Response</span>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    ) : !r.sellerResponse ? (
+                      <div className="pt-1">
+                        <button
+                          onClick={() => {
+                            setReplyingReviewId(r.id);
+                            setReplyText("");
+                          }}
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition flex items-center gap-1.5"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5 text-[#FF5E00]" />
+                          <span>Reply to Customer</span>
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
