@@ -80,8 +80,18 @@ model SellerProfile {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  // Bank & Payout Receiving Details
+  bankName        String?
+  accountTitle    String?
+  accountNumber   String?
+  iban            String?
+  branchCode      String?
+  payoutMethod    String   @default("BANK_TRANSFER") // BANK_TRANSFER, JAZZ_CASH, EASYPAISA
+  payoutPhone     String?
+
   products        Product[]
   orderItems      OrderItem[]
+  payouts         SellerPayout[]
 
   @@index([storeSlug])
   @@index([status])
@@ -590,3 +600,42 @@ model PasswordReset {
   @@index([tokenHash])
   @@index([expiresAt])
 }
+
+model SellerPayout {
+  id              String        @id @default(cuid())
+  sellerId        String
+  seller          SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  amount          Float
+  fee             Float         @default(0.0)
+  netAmount       Float
+  status          String        @default("PENDING") // PENDING, TRANSFERRED, REJECTED
+  payoutMethod    String        // BANK_TRANSFER, JAZZ_CASH, EASYPAISA
+  payoutDetails   String?       // JSON string of snapshot bank / wallet details at request time
+  adminReference  String?       // Bank transaction ref / UTR / Cheque entered by Admin
+  rejectionReason String?
+  requestedAt     DateTime      @default(now())
+  processedAt     DateTime?
+  processedBy     String?
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([sellerId])
+  @@index([status])
+}
+
+model PlatformFinancialSetting {
+  id                    String   @id @default("default")
+  defaultCommissionRate Float    @default(10.0) // 10%
+  minPayoutAmount       Float    @default(1000.0) // Rs. 1,000 minimum withdrawal
+  adminBankName         String?  // e.g. Habib Bank Limited (HBL)
+  adminAccountTitle     String?  // e.g. FAYZEE MARKETPLACE (PVT) LTD
+  adminAccountNumber    String?
+  adminIban             String?
+  adminBranchCode       String?
+  adminJazzCash         String?  // e.g. 03001234567
+  adminEasyPaisa        String?  // e.g. 03451234567
+  payoutInstructions    String?
+  updatedAt             DateTime @updatedAt
+}
+

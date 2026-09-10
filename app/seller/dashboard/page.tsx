@@ -7,20 +7,25 @@ import {
   AlertCircle,
   AlertTriangle,
   ArrowUpRight,
+  Building2,
   Check,
   CheckCircle2,
   ChevronDown,
   Clock,
+  CreditCard,
   DollarSign,
   Image as ImageIcon,
+  Landmark,
   Layers,
   Loader2,
   MessageSquare,
   Package,
   Plus,
   Search,
+  Send,
   ShoppingBag,
   Sliders,
+  Smartphone,
   Sparkles,
   Star,
   Store,
@@ -28,6 +33,7 @@ import {
   Trash2,
   Truck,
   Upload,
+  Wallet,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -51,13 +57,34 @@ interface VariantFormItem {
 
 export default function SellerDashboardPage() {
   const { user, loading: authLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState<"overview" | "products" | "orders" | "reviews">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "products" | "orders" | "reviews" | "finance">("overview");
 
   const [products, setProducts] = useState<any[]>([]);
   const [orderItems, setOrderItems] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [sellerReviews, setSellerReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Finance & Payouts State
+  const [financeData, setFinanceData] = useState<any>(null);
+  const [payoutsList, setPayoutsList] = useState<any[]>([]);
+  const [bankForm, setBankForm] = useState({
+    payoutMethod: "BANK_TRANSFER",
+    bankName: "",
+    accountTitle: "",
+    accountNumber: "",
+    iban: "",
+    branchCode: "",
+    payoutPhone: "",
+  });
+  const [savingBank, setSavingBank] = useState(false);
+  const [bankSavedMsg, setBankSavedMsg] = useState("");
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [withdrawNotes, setWithdrawNotes] = useState("");
+  const [submittingWithdraw, setSubmittingWithdraw] = useState(false);
+  const [withdrawError, setWithdrawError] = useState("");
+  const [withdrawSuccessMsg, setWithdrawSuccessMsg] = useState("");
 
   // Reviews Reply state
   const [replyingReviewId, setReplyingReviewId] = useState<string | null>(null);
@@ -97,26 +124,95 @@ export default function SellerDashboardPage() {
 
   const fetchSellerData = async () => {
     try {
-      const [prodRes, orderRes, catRes, revRes] = await Promise.all([
+      const [prodRes, orderRes, catRes, revRes, finRes, payRes] = await Promise.all([
         fetch("/api/seller/products"),
         fetch("/api/seller/orders"),
         fetch("/api/categories"),
         fetch("/api/seller/reviews"),
+        fetch("/api/seller/finance"),
+        fetch("/api/seller/payouts"),
       ]);
 
       const prodData = await prodRes.json();
       const orderData = await orderRes.json();
       const catData = await catRes.json();
       const revData = await revRes.json();
+      const finData = await finRes.json();
+      const payData = await payRes.json();
 
       if (prodData.products) setProducts(prodData.products);
       if (orderData.orderItems) setOrderItems(orderData.orderItems);
       if (catData.categories) setCategories(catData.categories);
       if (revData.reviews) setSellerReviews(revData.reviews);
+      if (finData.summary) {
+        setFinanceData(finData);
+        if (finData.receivingAccount) {
+          setBankForm((prev) => ({
+            ...prev,
+            ...finData.receivingAccount,
+          }));
+        }
+      }
+      if (payData.payouts) setPayoutsList(payData.payouts);
     } catch (e) {
       console.error("Fetch seller data error:", e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveBankDetails = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingBank(true);
+    setBankSavedMsg("");
+    try {
+      const res = await fetch("/api/seller/finance", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bankForm),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save bank details");
+
+      setBankSavedMsg("Receiving account details saved successfully!");
+      setTimeout(() => setBankSavedMsg(""), 4000);
+      fetchSellerData();
+    } catch (err: any) {
+      alert(err.message || "Failed to save details");
+    } finally {
+      setSavingBank(false);
+    }
+  };
+
+  const handleWithdrawSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmittingWithdraw(true);
+    setWithdrawError("");
+    setWithdrawSuccessMsg("");
+    try {
+      const res = await fetch("/api/seller/payouts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: Number(withdrawAmount),
+          notes: withdrawNotes.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to submit withdrawal request");
+
+      setWithdrawSuccessMsg(data.message || "Withdrawal request submitted successfully!");
+      setWithdrawAmount("");
+      setWithdrawNotes("");
+      setTimeout(() => {
+        setIsWithdrawModalOpen(false);
+        setWithdrawSuccessMsg("");
+      }, 2000);
+      fetchSellerData();
+    } catch (err: any) {
+      setWithdrawError(err.message || "Failed to submit request");
+    } finally {
+      setSubmittingWithdraw(false);
     }
   };
 
@@ -597,6 +693,22 @@ export default function SellerDashboardPage() {
           }`}>
             {sellerReviews.length}
           </span>
+        </button>
+        <button
+          onClick={() => setActiveTab("finance")}
+          className={`pb-3 transition relative whitespace-nowrap flex items-center gap-1.5 ${
+            activeTab === "finance"
+              ? "text-[#FF5E00] border-b-2 border-[#FF5E00]"
+              : "text-[#777777] hover:text-[#1C2A39]"
+          }`}
+        >
+          <Wallet className="w-4 h-4" />
+          <span>Finance & Payouts</span>
+          {financeData?.summary?.availableBalance > 0 && (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">
+              Rs. {Math.floor(financeData.summary.availableBalance).toLocaleString()}
+            </span>
+          )}
         </button>
       </div>
 
@@ -1315,6 +1427,579 @@ export default function SellerDashboardPage() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 5: Finance & Payouts */}
+      {activeTab === "finance" && (
+        <div className="space-y-6">
+          {/* Top Finance Overview KPIs */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Available Balance */}
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50/60 p-5 rounded-3xl border border-emerald-200 shadow-xs relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-emerald-800 uppercase tracking-wide">
+                  Available for Payout
+                </span>
+                <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                  <Wallet className="w-4 h-4" />
+                </div>
+              </div>
+              <p className="text-2xl sm:text-3xl font-black text-emerald-950 mt-2">
+                {formatPrice(financeData?.summary?.availableBalance || 0)}
+              </p>
+              <p className="text-[11px] text-emerald-700 mt-1">
+                Cleared from delivered orders (Net 90%)
+              </p>
+
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setWithdrawError("");
+                    setWithdrawSuccessMsg("");
+                    setIsWithdrawModalOpen(true);
+                  }}
+                  disabled={!financeData?.summary?.availableBalance || financeData.summary.availableBalance < 1000}
+                  className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 active:scale-98"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Request Payout</span>
+                </button>
+                {(!financeData?.summary?.availableBalance || financeData.summary.availableBalance < 1000) && (
+                  <span className="text-[10px] text-emerald-600/80 block text-center mt-1">
+                    Min. withdrawal: Rs. 1,000
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Pending Clearance */}
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50/50 p-5 rounded-3xl border border-amber-200 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-amber-800 uppercase tracking-wide">
+                  Pending Clearance
+                </span>
+                <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-xs">
+                  <Clock className="w-4 h-4" />
+                </div>
+              </div>
+              <p className="text-2xl sm:text-3xl font-black text-amber-950 mt-2">
+                {formatPrice(financeData?.summary?.pendingEarnings || 0)}
+              </p>
+              <p className="text-[11px] text-amber-700 mt-1">
+                Locked in packing / in-transit orders.
+              </p>
+              <div className="mt-4 p-2 bg-amber-100/60 rounded-xl border border-amber-200 text-[10px] text-amber-800">
+                Transfers to available balance once orders are delivered.
+              </div>
+            </div>
+
+            {/* Gross Store Sales */}
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                  Gross Store Sales
+                </span>
+                <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
+                  <DollarSign className="w-4 h-4" />
+                </div>
+              </div>
+              <p className="text-2xl font-black text-slate-900 mt-2">
+                {formatPrice(financeData?.summary?.totalSales || 0)}
+              </p>
+              <div className="mt-3 space-y-1 text-[11px] border-t border-slate-100 pt-2">
+                <div className="flex justify-between text-slate-500">
+                  <span>Platform Fee ({financeData?.summary?.commissionRate || 10}%):</span>
+                  <span className="font-bold text-rose-600">
+                    -{formatPrice(financeData?.summary?.totalCommission || 0)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-slate-500">
+                  <span>Completed Items:</span>
+                  <span className="font-bold text-slate-700">
+                    {financeData?.summary?.deliveredOrdersCount || 0}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Total Withdrawn to Date */}
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                  Total Withdrawn
+                </span>
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <Building2 className="w-4 h-4" />
+                </div>
+              </div>
+              <p className="text-2xl font-black text-slate-900 mt-2">
+                {formatPrice(financeData?.summary?.transferredPayouts || 0)}
+              </p>
+              <p className="text-[11px] text-slate-400 mt-1">
+                Disbursed to your account to date
+              </p>
+              {financeData?.summary?.pendingPayouts > 0 && (
+                <div className="mt-3 p-2 bg-blue-50 rounded-xl text-[10px] text-blue-700 font-medium">
+                  {formatPrice(financeData.summary.pendingPayouts)} currently pending admin transfer
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Receiving Bank Account & Mobile Wallet Settings Card */}
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-2">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <Landmark className="w-5 h-5 text-[#FF5E00]" />
+                  <span>Payout Receiving Account</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Specify the bank account or mobile wallet where Fayzee Admin transfers your store payouts.
+                </p>
+              </div>
+
+              {bankSavedMsg && (
+                <div className="px-3 py-1.5 bg-emerald-50 text-emerald-800 rounded-xl text-xs font-bold border border-emerald-200 flex items-center gap-1.5 animate-in fade-in">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <span>{bankSavedMsg}</span>
+                </div>
+              )}
+            </div>
+
+            <form onSubmit={handleSaveBankDetails} className="space-y-4">
+              {/* Method Selector */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-2">
+                  Select Payout Method:
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setBankForm((prev) => ({ ...prev, payoutMethod: "BANK_TRANSFER" }))}
+                    className={`p-3 rounded-2xl border text-left flex items-center gap-3 transition ${
+                      bankForm.payoutMethod === "BANK_TRANSFER"
+                        ? "border-[#FF5E00] bg-orange-50/40 text-slate-900 ring-2 ring-[#FF5E00]/20"
+                        : "border-slate-200 hover:border-slate-300 text-slate-600"
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
+                      <Landmark className="w-4 h-4 text-[#FF5E00]" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold block">Bank Account (IBAN)</span>
+                      <span className="text-[10px] text-slate-400 block">All Pakistani Banks</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setBankForm((prev) => ({ ...prev, payoutMethod: "JAZZ_CASH" }))}
+                    className={`p-3 rounded-2xl border text-left flex items-center gap-3 transition ${
+                      bankForm.payoutMethod === "JAZZ_CASH"
+                        ? "border-[#FF5E00] bg-orange-50/40 text-slate-900 ring-2 ring-[#FF5E00]/20"
+                        : "border-slate-200 hover:border-slate-300 text-slate-600"
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                      JC
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold block">JazzCash Mobile</span>
+                      <span className="text-[10px] text-slate-400 block">Instant Wallet Payout</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setBankForm((prev) => ({ ...prev, payoutMethod: "EASYPAISA" }))}
+                    className={`p-3 rounded-2xl border text-left flex items-center gap-3 transition ${
+                      bankForm.payoutMethod === "EASYPAISA"
+                        ? "border-[#FF5E00] bg-orange-50/40 text-slate-900 ring-2 ring-[#FF5E00]/20"
+                        : "border-slate-200 hover:border-slate-300 text-slate-600"
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                      EP
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold block">EasyPaisa Mobile</span>
+                      <span className="text-[10px] text-slate-400 block">Instant Wallet Payout</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Bank Account Fields */}
+              {bankForm.payoutMethod === "BANK_TRANSFER" && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Bank Name <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={bankForm.bankName}
+                      onChange={(e) => setBankForm({ ...bankForm, bankName: e.target.value })}
+                      placeholder="e.g. Meezan Bank / HBL / Bank Alfalah"
+                      className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#FF5E00]/20"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Account Title <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={bankForm.accountTitle}
+                      onChange={(e) => setBankForm({ ...bankForm, accountTitle: e.target.value })}
+                      placeholder="e.g. Malak Fayaz (Must match bank records)"
+                      className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#FF5E00]/20"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      IBAN Number (24 digits) <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={bankForm.iban}
+                      onChange={(e) => setBankForm({ ...bankForm, iban: e.target.value.toUpperCase() })}
+                      placeholder="PK36MEZN0001234567890123"
+                      className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF5E00]/20"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Branch Code (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={bankForm.branchCode}
+                      onChange={(e) => setBankForm({ ...bankForm, branchCode: e.target.value })}
+                      placeholder="e.g. 0142"
+                      className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#FF5E00]/20"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Mobile Wallet Fields */}
+              {(bankForm.payoutMethod === "JAZZ_CASH" || bankForm.payoutMethod === "EASYPAISA") && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Registered Account Title <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={bankForm.accountTitle}
+                      onChange={(e) => setBankForm({ ...bankForm, accountTitle: e.target.value })}
+                      placeholder="e.g. Malak Fayaz"
+                      className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#FF5E00]/20"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Mobile Account Number (11 digits) <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      maxLength={11}
+                      value={bankForm.payoutPhone}
+                      onChange={(e) => setBankForm({ ...bankForm, payoutPhone: e.target.value.replace(/\D/g, "") })}
+                      placeholder="03001234567"
+                      className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF5E00]/20"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="submit"
+                  disabled={savingBank}
+                  className="px-5 py-2.5 bg-[#FF5E00] hover:bg-[#FF8C00] disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-98"
+                >
+                  {savingBank ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Saving Details...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Save Receiving Details</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Payout History & Statements Table */}
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Withdrawal & Payout History</h3>
+                <p className="text-xs text-slate-500">
+                  Track your fund withdrawal requests and bank settlement receipts.
+                </p>
+              </div>
+              <span className="text-xs text-slate-400">
+                {payoutsList.length} total request{payoutsList.length === 1 ? "" : "s"}
+              </span>
+            </div>
+
+            {payoutsList.length === 0 ? (
+              <div className="py-12 px-4 text-center">
+                <Wallet className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                <p className="text-xs font-bold text-slate-800">No withdrawal requests yet</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  When you request a payout, its bank transfer status and reference will be tracked here.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left min-w-[640px]">
+                  <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200 uppercase text-[10px]">
+                    <tr>
+                      <th className="py-3 px-4">Request Date</th>
+                      <th className="py-3 px-4">Amount</th>
+                      <th className="py-3 px-4">Payout Method</th>
+                      <th className="py-3 px-4">Status</th>
+                      <th className="py-3 px-4">Bank Reference (UTR)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {payoutsList.map((p) => (
+                      <tr key={p.id} className="hover:bg-slate-50/50 transition">
+                        <td className="py-3 px-4 text-slate-700">
+                          {formatDate(p.requestedAt)}
+                          <span className="text-[10px] text-slate-400 block font-mono">
+                            ID: {p.id.slice(-8)}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="font-black text-slate-900 text-sm">
+                            {formatPrice(p.amount)}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="font-medium text-slate-800 block">
+                            {p.payoutMethod === "BANK_TRANSFER"
+                              ? "Bank Transfer (IBAN)"
+                              : p.payoutMethod === "JAZZ_CASH"
+                              ? "JazzCash Mobile"
+                              : "EasyPaisa Mobile"}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          {p.status === "PENDING" && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 text-amber-800 rounded-full text-[10px] font-bold border border-amber-200">
+                              <Clock className="w-3 h-3 text-amber-600 animate-spin" />
+                              <span>Pending Admin Transfer</span>
+                            </span>
+                          )}
+                          {p.status === "TRANSFERRED" && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-800 rounded-full text-[10px] font-bold border border-emerald-200">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                              <span>Transferred & Settled</span>
+                            </span>
+                          )}
+                          {p.status === "REJECTED" && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-rose-50 text-rose-800 rounded-full text-[10px] font-bold border border-rose-200">
+                              <X className="w-3 h-3 text-rose-600" />
+                              <span>Declined (Refunded)</span>
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4">
+                          {p.adminReference ? (
+                            <div className="font-mono text-[11px] font-bold text-emerald-700 select-all">
+                              {p.adminReference}
+                            </div>
+                          ) : (
+                            <span className="text-slate-400 text-[11px]">Processing...</span>
+                          )}
+                          {p.rejectionReason && (
+                            <span className="text-[10px] text-rose-600 block mt-0.5">
+                              Reason: {p.rejectionReason}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Request Fund Withdrawal */}
+      {isWithdrawModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-100">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                  <Wallet className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">Request Fund Withdrawal</h3>
+                  <p className="text-[11px] text-slate-500">
+                    Transfer store earnings to your receiving account
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsWithdrawModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Account Details Preview */}
+            <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">
+                Destination Receiving Account
+              </span>
+              <p className="font-bold text-slate-900">
+                {financeData?.receivingAccount?.payoutMethod === "BANK_TRANSFER"
+                  ? `${financeData?.receivingAccount?.bankName || "Bank"} (${financeData?.receivingAccount?.accountTitle})`
+                  : `${financeData?.receivingAccount?.payoutMethod} (${financeData?.receivingAccount?.accountTitle})`}
+              </p>
+              <p className="font-mono text-[11px] text-slate-600">
+                {financeData?.receivingAccount?.iban ||
+                  financeData?.receivingAccount?.accountNumber ||
+                  financeData?.receivingAccount?.payoutPhone ||
+                  "No account saved yet"}
+              </p>
+            </div>
+
+            {/* Balance info */}
+            <div className="flex justify-between items-center text-xs p-3 bg-emerald-50/70 border border-emerald-200 rounded-2xl text-emerald-950">
+              <span>Available for Withdrawal:</span>
+              <span className="font-black text-sm text-emerald-700">
+                {formatPrice(financeData?.summary?.availableBalance || 0)}
+              </span>
+            </div>
+
+            {withdrawError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 text-xs">
+                {withdrawError}
+              </div>
+            )}
+
+            {withdrawSuccessMsg && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-xs font-bold flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span>{withdrawSuccessMsg}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleWithdrawSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Withdrawal Amount (Rs.) <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  required
+                  min={1000}
+                  max={Math.floor(financeData?.summary?.availableBalance || 0)}
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                  placeholder="e.g. 5000"
+                  className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF5E00]/20"
+                />
+
+                {/* Quick Selection Pills */}
+                <div className="flex items-center gap-2 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setWithdrawAmount("1000")}
+                    className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-[10px] font-bold text-slate-700 transition"
+                  >
+                    Rs. 1,000
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setWithdrawAmount("5000")}
+                    className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-[10px] font-bold text-slate-700 transition"
+                  >
+                    Rs. 5,000
+                  </button>
+                  {financeData?.summary?.availableBalance >= 1000 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setWithdrawAmount(String(Math.floor(financeData.summary.availableBalance)))
+                      }
+                      className="px-2.5 py-1 bg-emerald-100 hover:bg-emerald-200 rounded-lg text-[10px] font-bold text-emerald-800 transition"
+                    >
+                      All Available
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Note for Admin (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={withdrawNotes}
+                  onChange={(e) => setWithdrawNotes(e.target.value)}
+                  placeholder="e.g. Weekly settlement request"
+                  className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#FF5E00]/20"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsWithdrawModalOpen(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingWithdraw || !withdrawAmount || Number(withdrawAmount) < 1000}
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 active:scale-98"
+                >
+                  {submittingWithdraw ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Submitting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Confirm & Request</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
