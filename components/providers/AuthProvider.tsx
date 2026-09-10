@@ -17,6 +17,7 @@ export interface UserSession {
     rating: number;
     rejectionReason?: string | null;
     isPhoneVerified?: boolean;
+    isEmailVerified?: boolean;
   } | null;
 }
 

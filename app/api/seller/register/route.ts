@@ -18,6 +18,7 @@ export async function POST(req: Request) {
       taxNumber,
       businessAddress,
       phone,
+      email,
       description,
       cnicFrontUrl,
       cnicBackUrl,
@@ -27,11 +28,21 @@ export async function POST(req: Request) {
       accountNumber,
       iban,
       isPhoneVerified,
+      isEmailVerified,
     } = body;
+
+    const sellerEmail = (email || user.email || "").trim();
 
     if (!storeName || !businessName || !cnic || !phone || !businessAddress) {
       return NextResponse.json(
         { error: "Please complete all required fields." },
+        { status: 400 }
+      );
+    }
+
+    if (!isEmailVerified) {
+      return NextResponse.json(
+        { error: "Please verify your email address with the 6-digit confirmation code before submitting." },
         { status: 400 }
       );
     }
@@ -62,7 +73,9 @@ export async function POST(req: Request) {
           taxNumber: taxNumber || null,
           cnic,
           phone,
+          email: sellerEmail,
           isPhoneVerified: Boolean(isPhoneVerified),
+          isEmailVerified: Boolean(isEmailVerified),
           cnicFrontUrl: cnicFrontUrl || null,
           cnicBackUrl: cnicBackUrl || null,
           bankProofUrl: bankProofUrl || null,
@@ -90,6 +103,7 @@ export async function POST(req: Request) {
           accountNumber: accountNumber || null,
           iban: iban || null,
           isPhoneVerified: Boolean(isPhoneVerified),
+          isEmailVerified: Boolean(isEmailVerified),
           rejectionReason: null,
           status: "PENDING",
         },
@@ -111,6 +125,7 @@ export async function POST(req: Request) {
           accountNumber: accountNumber || null,
           iban: iban || null,
           isPhoneVerified: Boolean(isPhoneVerified),
+          isEmailVerified: Boolean(isEmailVerified),
           status: "PENDING",
         },
       });

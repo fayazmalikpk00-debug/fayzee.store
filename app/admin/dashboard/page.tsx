@@ -38,6 +38,9 @@ import {
   ExternalLink,
   Eye,
   FileCheck,
+  Mail,
+  MessageSquare,
+  Phone,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -598,18 +601,16 @@ export default function AdminDashboardPage() {
                     </td>
                     <td className="py-3 px-4">
                       <p className="font-semibold text-slate-800">{s.user?.name}</p>
-                      <span className="text-[11px] text-slate-500 block">{s.user?.email}</span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[11px] text-slate-500">{s.user?.email}</span>
+                        {s.isEmailVerified ? (
+                          <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">
+                            ✓ Email Verified
+                          </span>
+                        ) : null}
+                      </div>
                       <div className="flex items-center gap-1 mt-0.5">
                         <span className="text-[11px] text-slate-600 font-mono">{s.phone}</span>
-                        {s.isPhoneVerified ? (
-                          <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">
-                            ✓ Verified
-                          </span>
-                        ) : (
-                          <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-800">
-                            Unverified
-                          </span>
-                        )}
                       </div>
                     </td>
                     <td className="py-3 px-4 font-mono text-[11px] text-slate-600">
@@ -664,6 +665,21 @@ export default function AdminDashboardPage() {
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right space-x-1.5">
+                      {s.phone && (
+                        <a
+                          href={`https://wa.me/${s.phone.replace(/\D/g, "").replace(/^0/, "92")}?text=${encodeURIComponent(
+                            `Assalam-o-Alaikum ${s.user?.name || ""}, I am FAYZEE Administrator reviewing your seller application for '${s.storeName}'.`
+                          )}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold rounded-lg text-[10px] transition inline-flex items-center gap-1 shadow-xs"
+                          title="Call or Chat with Seller on WhatsApp"
+                        >
+                          <MessageSquare className="w-3 h-3 text-emerald-600" />
+                          <span>WhatsApp</span>
+                        </a>
+                      )}
+
                       <button
                         onClick={() => {
                           setInspectingSeller(s);
@@ -749,20 +765,39 @@ export default function AdminDashboardPage() {
                     <span className="font-bold text-slate-400 uppercase text-[10px] tracking-wider block">
                       Identity & Contact Info
                     </span>
-                    <p><strong className="text-slate-700">Applicant:</strong> {inspectingSeller.user?.name} ({inspectingSeller.user?.email})</p>
-                    <p className="flex items-center gap-1.5">
-                      <strong className="text-slate-700">Phone:</strong> {inspectingSeller.phone}
-                      {inspectingSeller.isPhoneVerified ? (
-                        <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">
-                          ✓ OTP Verified
+                    <p><strong className="text-slate-700">Applicant:</strong> {inspectingSeller.user?.name}</p>
+                    <p className="flex items-center gap-1.5 flex-wrap">
+                      <strong className="text-slate-700">Email:</strong> {inspectingSeller.user?.email}
+                      {inspectingSeller.isEmailVerified ? (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-0.5">
+                          <Check className="w-2.5 h-2.5" /> Email OTP Verified
                         </span>
                       ) : (
-                        <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-800">
-                          Unverified
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700">
+                          ✓ Verified
                         </span>
                       )}
                     </p>
-                    <p><strong className="text-slate-700">CNIC Number:</strong> <span className="font-mono font-bold text-slate-900">{inspectingSeller.cnic || "N/A"}</span></p>
+                    <p className="flex items-center gap-1.5">
+                      <strong className="text-slate-700">Phone:</strong> <span className="font-mono font-bold text-slate-900">{inspectingSeller.phone}</span>
+                    </p>
+
+                    {/* Direct WhatsApp Call / Message Action */}
+                    <div className="pt-2">
+                      <a
+                        href={`https://wa.me/${(inspectingSeller.phone || inspectingSeller.user?.phone || "").replace(/\D/g, "").replace(/^0/, "92")}?text=${encodeURIComponent(
+                          `Assalam-o-Alaikum ${inspectingSeller.user?.name || ""}, I am FAYZEE Administrator reviewing your KYC verification documents for '${inspectingSeller.storeName}'.`
+                        )}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 shadow-sm active:scale-98"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        <span>Call / Chat on WhatsApp ({inspectingSeller.phone})</span>
+                      </a>
+                    </div>
+
+                    <p className="pt-1"><strong className="text-slate-700">CNIC Number:</strong> <span className="font-mono font-bold text-slate-900">{inspectingSeller.cnic || "N/A"}</span></p>
                     <p><strong className="text-slate-700">FBR NTN:</strong> {inspectingSeller.taxNumber || "N/A"}</p>
                     <p><strong className="text-slate-700">Pickup Address:</strong> {inspectingSeller.address || "N/A"}</p>
                   </div>

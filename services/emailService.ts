@@ -207,3 +207,154 @@ export async function sendPasswordResetEmail({
     };
   }
 }
+
+export interface SendSellerEmailOtpParams {
+  to: string;
+  userName?: string;
+  otpCode: string;
+}
+
+/**
+ * Dispatches a 6-digit OTP verification email for Seller onboarding.
+ */
+export async function sendSellerEmailOtp({
+  to,
+  userName = "Seller Partner",
+  otpCode,
+}: SendSellerEmailOtpParams): Promise<EmailResult> {
+  const isDev = process.env.NODE_ENV !== "production";
+  const resendApiKey = process.env.RESEND_API_KEY?.trim().replace(/^["']|["']$/g, "");
+  const fromEmail = process.env.EMAIL_FROM?.trim().replace(/^["']|["']$/g, "") || "FAYZEE <onboarding@resend.dev>";
+
+  // If RESEND_API_KEY is not configured, support local simulation so registration/testing is never blocked
+  if (!resendApiKey) {
+    console.warn(`⚠️ [FAYZEE EMAIL SIMULATION] RESEND_API_KEY not found in .env. Simulated OTP for ${to}: [${otpCode}]`);
+    return {
+      success: true,
+      isSimulated: true,
+      messageId: `simulated-otp-${Date.now()}`,
+    };
+  }
+
+  try {
+    console.log(`📨 [FAYZEE EMAIL] Sending Seller OTP [${otpCode}] to ${to} via Resend...`);
+
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${resendApiKey}`,
+      },
+      cache: "no-store",
+      body: JSON.stringify({
+        from: fromEmail,
+        to: [to],
+        subject: `${otpCode} is your FAYZEE Seller Verification Code`,
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>FAYZEE Seller Verification Code</title>
+          </head>
+          <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F7F9FA;">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F7F9FA; padding: 32px 16px;">
+              <tr>
+                <td align="center">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; background-color: #ffffff; border-radius: 24px; overflow: hidden; border: 1px solid #DDE2E6; box-shadow: 0 4px 6px -1px rgba(28, 42, 57, 0.06);">
+                    <!-- Luxury Dark Header -->
+                    <tr>
+                      <td style="background-color: #0B0F14; padding: 32px 24px; text-align: center; border-bottom: 2px solid #C8A96B;">
+                        <h1 style="color: #ffffff; font-size: 28px; font-weight: 900; letter-spacing: -0.5px; margin: 0;">FAYZEE</h1>
+                        <p style="color: #C8A96B; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin: 6px 0 0 0;">Seller Verification Portal</p>
+                      </td>
+                    </tr>
+                    
+                    <!-- Content Body -->
+                    <tr>
+                      <td style="padding: 36px 32px;">
+                        <h2 style="color: #0B0F14; font-size: 20px; font-weight: 800; margin: 0 0 16px 0;">Verify Your Email Address</h2>
+                        <p style="color: #333333; font-size: 14px; line-height: 1.6; margin: 0 0 16px 0;">
+                          Hello <strong>${userName}</strong>,
+                        </p>
+                        <p style="color: #333333; font-size: 14px; line-height: 1.6; margin: 0 0 24px 0;">
+                          Thank you for choosing to sell on FAYZEE. To verify your email address and proceed with your store registration, please enter the following 6-digit confirmation code on the verification page:
+                        </p>
+                        
+                        <!-- OTP Code Display Card -->
+                        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 24px 0;">
+                          <tr>
+                            <td align="center">
+                              <div style="background-color: #0B0F14; border: 2px solid #C8A96B; border-radius: 16px; padding: 20px 32px; display: inline-block; box-shadow: 0 8px 24px rgba(11, 15, 20, 0.2);">
+                                <span style="font-family: 'Courier New', Courier, monospace; color: #C8A96B; font-size: 36px; font-weight: 900; letter-spacing: 10px; display: block;">
+                                  ${otpCode}
+                                </span>
+                              </div>
+                            </td>
+                          </tr>
+                        </table>
+                        
+                        <!-- Security & Expiry Note -->
+                        <div style="background-color: #FAF9F6; border-radius: 12px; padding: 14px 16px; margin: 24px 0 16px 0; border: 1px solid #E8E5DC; border-left: 4px solid #C8A96B;">
+                          <p style="color: #333333; font-size: 12px; line-height: 1.5; margin: 0 0 8px 0;">
+                            ⏳ <strong>Expiry Notice:</strong> This code will expire in <strong>10 minutes</strong>.
+                          </p>
+                          <p style="color: #555555; font-size: 12px; line-height: 1.5; margin: 0;">
+                            🔒 <strong>Security Warning:</strong> FAYZEE staff will never ask you for this code. Do not share it with anyone.
+                          </p>
+                        </div>
+
+                        <!-- Admin WhatsApp Onboarding Info -->
+                        <div style="background-color: #F0FDF4; border-radius: 12px; padding: 14px 16px; margin: 16px 0 0 0; border: 1px solid #BBF7D0; border-left: 4px solid #22C55E;">
+                          <p style="color: #166534; font-size: 12px; line-height: 1.5; margin: 0;">
+                            💬 <strong>Next Step:</strong> After entering this code and submitting your CNIC & Bank Cheque photos, FAYZEE Admin will inspect your documents and reach out to your registered phone number via WhatsApp for onboarding verification.
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                      <td style="background-color: #0B0F14; padding: 24px 32px; text-align: center;">
+                        <p style="color: #8A8F98; font-size: 11px; margin: 0 0 6px 0;">
+                          &copy; ${new Date().getFullYear()} FAYZEE Marketplace. All rights reserved.
+                        </p>
+                        <p style="color: #8A8F98; font-size: 11px; margin: 0;">
+                          Pakistan's Premier Multi-Vendor E-Commerce Platform • <a href="https://fayzee.store" style="color: #C8A96B; text-decoration: underline;">fayzee.store</a>
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>
+        `,
+        text: `FAYZEE - Seller Email Verification Code\n\nHello ${userName},\n\nYour 6-digit confirmation code is: ${otpCode}\n\nThis code is valid for 10 minutes. Please enter it on the seller registration page.\n\nAfter submitting your application, FAYZEE Admin will review your CNIC and contact you via WhatsApp for final onboarding.\n\n- The FAYZEE Team\nhttps://fayzee.store`,
+      }),
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      const detailedError =
+        errData.message ||
+        errData.error ||
+        response.statusText ||
+        "Resend API rejected the email dispatch request.";
+      console.error("❌ [RESEND OTP API ERROR]:", detailedError);
+      return { success: false, error: detailedError };
+    }
+
+    const data = await response.json();
+    console.log(`✅ [FAYZEE OTP EMAIL SUCCESS] Dispatched to ${to}, Resend ID: ${data.id}`);
+    return { success: true, messageId: data.id };
+  } catch (err: any) {
+    console.error("❌ [EMAIL OTP DISPATCH EXCEPTION]:", err);
+    return {
+      success: false,
+      error: err.message || "Network error while connecting to email provider.",
+    };
+  }
+}

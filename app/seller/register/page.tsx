@@ -10,6 +10,9 @@ import {
   CreditCard,
   FileText,
   Loader2,
+  Mail,
+  MessageSquare,
+  Phone,
   ShieldCheck,
   Smartphone,
   Sparkles,
@@ -19,7 +22,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function SellerRegisterPage() {
   const router = useRouter();
@@ -32,14 +35,25 @@ export default function SellerRegisterPage() {
   const [city, setCity] = useState("Karachi");
   const [description, setDescription] = useState("");
 
-  // Step 2: Phone & OTP Verification
+  // Step 2: Email OTP & Contact Information
+  const [email, setEmail] = useState("");
+  const [emailOtpCode, setEmailOtpCode] = useState("");
+  const [emailOtpSent, setEmailOtpSent] = useState(false);
+  const [emailOtpLoading, setEmailOtpLoading] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [emailOtpMessage, setEmailOtpMessage] = useState("");
+  const [demoEmailOtpHint, setDemoEmailOtpHint] = useState("");
   const [phone, setPhone] = useState("");
-  const [otpCode, setOtpCode] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpLoading, setOtpLoading] = useState(false);
-  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
-  const [otpMessage, setOtpMessage] = useState("");
-  const [demoOtpHint, setDemoOtpHint] = useState("");
+
+  // Auto-fill user email when session loads
+  useEffect(() => {
+    if (user?.email && !email) {
+      setEmail(user.email);
+    }
+    if (user?.phone && !phone) {
+      setPhone(user.phone);
+    }
+  }, [user]);
 
   // Step 3: CNIC & Tax Information
   const [cnic, setCnic] = useState("");
@@ -113,66 +127,67 @@ export default function SellerRegisterPage() {
     }
   };
 
-  // OTP Handlers
-  const handleSendOtp = async () => {
-    if (!phone || phone.trim().length < 10) {
-      setErrorMsg("Please enter a valid Pakistani mobile number first (e.g. 03001234567).");
+  // Email OTP Handlers
+  const handleSendEmailOtp = async () => {
+    const targetEmail = (email || user?.email || "").trim();
+    if (!targetEmail || !targetEmail.includes("@")) {
+      setErrorMsg("Please enter a valid email address first.");
       return;
     }
 
-    setOtpLoading(true);
+    setEmailOtpLoading(true);
     setErrorMsg("");
-    setOtpMessage("");
-    setDemoOtpHint("");
+    setEmailOtpMessage("");
+    setDemoEmailOtpHint("");
 
     try {
-      const res = await fetch("/api/seller/verify-otp", {
+      const res = await fetch("/api/seller/verify-email-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "SEND_OTP", phone }),
+        body: JSON.stringify({ action: "SEND_OTP", email: targetEmail }),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to send verification code");
+      if (!res.ok) throw new Error(data.error || "Failed to send email verification code");
 
-      setOtpSent(true);
-      setOtpMessage(data.message || "Verification code sent!");
+      setEmailOtpSent(true);
+      setEmailOtpMessage(data.message || "Verification code sent to your email!");
       if (data.demoOtp) {
-        setDemoOtpHint(data.demoOtp);
+        setDemoEmailOtpHint(data.demoOtp);
       }
     } catch (err: any) {
-      setErrorMsg(err.message || "Failed to send code");
+      setErrorMsg(err.message || "Failed to send email verification code");
     } finally {
-      setOtpLoading(false);
+      setEmailOtpLoading(false);
     }
   };
 
-  const handleVerifyOtp = async () => {
-    if (!otpCode || otpCode.trim().length !== 6) {
-      setErrorMsg("Please enter the complete 6-digit code.");
+  const handleVerifyEmailOtp = async () => {
+    if (!emailOtpCode || emailOtpCode.trim().length !== 6) {
+      setErrorMsg("Please enter the complete 6-digit confirmation code.");
       return;
     }
 
-    setOtpLoading(true);
+    setEmailOtpLoading(true);
     setErrorMsg("");
 
     try {
-      const res = await fetch("/api/seller/verify-otp", {
+      const res = await fetch("/api/seller/verify-email-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "VERIFY_OTP", phone, otp: otpCode }),
+        body: JSON.stringify({ action: "VERIFY_OTP", email, otp: emailOtpCode }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Invalid verification code");
 
-      setIsPhoneVerified(true);
-      setOtpMessage("Phone number verified successfully! ✓");
-      setDemoOtpHint("");
+      setIsEmailVerified(true);
+      setEmailOtpMessage("Email address verified successfully! ✓");
+      setDemoEmailOtpHint("");
     } catch (err: any) {
-      setErrorMsg(err.message || "Failed to verify code");
+      setErrorMsg(err.message || "Failed to verify email code");
     } finally {
-      setOtpLoading(false);
+      setEmailOtpLoading(false);
     }
   };
 
@@ -183,6 +198,16 @@ export default function SellerRegisterPage() {
 
     if (!user) {
       router.push("/login?redirect=/seller/register");
+      return;
+    }
+
+    if (!isEmailVerified) {
+      setErrorMsg("Please verify your email address with the 6-digit confirmation code before submitting.");
+      return;
+    }
+
+    if (!phone || phone.trim().length < 10) {
+      setErrorMsg("Please enter your active WhatsApp / mobile number for Admin onboarding verification.");
       return;
     }
 
@@ -208,6 +233,7 @@ export default function SellerRegisterPage() {
           taxNumber,
           businessAddress: `${businessAddress}, ${city}`,
           phone,
+          email,
           description,
           cnicFrontUrl,
           cnicBackUrl,
@@ -216,7 +242,8 @@ export default function SellerRegisterPage() {
           accountTitle,
           accountNumber,
           iban,
-          isPhoneVerified,
+          isPhoneVerified: false,
+          isEmailVerified: true,
         }),
       });
 
@@ -236,21 +263,60 @@ export default function SellerRegisterPage() {
 
   if (success) {
     return (
-      <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-4 animate-in fade-in">
-        <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto border border-emerald-200">
+      <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-6 animate-in fade-in">
+        <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto border border-emerald-200 shadow-sm">
           <CheckCircle2 className="w-10 h-10" />
         </div>
-        <h1 className="text-2xl font-black text-[#0B0F14]">KYC Application Submitted!</h1>
-        <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
-          Shukriya! Aapki store details aur government verification documents (CNIC & Bank Cheque) 
-          FAYZEE Admin team ke paas review ke liye darj ho chuki hain. Account verify hote hi aap live products publish kar sakein ge.
+        <div className="space-y-2">
+          <span className="px-3 py-1 rounded-full text-[11px] font-extrabold bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/30 tracking-wider uppercase">
+            KYC Under Admin Review
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-black text-[#0B0F14]">
+            Application Submitted Successfully!
+          </h1>
+        </div>
+
+        <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
+          Aapki store details, verified email, aur government verification documents (CNIC & Bank Cheque) 
+          FAYZEE Admin team ke paas review ke liye darj ho chuki hain.
         </p>
+
+        {/* Verification Next Steps Card */}
+        <div className="bg-[#FAF9F6] border border-[#E8E5DC] rounded-2xl p-5 text-left space-y-3">
+          <div className="flex items-center gap-2 text-xs font-black text-[#0B0F14]">
+            <Sparkles className="w-4 h-4 text-[#C8A96B]" />
+            <span>Verification Process Details:</span>
+          </div>
+
+          <ul className="text-xs text-slate-700 space-y-2.5">
+            <li className="flex items-start gap-2">
+              <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <span>
+                <strong>Verified Email:</strong> <span className="text-slate-900 font-semibold">{email}</span> (6-Digit OTP confirmed)
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <span>
+                <strong>Documents Submitted:</strong> CNIC Front, CNIC Back, Bank Cheque Leaf.
+              </span>
+            </li>
+            <li className="flex items-start gap-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900">
+              <MessageSquare className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+              <span>
+                <strong>Admin WhatsApp Contact:</strong> FAYZEE Admin will inspect your documents and will personally call or message you on WhatsApp at <strong>{phone}</strong> for identity confirmation & onboarding.
+              </span>
+            </li>
+          </ul>
+        </div>
+
         <div className="pt-2">
           <Link
             href="/seller/dashboard"
-            className="inline-block px-6 py-3 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] text-xs font-bold rounded-2xl shadow-sm border border-[#C8A96B]/30 transition"
+            className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] text-xs font-black rounded-2xl shadow-card border border-[#C8A96B]/30 transition"
           >
-            Go to Seller Dashboard
+            <span>Open Seller Dashboard</span>
+            <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </div>
@@ -380,95 +446,122 @@ export default function SellerRegisterPage() {
           </div>
         </div>
 
-        {/* SECTION 2: Mobile Number & OTP Verification */}
+        {/* SECTION 2: Email OTP & WhatsApp Contact Verification */}
         <div className="space-y-4">
           <div className="flex items-center justify-between pb-2 border-b border-[#E8E5DC]">
             <div className="flex items-center gap-2">
-              <Smartphone className="w-4 h-4 text-[#C8A96B]" />
-              <h3 className="text-sm font-black text-[#0B0F14]">2. Mobile Phone & OTP Verification</h3>
+              <Mail className="w-4 h-4 text-[#C8A96B]" />
+              <h3 className="text-sm font-black text-[#0B0F14]">2. Email Verification & WhatsApp Contact</h3>
             </div>
-            {isPhoneVerified && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1">
+            {isEmailVerified && (
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1">
                 <Check className="w-3 h-3" />
-                Verified
+                Email Verified
               </span>
             )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
+            {/* Email OTP Field */}
+            <div className="space-y-2">
               <label className="block font-bold text-[#0B0F14] mb-1">
-                Business Contact Phone <span className="text-rose-500">*</span>
+                Merchant Email Address <span className="text-rose-500">*</span>
               </label>
               <div className="flex gap-2">
                 <input
-                  type="tel"
+                  type="email"
                   required
-                  disabled={isPhoneVerified}
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="03001234567"
-                  className="w-full px-3.5 py-2.5 bg-[#F5F3EE] rounded-xl border border-[#E8E5DC] text-[#0B0F14] font-mono placeholder:text-[#8A8F98] focus:outline-none focus:border-[#C8A96B] focus:bg-white transition disabled:opacity-70"
+                  disabled={isEmailVerified}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="seller@fayzee.store"
+                  className="w-full px-3.5 py-2.5 bg-[#F5F3EE] rounded-xl border border-[#E8E5DC] text-[#0B0F14] placeholder:text-[#8A8F98] focus:outline-none focus:border-[#C8A96B] focus:bg-white transition disabled:opacity-75 font-medium text-xs"
                 />
-                {!isPhoneVerified && (
+                {!isEmailVerified && (
                   <button
                     type="button"
-                    onClick={handleSendOtp}
-                    disabled={otpLoading || !phone}
-                    className="px-4 py-2.5 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] font-bold rounded-xl whitespace-nowrap transition disabled:opacity-50 flex items-center gap-1.5"
+                    onClick={handleSendEmailOtp}
+                    disabled={emailOtpLoading || !email}
+                    className="px-4 py-2.5 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] font-bold text-xs rounded-xl whitespace-nowrap transition disabled:opacity-50 flex items-center gap-1.5 shrink-0"
                   >
-                    {otpLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-                    <span>{otpSent ? "Resend" : "Send OTP"}</span>
+                    {emailOtpLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
+                    <span>{emailOtpSent ? "Resend" : "Send OTP"}</span>
                   </button>
                 )}
               </div>
-            </div>
 
-            {/* OTP Code Box */}
-            {otpSent && !isPhoneVerified && (
-              <div>
-                <label className="block font-bold text-[#0B0F14] mb-1">
-                  Enter 6-Digit OTP Code <span className="text-rose-500">*</span>
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    maxLength={6}
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value)}
-                    placeholder="e.g. 482910"
-                    className="w-full px-3.5 py-2.5 bg-[#F5F3EE] rounded-xl border border-[#E8E5DC] text-[#0B0F14] font-mono text-center font-bold tracking-widest focus:outline-none focus:border-[#C8A96B] focus:bg-white transition"
-                  />
+              {/* Enter 6-Digit Email OTP Box */}
+              {emailOtpSent && !isEmailVerified && (
+                <div className="pt-2 space-y-2">
+                  <label className="block text-[11px] font-bold text-slate-700">
+                    Enter 6-Digit Email Code <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      maxLength={6}
+                      value={emailOtpCode}
+                      onChange={(e) => setEmailOtpCode(e.target.value)}
+                      placeholder="e.g. 123456"
+                      className="w-full px-3.5 py-2.5 bg-[#F5F3EE] rounded-xl border border-[#E8E5DC] text-[#0B0F14] font-mono text-center font-black tracking-widest focus:outline-none focus:border-[#C8A96B] focus:bg-white transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleVerifyEmailOtp}
+                      disabled={emailOtpLoading || emailOtpCode.length !== 6}
+                      className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl whitespace-nowrap transition disabled:opacity-50 flex items-center gap-1.5 shrink-0"
+                    >
+                      {emailOtpLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                      <span>Verify Email</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Status or Simulation Messages */}
+              {emailOtpMessage && (
+                <p className="text-[11px] text-emerald-700 font-bold">{emailOtpMessage}</p>
+              )}
+              {demoEmailOtpHint && (
+                <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 flex items-center justify-between">
+                  <span>Simulated OTP: <strong>{demoEmailOtpHint}</strong></span>
                   <button
                     type="button"
-                    onClick={handleVerifyOtp}
-                    disabled={otpLoading || otpCode.length !== 6}
-                    className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl whitespace-nowrap transition disabled:opacity-50 flex items-center gap-1.5"
+                    onClick={() => setEmailOtpCode(demoEmailOtpHint)}
+                    className="font-bold underline text-amber-800"
                   >
-                    {otpLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                    <span>Verify Code</span>
+                    Auto-fill Code
                   </button>
                 </div>
-              </div>
-            )}
-          </div>
-
-          {/* OTP Notification Hint */}
-          {otpMessage && (
-            <p className="text-[11px] text-emerald-700 font-bold">{otpMessage}</p>
-          )}
-          {demoOtpHint && (
-            <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 flex items-center justify-between">
-              <span>Simulation / Demo Verification Code: <strong>{demoOtpHint}</strong></span>
-              <button
-                type="button"
-                onClick={() => setOtpCode(demoOtpHint)}
-                className="font-bold underline text-amber-800"
-              >
-                Auto-fill Code
-              </button>
+              )}
             </div>
-          )}
+
+            {/* Mobile / WhatsApp Contact Number */}
+            <div className="space-y-2">
+              <label className="block font-bold text-[#0B0F14] mb-1">
+                WhatsApp / Contact Mobile Number <span className="text-rose-500">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="tel"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="03001234567"
+                  className="w-full pl-9 pr-3.5 py-2.5 bg-[#F5F3EE] rounded-xl border border-[#E8E5DC] text-[#0B0F14] font-mono placeholder:text-[#8A8F98] focus:outline-none focus:border-[#C8A96B] focus:bg-white transition text-xs font-semibold"
+                />
+                <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3.5" />
+              </div>
+
+              {/* Admin Onboarding Call/WhatsApp Notice */}
+              <div className="p-3 bg-emerald-50/70 border border-emerald-200/80 rounded-xl text-[11px] text-emerald-900 flex items-start gap-2">
+                <MessageSquare className="w-3.5 h-3.5 text-emerald-700 shrink-0 mt-0.5" />
+                <span className="leading-relaxed">
+                  <strong>Direct Admin Verification:</strong> FAYZEE Admin will personally call or message you on WhatsApp at this number to verify your identity & approve your store.
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* SECTION 3: National Identity & Document Uploads */}

@@ -776,8 +776,8 @@ ${paymentLine}${noteLine}
                 KYC Verification Under Review
               </h3>
               <p className="text-amber-800 text-[11px] mt-0.5 max-w-2xl leading-relaxed">
-                Aapke government identity documents (CNIC & Bank Cheque) FAYZEE Admin ke paas review mein hain. 
-                Aap store settings dekh sakte hain; Admin verification approve hote hi live products publish karna active ho jaye ga.
+                Aapka email verify ho chuka hai aur government identity documents (CNIC & Bank Cheque) FAYZEE Admin team ke paas review mein hain. 
+                Admin aapke diye gaye number par WhatsApp call ya message ke zariye raabta karke aapka store approve karega.
               </p>
             </div>
           </div>

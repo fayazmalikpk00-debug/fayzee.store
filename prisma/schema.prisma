@@ -79,6 +79,7 @@ model SellerProfile {
   status          String   @default("PENDING") // PENDING, APPROVED, REJECTED, SUSPENDED
   rejectionReason String?
   isPhoneVerified Boolean  @default(false)
+  isEmailVerified Boolean  @default(false)
   cnicFrontUrl    String?
   cnicBackUrl     String?
   bankProofUrl    String?
@@ -112,13 +113,17 @@ model SellerApplication {
   taxNumber           String?
   cnic                String
   phone               String
+  email               String?
   isPhoneVerified     Boolean   @default(false)
+  isEmailVerified     Boolean   @default(false)
   cnicFrontUrl        String?
   cnicBackUrl         String?
   bankProofUrl        String?
   documentUrl         String?
   phoneOtp            String?
   phoneOtpExpires     DateTime?
+  emailOtp            String?
+  emailOtpExpires     DateTime?
   notes               String?
   status              String    @default("PENDING") // PENDING, APPROVED, REJECTED
   reviewedBy          String?

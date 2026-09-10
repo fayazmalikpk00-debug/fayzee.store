@@ -62,6 +62,7 @@ export async function getSessionUser() {
             rating: true,
             rejectionReason: true,
             isPhoneVerified: true,
+            isEmailVerified: true,
           },
         },
       },
