@@ -5,12 +5,15 @@ import { formatDate, formatDateTime, formatPrice } from "@/lib/utils";
 import {
   AlertTriangle,
   ArrowRight,
+  Check,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
   Clock,
   DollarSign,
   Layers,
+  Loader2,
+  Megaphone,
   Package,
   Plus,
   Search,
@@ -18,6 +21,8 @@ import {
   ShieldAlert,
   ShieldCheck,
   ShoppingBag,
+  Sparkles,
+  Star,
   Store,
   Tag,
   Trash2,
@@ -33,7 +38,7 @@ export default function AdminDashboardPage() {
   const [sellers, setSellers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    "analytics" | "sellers" | "categories" | "audit"
+    "analytics" | "sellers" | "categories" | "products" | "audit"
   >("analytics");
 
   // Category Management State
@@ -45,21 +50,30 @@ export default function AdminDashboardPage() {
   const [newCatIcon, setNewCatIcon] = useState("📦");
   const [newCatDesc, setNewCatDesc] = useState("");
 
+  // Products & Ads Promotion State
+  const [productsList, setProductsList] = useState<any[]>([]);
+  const [prodSearch, setProdSearch] = useState("");
+  const [prodFilter, setProdFilter] = useState<"all" | "topPick" | "ads">("all");
+  const [updatingProdId, setUpdatingProdId] = useState<string | null>(null);
+
   const fetchData = async () => {
     try {
-      const [analyticsRes, sellersRes, catRes] = await Promise.all([
+      const [analyticsRes, sellersRes, catRes, prodRes] = await Promise.all([
         fetch("/api/admin/analytics"),
         fetch("/api/admin/sellers"),
         fetch("/api/admin/categories"),
+        fetch("/api/admin/products"),
       ]);
 
       const analyticsData = await analyticsRes.json();
       const sellersData = await sellersRes.json();
       const catData = await catRes.json();
+      const prodData = await prodRes.json();
 
       if (analyticsData.metrics) setData(analyticsData);
       if (sellersData.sellers) setSellers(sellersData.sellers);
       if (catData.categories) setCategoriesList(catData.categories);
+      if (prodData.products) setProductsList(prodData.products);
     } catch (e) {
       console.error(e);
     } finally {
@@ -89,6 +103,46 @@ export default function AdminDashboardPage() {
       }
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const handleToggleTopPick = async (productId: string, currentVal: boolean) => {
+    setUpdatingProdId(productId);
+    try {
+      const res = await fetch("/api/admin/products", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId, isTrending: !currentVal }),
+      });
+      if (res.ok) {
+        const prodRes = await fetch("/api/admin/products");
+        const prodData = await prodRes.json();
+        if (prodData.products) setProductsList(prodData.products);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setUpdatingProdId(null);
+    }
+  };
+
+  const handleToggleAd = async (productId: string, currentVal: boolean) => {
+    setUpdatingProdId(productId);
+    try {
+      const res = await fetch("/api/admin/products", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId, isFeatured: !currentVal }),
+      });
+      if (res.ok) {
+        const prodRes = await fetch("/api/admin/products");
+        const prodData = await prodRes.json();
+        if (prodData.products) setProductsList(prodData.products);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setUpdatingProdId(null);
     }
   };
 
@@ -184,6 +238,17 @@ export default function AdminDashboardPage() {
         >
           <Layers className="w-3.5 h-3.5" />
           <span>Category Hierarchy ({categoriesList.length})</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("products")}
+          className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
+            activeTab === "products"
+              ? "bg-[#FF5E00] text-white"
+              : "text-[#333333] hover:bg-[#F7F9FA]"
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+          <span>Products & Ads ({productsList.length})</span>
         </button>
         <button
           onClick={() => setActiveTab("audit")}
@@ -516,7 +581,251 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* TAB 4: Audit Trail */}
+      {/* TAB 4: Products & Ads Management */}
+      {activeTab === "products" && (
+        <div className="space-y-6 animate-fadeIn">
+          {/* Top Overview Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="p-5 bg-white rounded-2xl border border-slate-200 shadow-xs space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-400 uppercase">Total Catalog Items</span>
+                <Package className="w-4 h-4 text-slate-400" />
+              </div>
+              <p className="text-2xl font-black text-slate-900">{productsList.length}</p>
+              <span className="text-xs text-slate-500 font-medium">Available across verified stores</span>
+            </div>
+
+            <div className="p-5 bg-gradient-to-br from-[#1C2A39] to-[#25374C] text-white rounded-2xl border border-[#2A3B4C] shadow-xs space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#FF8C00] uppercase flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5" /> Hero AI Top Pick
+                </span>
+                <Star className="w-4 h-4 text-[#FF8C00] fill-[#FF8C00]" />
+              </div>
+              <p className="text-base font-black truncate">
+                {productsList.find((p) => p.isTrending)?.title || "Auto-Selected Top Product"}
+              </p>
+              <span className="text-xs text-slate-300">
+                {productsList.find((p) => p.isTrending) ? "Manually selected by Admin" : "Auto-picked by system"}
+              </span>
+            </div>
+
+            <div className="p-5 bg-white rounded-2xl border border-orange-200 shadow-xs space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#FF5E00] uppercase flex items-center gap-1">
+                  <Megaphone className="w-3.5 h-3.5" /> Sponsored Website Ads
+                </span>
+                <span className="px-2 py-0.5 bg-[#FF5E00]/10 text-[#FF5E00] rounded-full font-black text-xs">
+                  {productsList.filter((p) => p.isFeatured).length} Active
+                </span>
+              </div>
+              <p className="text-2xl font-black text-slate-900">
+                {productsList.filter((p) => p.isFeatured).length} Products
+              </p>
+              <span className="text-xs text-slate-500 font-medium">Promoted on homepage & catalog</span>
+            </div>
+          </div>
+
+          {/* Search & Filter Bar */}
+          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="relative flex-1 max-w-md">
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search products by title, SKU, or seller store..."
+                value={prodSearch}
+                onChange={(e) => setProdSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:outline-hidden focus:border-[#FF5E00] transition"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setProdFilter("all")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                  prodFilter === "all"
+                    ? "bg-[#1C2A39] text-white"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                All ({productsList.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setProdFilter("topPick")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
+                  prodFilter === "topPick"
+                    ? "bg-amber-500 text-white"
+                    : "bg-amber-50 text-amber-700 hover:bg-amber-100"
+                }`}
+              >
+                <Star className="w-3 h-3 fill-current" /> Top Pick ({productsList.filter((p) => p.isTrending).length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setProdFilter("ads")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
+                  prodFilter === "ads"
+                    ? "bg-[#FF5E00] text-white"
+                    : "bg-orange-50 text-[#FF5E00] hover:bg-orange-100"
+                }`}
+              >
+                <Megaphone className="w-3 h-3" /> Sponsored Ads ({productsList.filter((p) => p.isFeatured).length})
+              </button>
+            </div>
+          </div>
+
+          {/* Products List Table / Cards */}
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+            <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm sm:text-base font-bold text-slate-900">
+                  Seller Products Promotion & Spotlight Controls
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  1-Click spotlight for Homepage Hero (&quot;AI Top Pick&quot;) and Website Ads (&quot;Sponsored&quot;) requested by sellers
+                </p>
+              </div>
+            </div>
+
+            <div className="divide-y divide-slate-100">
+              {productsList
+                .filter((p) => {
+                  if (prodFilter === "topPick") return p.isTrending;
+                  if (prodFilter === "ads") return p.isFeatured;
+                  return true;
+                })
+                .filter((p) => {
+                  if (!prodSearch.trim()) return true;
+                  const q = prodSearch.toLowerCase();
+                  return (
+                    p.title?.toLowerCase().includes(q) ||
+                    p.sku?.toLowerCase().includes(q) ||
+                    p.seller?.storeName?.toLowerCase().includes(q) ||
+                    p.category?.name?.toLowerCase().includes(q)
+                  );
+                })
+                .map((product) => {
+                  const isUpdating = updatingProdId === product.id;
+                  return (
+                    <div
+                      key={product.id}
+                      className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/70 transition"
+                    >
+                      {/* Product Thumbnail & Details */}
+                      <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                        <div className="w-14 h-14 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 relative">
+                          <img
+                            src={
+                              product.images?.[0]?.url ||
+                              "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100"
+                            }
+                            alt={product.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="text-sm font-bold text-slate-900 truncate">
+                              {product.title}
+                            </h4>
+                            {product.isTrending && (
+                              <span className="px-2 py-0.5 bg-amber-500/15 text-amber-700 text-[10px] font-black rounded-md border border-amber-300 flex items-center gap-1 shrink-0">
+                                <Star className="w-3 h-3 fill-amber-500 text-amber-500" /> Active Hero Top Pick
+                              </span>
+                            )}
+                            {product.isFeatured && (
+                              <span className="px-2 py-0.5 bg-[#FF5E00]/15 text-[#FF5E00] text-[10px] font-black rounded-md border border-[#FF5E00]/30 flex items-center gap-1 shrink-0">
+                                <Megaphone className="w-3 h-3" /> Sponsored Ad
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
+                            <span className="flex items-center gap-1 font-semibold text-slate-700">
+                              <Store className="w-3.5 h-3.5 text-slate-400" />
+                              {product.seller?.storeName || "Official Store"}
+                            </span>
+                            <span>•</span>
+                            <span className="text-slate-500">
+                              SKU: <span className="font-mono text-slate-700">{product.sku}</span>
+                            </span>
+                            <span>•</span>
+                            <span className="text-slate-500">
+                              Category: <span className="text-slate-700">{product.category?.name || "General"}</span>
+                            </span>
+                            <span>•</span>
+                            <span className="font-black text-slate-900">
+                              {formatPrice(product.salePrice || product.price)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons: AI Top Pick & Website Ad */}
+                      <div className="flex items-center gap-2.5 shrink-0 flex-wrap self-end md:self-auto">
+                        {/* 1. AI Top Pick Toggle Button */}
+                        <button
+                          type="button"
+                          disabled={isUpdating}
+                          onClick={() => handleToggleTopPick(product.id, Boolean(product.isTrending))}
+                          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs ${
+                            product.isTrending
+                              ? "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20"
+                              : "bg-white border border-slate-300 hover:border-amber-400 hover:text-amber-700 text-slate-700"
+                          } disabled:opacity-50`}
+                          title="Spotlight this product on the homepage Hero section as Fayzee AI Top Pick"
+                        >
+                          {isUpdating ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Star className={`w-3.5 h-3.5 ${product.isTrending ? "fill-white" : ""}`} />
+                          )}
+                          <span>
+                            {product.isTrending ? "Hero Top Pick Active" : "Set as AI Top Pick"}
+                          </span>
+                        </button>
+
+                        {/* 2. Website Sponsored Ad Toggle Button */}
+                        <button
+                          type="button"
+                          disabled={isUpdating}
+                          onClick={() => handleToggleAd(product.id, Boolean(product.isFeatured))}
+                          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs ${
+                            product.isFeatured
+                              ? "bg-[#FF5E00] hover:bg-[#E05300] text-white shadow-orange-500/20"
+                              : "bg-white border border-slate-300 hover:border-[#FF5E00] hover:text-[#FF5E00] text-slate-700"
+                          } disabled:opacity-50`}
+                          title="Show this product as a Sponsored Ad on website with special Ad badge"
+                        >
+                          {isUpdating ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Megaphone className="w-3.5 h-3.5" />
+                          )}
+                          <span>
+                            {product.isFeatured ? "Sponsored Ad Active" : "Promote as Ad"}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+
+              {productsList.length === 0 && (
+                <div className="py-16 text-center text-xs text-slate-500 space-y-2">
+                  <Package className="w-8 h-8 mx-auto text-slate-300" />
+                  <p>No products found in the catalog.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 5: Audit Trail */}
       {activeTab === "audit" && (
         <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 space-y-4">
           <h3 className="text-sm font-bold text-slate-900">Security & Operational Audit Logs</h3>

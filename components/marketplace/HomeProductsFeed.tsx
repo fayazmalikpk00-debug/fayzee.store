@@ -280,6 +280,7 @@ export function HomeProductsFeed({
               category={product.category?.name}
               seller={product.seller}
               inStock={product.stockQuantity > 0}
+              isFeatured={Boolean(product.isFeatured)}
             />
           ))}
         </div>

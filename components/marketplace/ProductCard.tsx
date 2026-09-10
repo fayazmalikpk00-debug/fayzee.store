@@ -22,6 +22,7 @@ export interface ProductCardProps {
     storeSlug: string;
   };
   inStock?: boolean;
+  isFeatured?: boolean;
 }
 
 export function ProductCard({
@@ -37,6 +38,7 @@ export function ProductCard({
   category,
   seller,
   inStock = true,
+  isFeatured = false,
 }: ProductCardProps) {
   const { addToCart } = useCart();
   const [added, setAdded] = useState(false);
@@ -58,7 +60,13 @@ export function ProductCard({
   return (
     <div className="group relative bg-white rounded-2xl border border-[#DDE2E6] hover:border-[#FF5E00]/50 hover:shadow-card-hover transition-all duration-300 flex flex-col overflow-hidden">
       {/* Badges */}
-      <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
+      <div className="absolute top-3 left-3 z-10 flex flex-col items-start gap-1">
+        {isFeatured ? (
+          <span className="px-2 py-0.5 bg-[#1C2A39]/90 backdrop-blur-xs text-[#FF8C00] text-[10px] font-black rounded-md border border-[#FF5E00]/40 shadow-xs flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#FF5E00] animate-pulse"></span>
+            Sponsored Ad
+          </span>
+        ) : null}
         {discountPercent && discountPercent > 0 ? (
           <span className="px-2.5 py-0.5 bg-[#FF5E00] text-white text-xs font-extrabold rounded-md shadow-sm">
             -{discountPercent}%
