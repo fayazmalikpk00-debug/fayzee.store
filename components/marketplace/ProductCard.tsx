@@ -58,12 +58,12 @@ export function ProductCard({
   };
 
   return (
-    <div className="group relative bg-white rounded-2xl border border-[#DDE2E6] hover:border-[#FF5E00]/50 hover:shadow-card-hover transition-all duration-300 flex flex-col overflow-hidden">
+    <div className="group relative bg-white rounded-2xl border border-[#DDE2E6] hover:border-[#FF5E00]/60 hover:shadow-card-hover hover:-translate-y-1.5 transition-all duration-300 ease-out flex flex-col overflow-hidden will-change-transform">
       {/* Badges */}
       <div className="absolute top-3 left-3 z-10 flex flex-col items-start gap-1">
         {isFeatured ? (
-          <span className="px-2 py-0.5 bg-[#1C2A39]/90 backdrop-blur-xs text-[#FF8C00] text-[10px] font-black rounded-md border border-[#FF5E00]/40 shadow-xs flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#FF5E00] animate-pulse"></span>
+          <span className="px-2 py-0.5 bg-[#1C2A39]/95 backdrop-blur-xs text-[#FF8C00] text-[10px] font-black rounded-md border border-[#FF5E00]/50 shadow-xs flex items-center gap-1 animate-pulse-glow">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#FF5E00] animate-ping"></span>
             Sponsored Ad
           </span>
         ) : null}
@@ -81,10 +81,10 @@ export function ProductCard({
           e.stopPropagation();
           setIsLiked(!isLiked);
         }}
-        className="absolute top-3 right-3 z-10 p-2 rounded-full bg-white/90 backdrop-blur-xs text-slate-400 hover:text-red-500 transition shadow-xs"
+        className="absolute top-3 right-3 z-10 p-2 rounded-full bg-white/90 backdrop-blur-xs text-slate-400 hover:text-red-500 hover:scale-110 active:scale-75 transition-all duration-200 shadow-xs"
         title="Save to Wishlist"
       >
-        <Heart className={`w-4 h-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`} />
+        <Heart className={`w-4 h-4 transition-transform duration-200 ${isLiked ? "fill-red-500 text-red-500 scale-110" : ""}`} />
       </button>
 
       {/* Image container */}
@@ -92,7 +92,7 @@ export function ProductCard({
         <img
           src={image || "/images/product-placeholder.svg"}
           alt={title}
-          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-cover object-center group-hover:scale-[1.08] transition-transform duration-500 ease-out"
           loading="lazy"
         />
       </Link>
@@ -141,11 +141,11 @@ export function ProductCard({
           <button
             onClick={handleAddToCart}
             disabled={!inStock}
-            className={`p-2 sm:px-3.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition shrink-0 min-w-[34px] min-h-[34px] ${
+            className={`p-2 sm:px-3.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-all duration-200 shrink-0 min-w-[34px] min-h-[34px] ${
               added
-                ? "bg-emerald-600 text-white shadow-xs"
+                ? "bg-emerald-600 text-white shadow-md scale-105"
                 : inStock
-                ? "bg-[#FF5E00] hover:bg-[#FF8C00] text-white shadow-xs"
+                ? "bg-[#FF5E00] hover:bg-[#FF8C00] active:scale-90 text-white shadow-xs hover:shadow-md"
                 : "bg-slate-100 text-slate-400 cursor-not-allowed"
             }`}
             title={inStock ? "Add to Cart" : "Out of Stock"}
@@ -153,8 +153,8 @@ export function ProductCard({
           >
             {added ? (
               <>
-                <Check className="w-4 h-4" />
-                <span className="hidden sm:inline">Added</span>
+                <Check className="w-4 h-4 animate-bounce" />
+                <span className="hidden sm:inline">Added!</span>
               </>
             ) : inStock ? (
               <>

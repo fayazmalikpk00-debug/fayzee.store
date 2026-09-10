@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function Navbar() {
   const router = useRouter();
@@ -28,6 +28,20 @@ export function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+
+  // Cart bounce animation state on item add
+  const [isCartBouncing, setIsCartBouncing] = useState(false);
+  const prevCartCountRef = useRef(cartCount);
+
+  useEffect(() => {
+    if (cartCount > prevCartCountRef.current) {
+      setIsCartBouncing(true);
+      const timer = setTimeout(() => setIsCartBouncing(false), 650);
+      prevCartCountRef.current = cartCount;
+      return () => clearTimeout(timer);
+    }
+    prevCartCountRef.current = cartCount;
+  }, [cartCount]);
 
   // Mega Menu State
   const [megaMenuOpen, setMegaMenuOpen] = useState(false);
@@ -254,10 +268,16 @@ export function Navbar() {
             className="flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-2 text-white hover:text-[#FF8C00] hover:bg-white/10 rounded-full transition relative shrink-0"
             title="Shopping Cart"
           >
-            <div className="relative">
+            <div className={`relative transition-transform duration-300 ${isCartBouncing ? "animate-cart-bounce" : ""}`}>
               <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
               {cartCount > 0 && (
-                <span className="absolute -top-1.5 -right-2 bg-[#FF5E00] text-white text-[10px] sm:text-xs font-bold rounded-full min-w-[18px] sm:min-w-[20px] h-4 sm:h-5 px-1 flex items-center justify-center shadow-md animate-pulse">
+                <span
+                  className={`absolute -top-1.5 -right-2 text-white text-[10px] sm:text-xs font-bold rounded-full min-w-[18px] sm:min-w-[20px] h-4 sm:h-5 px-1 flex items-center justify-center shadow-md transition-all duration-300 ${
+                    isCartBouncing
+                      ? "scale-125 bg-emerald-500 shadow-emerald-500/50"
+                      : "bg-[#FF5E00] scale-100"
+                  }`}
+                >
                   {cartCount}
                 </span>
               )}

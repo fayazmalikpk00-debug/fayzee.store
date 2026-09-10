@@ -1,6 +1,7 @@
 "use client";
 
 import { ProductCard } from "@/components/marketplace/ProductCard";
+import { ProductSkeletonGrid } from "@/components/marketplace/ProductSkeleton";
 import {
   ArrowRight,
   ChevronDown,
@@ -186,7 +187,7 @@ export function HomeProductsFeed({
 
       {/* 2. On-Demand Expandable Category Grid (Shown ONLY when user clicks) */}
       {showCategoriesGrid && (
-        <div className="p-5 sm:p-6 bg-[#F7F9FA] rounded-3xl border border-[#DDE2E6] shadow-inner space-y-4 animate-fadeIn">
+        <div className="p-5 sm:p-6 bg-[#F7F9FA] rounded-3xl border border-[#DDE2E6] shadow-inner space-y-4 animate-slide-down">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Layers className="w-5 h-5 text-[#FF5E00]" />
@@ -327,9 +328,12 @@ export function HomeProductsFeed({
 
       {/* 5. Products Grid or Loading State */}
       {isLoading ? (
-        <div className="py-20 text-center space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin text-[#FF5E00] mx-auto" />
-          <p className="text-sm font-semibold text-[#555555]">Loading products...</p>
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#FF5E00] pb-1">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Fetching department products...</span>
+          </div>
+          <ProductSkeletonGrid count={8} />
         </div>
       ) : products.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -376,14 +380,13 @@ export function HomeProductsFeed({
       {/* Sentinel for Infinite Scroll */}
       <div ref={observerRef} className="h-6 w-full" />
 
-      {/* Loading More Indicator */}
+      {/* Loading More Indicator with Daraz Shimmer Skeleton */}
       {isLoadingMore && (
-        <div className="py-6 text-center flex flex-col items-center justify-center gap-2 animate-fadeIn">
-          <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-[#DDE2E6] shadow-sm">
-            <Loader2 className="w-5 h-5 animate-spin text-[#FF5E00]" />
-            <span className="text-xs sm:text-sm font-bold text-[#1C2A39]">
-              Loading more products...
-            </span>
+        <div className="space-y-4 pt-2">
+          <ProductSkeletonGrid count={4} />
+          <div className="py-2 text-center flex items-center justify-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin text-[#FF5E00]" />
+            <span className="text-xs font-bold text-[#777777]">Loading more items...</span>
           </div>
         </div>
       )}

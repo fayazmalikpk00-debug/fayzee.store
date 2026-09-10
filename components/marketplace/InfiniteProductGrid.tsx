@@ -1,6 +1,7 @@
 "use client";
 
 import { ProductCard } from "@/components/marketplace/ProductCard";
+import { ProductSkeletonGrid } from "@/components/marketplace/ProductSkeleton";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -134,14 +135,13 @@ export function InfiniteProductGrid({
       {/* Sentinel for auto-load */}
       <div ref={observerRef} className="h-6 w-full" />
 
-      {/* Loading More Indicator */}
+      {/* Loading More Indicator with Daraz Shimmer Skeleton */}
       {isLoadingMore && (
-        <div className="py-6 text-center flex flex-col items-center justify-center gap-2 animate-fadeIn">
-          <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-[#DDE2E6] shadow-sm">
-            <Loader2 className="w-5 h-5 animate-spin text-[#FF5E00]" />
-            <span className="text-xs sm:text-sm font-bold text-[#1C2A39]">
-              Loading more products...
-            </span>
+        <div className="space-y-4 pt-2">
+          <ProductSkeletonGrid count={3} columns="grid-cols-2 md:grid-cols-3" />
+          <div className="py-2 text-center flex items-center justify-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin text-[#FF5E00]" />
+            <span className="text-xs font-bold text-[#777777]">Loading more products...</span>
           </div>
         </div>
       )}

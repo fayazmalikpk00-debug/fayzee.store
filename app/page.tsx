@@ -89,7 +89,7 @@ export default async function HomePage() {
 
             {/* Hero Interactive Showcase Card */}
             <div className="lg:col-span-5 hidden lg:block">
-              <div className="p-6 sm:p-7 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl space-y-4">
+              <div className="p-6 sm:p-7 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl space-y-4 animate-float">
                 <div className="flex items-center justify-between text-sm text-slate-200">
                   <span className="font-bold flex items-center gap-1.5 text-white">
                     <Sparkles className="w-4 h-4 text-[#FF5E00]" /> Fayzee AI Top Pick
@@ -183,8 +183,8 @@ export default async function HomePage() {
           <section className="p-6 sm:p-8 bg-[#F7F9FA] rounded-3xl border border-[#DDE2E6] shadow-sm space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-[#FF5E00] text-white flex items-center justify-center shadow-md animate-pulse shrink-0">
-                  <Flame className="w-6 h-6" />
+                <div className="w-11 h-11 rounded-2xl bg-[#FF5E00] text-white flex items-center justify-center shadow-md animate-pulse-glow shrink-0">
+                  <Flame className="w-6 h-6 animate-bounce" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -211,7 +211,7 @@ export default async function HomePage() {
               {flashSale.items.map((item) => (
                 <div
                   key={item.id}
-                  className="bg-white p-4 sm:p-5 rounded-2xl border border-[#DDE2E6] hover:border-[#FF5E00] transition shadow-xs flex gap-4"
+                  className="bg-white p-4 sm:p-5 rounded-2xl border border-[#DDE2E6] hover:border-[#FF5E00] hover:-translate-y-1 hover:shadow-card-hover transition-all duration-300 flex gap-4"
                 >
                   <img
                     src={

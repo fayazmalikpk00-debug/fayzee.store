@@ -1,6 +1,7 @@
 import { FayzeeAIAssistant } from "@/components/ai/FayzeeAIAssistant";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
+import { BackToTop } from "@/components/marketplace/BackToTop";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { CartProvider } from "@/components/providers/CartProvider";
 import type { Metadata, Viewport } from "next";
@@ -52,6 +53,7 @@ export default function RootLayout({
             <main className="flex-1 w-full max-w-full overflow-x-hidden min-w-0">{children}</main>
             <Footer />
             <FayzeeAIAssistant />
+            <BackToTop />
           </CartProvider>
         </AuthProvider>
       </body>
