@@ -295,6 +295,7 @@ export default async function HomePage() {
                   category={product.category.name}
                   seller={product.seller}
                   inStock={product.stockQuantity > 0}
+                  isFeatured={Boolean(product.isFeatured)}
                 />
               ))}
             </div>
