@@ -19,11 +19,26 @@ export async function POST(req: Request) {
       businessAddress,
       phone,
       description,
+      cnicFrontUrl,
+      cnicBackUrl,
+      bankProofUrl,
+      bankName,
+      accountTitle,
+      accountNumber,
+      iban,
+      isPhoneVerified,
     } = body;
 
     if (!storeName || !businessName || !cnic || !phone || !businessAddress) {
       return NextResponse.json(
         { error: "Please complete all required fields." },
+        { status: 400 }
+      );
+    }
+
+    if (!cnicFrontUrl || !cnicBackUrl) {
+      return NextResponse.json(
+        { error: "Government CNIC Front and Back photos are required for seller verification." },
         { status: 400 }
       );
     }
@@ -47,6 +62,10 @@ export async function POST(req: Request) {
           taxNumber: taxNumber || null,
           cnic,
           phone,
+          isPhoneVerified: Boolean(isPhoneVerified),
+          cnicFrontUrl: cnicFrontUrl || null,
+          cnicBackUrl: cnicBackUrl || null,
+          bankProofUrl: bankProofUrl || null,
           notes: description,
           status: "PENDING",
         },
@@ -63,6 +82,15 @@ export async function POST(req: Request) {
           address: businessAddress,
           cnic,
           taxNumber,
+          cnicFrontUrl: cnicFrontUrl || null,
+          cnicBackUrl: cnicBackUrl || null,
+          bankProofUrl: bankProofUrl || null,
+          bankName: bankName || null,
+          accountTitle: accountTitle || null,
+          accountNumber: accountNumber || null,
+          iban: iban || null,
+          isPhoneVerified: Boolean(isPhoneVerified),
+          rejectionReason: null,
           status: "PENDING",
         },
         create: {
@@ -75,6 +103,14 @@ export async function POST(req: Request) {
           address: businessAddress,
           cnic,
           taxNumber,
+          cnicFrontUrl: cnicFrontUrl || null,
+          cnicBackUrl: cnicBackUrl || null,
+          bankProofUrl: bankProofUrl || null,
+          bankName: bankName || null,
+          accountTitle: accountTitle || null,
+          accountNumber: accountNumber || null,
+          iban: iban || null,
+          isPhoneVerified: Boolean(isPhoneVerified),
           status: "PENDING",
         },
       });

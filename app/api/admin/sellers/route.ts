@@ -31,7 +31,7 @@ export async function PATCH(req: Request) {
     }
 
     const body = await req.json();
-    const { sellerId, status } = body;
+    const { sellerId, status, rejectionReason } = body;
 
     if (!sellerId || !status) {
       return NextResponse.json({ error: "Seller ID and status are required." }, { status: 400 });
@@ -39,8 +39,22 @@ export async function PATCH(req: Request) {
 
     const updated = await prisma.sellerProfile.update({
       where: { id: sellerId },
-      data: { status },
+      data: {
+        status,
+        rejectionReason: status === "REJECTED" ? rejectionReason || "Identity or documents could not be verified." : null,
+      },
       include: { user: true },
+    });
+
+    // Also update any pending sellerApplication
+    await prisma.sellerApplication.updateMany({
+      where: { userId: updated.userId, status: "PENDING" },
+      data: {
+        status: status === "APPROVED" ? "APPROVED" : status === "REJECTED" ? "REJECTED" : "PENDING",
+        rejectionReason: status === "REJECTED" ? rejectionReason : null,
+        reviewedBy: user.name || "Admin",
+        reviewedAt: new Date(),
+      },
     });
 
     // Create Audit Log
@@ -50,19 +64,27 @@ export async function PATCH(req: Request) {
         action: `SELLER_STATUS_${status}`,
         targetType: "SELLER",
         targetId: sellerId,
-        details: JSON.stringify({ storeName: updated.storeName, newStatus: status }),
+        details: JSON.stringify({
+          storeName: updated.storeName,
+          newStatus: status,
+          reason: rejectionReason || null,
+        }),
       },
     });
 
     // Notify seller
+    const notificationMsg =
+      status === "APPROVED"
+        ? "Congratulations! Your Fayzee Seller Account & KYC documents have been verified and approved. You can now list products."
+        : status === "REJECTED"
+        ? `Your seller application was rejected. Reason: ${rejectionReason || "Verification failed"}. Please update your documents.`
+        : `Your seller account status was changed to ${status}.`;
+
     await prisma.notification.create({
       data: {
         userId: updated.userId,
         title: `Seller Account Update: ${status}`,
-        message:
-          status === "APPROVED"
-            ? "Congratulations! Your Fayzee Seller Account has been approved. You can now list products."
-            : `Your seller account status was changed to ${status}.`,
+        message: notificationMsg,
         type: "SELLER",
         link: "/seller/dashboard",
       },

@@ -27,6 +27,7 @@ import {
   Printer,
   Search,
   Send,
+  ShieldCheck,
   ShoppingBag,
   Sliders,
   Smartphone,
@@ -718,8 +719,31 @@ ${paymentLine}${noteLine}
               <h1 className="text-xl sm:text-2xl font-black text-[#0B0F14]">
                 {user.sellerProfile?.storeName || "Seller Store"}
               </h1>
-              <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold rounded-full">
-                {user.sellerProfile?.status || "APPROVED"}
+              <span
+                className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full flex items-center gap-1 ${
+                  user.sellerProfile?.status === "APPROVED"
+                    ? "bg-emerald-100 text-emerald-800"
+                    : user.sellerProfile?.status === "REJECTED"
+                    ? "bg-rose-100 text-rose-800"
+                    : "bg-amber-100 text-amber-800 animate-pulse"
+                }`}
+              >
+                {user.sellerProfile?.status === "APPROVED" ? (
+                  <>
+                    <Check className="w-3 h-3" />
+                    <span>Verified Merchant</span>
+                  </>
+                ) : user.sellerProfile?.status === "REJECTED" ? (
+                  <>
+                    <AlertTriangle className="w-3 h-3" />
+                    <span>Application Rejected</span>
+                  </>
+                ) : (
+                  <>
+                    <Clock className="w-3 h-3" />
+                    <span>KYC Pending Review</span>
+                  </>
+                )}
               </span>
             </div>
             <p className="text-xs text-[#8A8F98] mt-0.5">
@@ -739,6 +763,54 @@ ${paymentLine}${noteLine}
           </Link>
         )}
       </div>
+
+      {/* KYC Verification Status Banner */}
+      {(!user.sellerProfile?.status || user.sellerProfile?.status === "PENDING") && (
+        <div className="p-4 sm:p-5 bg-gradient-to-r from-amber-50 to-orange-50 rounded-3xl border border-amber-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-black text-amber-900 text-sm">
+                KYC Verification Under Review
+              </h3>
+              <p className="text-amber-800 text-[11px] mt-0.5 max-w-2xl leading-relaxed">
+                Aapke government identity documents (CNIC & Bank Cheque) FAYZEE Admin ke paas review mein hain. 
+                Aap store settings dekh sakte hain; Admin verification approve hote hi live products publish karna active ho jaye ga.
+              </p>
+            </div>
+          </div>
+          <span className="px-3 py-1 rounded-full text-[10px] font-black bg-amber-200 text-amber-900 shrink-0 self-start sm:self-auto uppercase tracking-wide">
+            Under Review
+          </span>
+        </div>
+      )}
+
+      {user.sellerProfile?.status === "REJECTED" && (
+        <div className="p-4 sm:p-5 bg-gradient-to-r from-rose-50 to-red-50 rounded-3xl border border-rose-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-black text-rose-900 text-sm">
+                KYC Application Rejected — Action Required
+              </h3>
+              <p className="text-rose-800 text-[11px] mt-0.5 max-w-2xl leading-relaxed">
+                Admin Note: <strong>{user.sellerProfile?.rejectionReason || "Identity or documents could not be verified."}</strong>. 
+                Please update your documents with clear photos to get approved.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/seller/register"
+            className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition shrink-0 self-start sm:self-auto shadow-xs"
+          >
+            Update Documents / Resubmit
+          </Link>
+        </div>
+      )}
 
       {/* Navigation Tabs */}
       <div className="flex border-b border-[#E8E5DC] gap-6 sm:gap-8 text-sm font-bold overflow-x-auto no-scrollbar">
@@ -898,6 +970,14 @@ ${paymentLine}${noteLine}
             <h3 className="text-base font-bold text-[#0B0F14]">Your Product Listings</h3>
             <button
               onClick={() => {
+                if (user.sellerProfile?.status === "PENDING" || !user.sellerProfile?.status) {
+                  alert("KYC Verification Required: Your seller account is currently under review by Fayzee Admin. You will be able to list live products once verified.");
+                  return;
+                }
+                if (user.sellerProfile?.status === "REJECTED") {
+                  alert("Account Rejected: Please update your KYC verification documents from settings to list products.");
+                  return;
+                }
                 resetFormState();
                 setIsAddModalOpen(true);
               }}
@@ -918,6 +998,14 @@ ${paymentLine}${noteLine}
                 </p>
                 <button
                   onClick={() => {
+                    if (user.sellerProfile?.status === "PENDING" || !user.sellerProfile?.status) {
+                      alert("KYC Verification Required: Your seller account is currently under review by Fayzee Admin. You will be able to list live products once verified.");
+                      return;
+                    }
+                    if (user.sellerProfile?.status === "REJECTED") {
+                      alert("Account Rejected: Please update your KYC verification documents from settings to list products.");
+                      return;
+                    }
                     resetFormState();
                     setIsAddModalOpen(true);
                   }}

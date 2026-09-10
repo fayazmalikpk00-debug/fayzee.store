@@ -77,6 +77,11 @@ model SellerProfile {
   rating          Float    @default(0.0)
   reviewCount     Int      @default(0)
   status          String   @default("PENDING") // PENDING, APPROVED, REJECTED, SUSPENDED
+  rejectionReason String?
+  isPhoneVerified Boolean  @default(false)
+  cnicFrontUrl    String?
+  cnicBackUrl     String?
+  bankProofUrl    String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -107,7 +112,13 @@ model SellerApplication {
   taxNumber           String?
   cnic                String
   phone               String
+  isPhoneVerified     Boolean   @default(false)
+  cnicFrontUrl        String?
+  cnicBackUrl         String?
+  bankProofUrl        String?
   documentUrl         String?
+  phoneOtp            String?
+  phoneOtpExpires     DateTime?
   notes               String?
   status              String    @default("PENDING") // PENDING, APPROVED, REJECTED
   reviewedBy          String?

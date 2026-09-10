@@ -60,6 +60,8 @@ export async function getSessionUser() {
             storeSlug: true,
             status: true,
             rating: true,
+            rejectionReason: true,
+            isPhoneVerified: true,
           },
         },
       },

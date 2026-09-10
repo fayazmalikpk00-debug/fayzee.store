@@ -36,6 +36,8 @@ import {
   XCircle,
   Copy,
   ExternalLink,
+  Eye,
+  FileCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -90,6 +92,12 @@ export default function AdminDashboardPage() {
   const [payoutAdminRef, setPayoutAdminRef] = useState("");
   const [payoutRejectReason, setPayoutRejectReason] = useState("");
   const [processingPayout, setProcessingPayout] = useState(false);
+
+  // Seller KYC Inspection Modal State
+  const [inspectingSeller, setInspectingSeller] = useState<any | null>(null);
+  const [sellerRejectReason, setSellerRejectReason] = useState("");
+  const [showRejectInput, setShowRejectInput] = useState(false);
+  const [isUpdatingSellerStatus, setIsUpdatingSellerStatus] = useState(false);
 
   // Category Management State
   const [categoriesList, setCategoriesList] = useState<any[]>([]);
@@ -254,20 +262,30 @@ export default function AdminDashboardPage() {
     }
   }, [user, authLoading]);
 
-  const handleUpdateSellerStatus = async (sellerId: string, status: string) => {
+  const handleUpdateSellerStatus = async (sellerId: string, status: string, reason?: string) => {
+    setIsUpdatingSellerStatus(true);
     try {
       const res = await fetch("/api/admin/sellers", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sellerId, status }),
+        body: JSON.stringify({ sellerId, status, rejectionReason: reason }),
       });
 
       if (res.ok) {
         await fetchData();
-        alert(`Seller status updated to ${status}. Notification and audit log recorded.`);
+        alert(`Seller status updated to ${status}. Notification sent to seller.`);
+        setInspectingSeller(null);
+        setSellerRejectReason("");
+        setShowRejectInput(false);
+      } else {
+        const d = await res.json();
+        alert(d.error || "Failed to update seller status");
       }
     } catch (e) {
       console.error(e);
+      alert("Error updating seller status");
+    } finally {
+      setIsUpdatingSellerStatus(false);
     }
   };
 
@@ -553,76 +571,401 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50 text-slate-500 font-bold border-b uppercase">
-              <tr>
-                <th className="py-3 px-4">Store & Business</th>
-                <th className="py-3 px-4">Applicant</th>
-                <th className="py-3 px-4">CNIC / Tax NTN</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {sellers.map((s) => (
-                <tr key={s.id} className="hover:bg-slate-50/60 transition">
-                  <td className="py-3 px-4">
-                    <p className="font-bold text-slate-900">{s.storeName}</p>
-                    <span className="text-[11px] text-slate-500 block">{s.businessName}</span>
-                    <span className="text-[10px] text-slate-400 font-mono">/{s.storeSlug}</span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <p className="font-semibold text-slate-800">{s.user.name}</p>
-                    <span className="text-[11px] text-slate-500 block">{s.user.email}</span>
-                    <span className="text-[10px] text-slate-400">{s.phone}</span>
-                  </td>
-                  <td className="py-3 px-4 font-mono text-[11px] text-slate-600">
-                    <div>CNIC: {s.cnic || "Verified"}</div>
-                    <div>NTN: {s.taxNumber || "N/A"}</div>
-                  </td>
-                  <td className="py-3 px-4">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-slate-50 text-slate-500 font-bold border-b uppercase">
+                <tr>
+                  <th className="py-3 px-4">Store & Business</th>
+                  <th className="py-3 px-4">Applicant & Contact</th>
+                  <th className="py-3 px-4">CNIC & Tax NTN</th>
+                  <th className="py-3 px-4">KYC Documents</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4 text-right">Verification Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {sellers.map((s) => (
+                  <tr key={s.id} className="hover:bg-slate-50/60 transition">
+                    <td className="py-3 px-4">
+                      <p className="font-bold text-slate-900">{s.storeName}</p>
+                      <span className="text-[11px] text-slate-500 block">{s.businessName}</span>
+                      <span className="text-[10px] text-slate-400 font-mono">/{s.storeSlug}</span>
+                      {s.rejectionReason && (
+                        <span className="text-[10px] text-rose-600 font-semibold block mt-0.5">
+                          Note: {s.rejectionReason}
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4">
+                      <p className="font-semibold text-slate-800">{s.user?.name}</p>
+                      <span className="text-[11px] text-slate-500 block">{s.user?.email}</span>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <span className="text-[11px] text-slate-600 font-mono">{s.phone}</span>
+                        {s.isPhoneVerified ? (
+                          <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">
+                            ✓ Verified
+                          </span>
+                        ) : (
+                          <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-800">
+                            Unverified
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 font-mono text-[11px] text-slate-600">
+                      <div>CNIC: {s.cnic || "N/A"}</div>
+                      <div>NTN: {s.taxNumber || "N/A"}</div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex flex-wrap gap-1">
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 ${
+                            s.cnicFrontUrl
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : "bg-slate-100 text-slate-400"
+                          }`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${s.cnicFrontUrl ? "bg-emerald-500" : "bg-slate-300"}`} />
+                          Front
+                        </span>
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 ${
+                            s.cnicBackUrl
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : "bg-slate-100 text-slate-400"
+                          }`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${s.cnicBackUrl ? "bg-emerald-500" : "bg-slate-300"}`} />
+                          Back
+                        </span>
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 ${
+                            s.bankProofUrl
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : "bg-slate-100 text-slate-400"
+                          }`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${s.bankProofUrl ? "bg-emerald-500" : "bg-slate-300"}`} />
+                          Cheque
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          s.status === "APPROVED"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : s.status === "REJECTED"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-amber-100 text-amber-800 animate-pulse"
+                        }`}
+                      >
+                        {s.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-right space-x-1.5">
+                      <button
+                        onClick={() => {
+                          setInspectingSeller(s);
+                          setShowRejectInput(false);
+                          setSellerRejectReason("");
+                        }}
+                        className="px-3 py-1.5 bg-[#0B0F14] hover:bg-[#1a222c] text-[#C8A96B] font-bold rounded-lg text-[10px] transition inline-flex items-center gap-1 shadow-xs"
+                      >
+                        <Eye className="w-3 h-3" />
+                        <span>Inspect KYC</span>
+                      </button>
+
+                      {s.status !== "APPROVED" && (
+                        <button
+                          onClick={() => handleUpdateSellerStatus(s.id, "APPROVED")}
+                          className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[10px] transition"
+                        >
+                          Approve
+                        </button>
+                      )}
+                      {s.status !== "REJECTED" && (
+                        <button
+                          onClick={() => {
+                            setInspectingSeller(s);
+                            setShowRejectInput(true);
+                          }}
+                          className="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-700 font-bold rounded-lg text-[10px] transition"
+                        >
+                          Reject
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Seller KYC Document Inspection Modal */}
+          {inspectingSeller && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in">
+              <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-200 p-6 space-y-6">
+                {/* Modal Header */}
+                <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-[#0B0F14] text-[#C8A96B] flex items-center justify-center">
+                      <FileCheck className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-black text-slate-900">
+                        {inspectingSeller.storeName} — KYC Verification
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        Entity: {inspectingSeller.businessName} (Applicant: {inspectingSeller.user?.name})
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
                     <span
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        s.status === "APPROVED"
-                          ? "bg-emerald-100 text-emerald-700"
-                          : s.status === "REJECTED"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-amber-100 text-amber-800 animate-pulse"
+                      className={`px-3 py-1 rounded-full text-xs font-bold ${
+                        inspectingSeller.status === "APPROVED"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : inspectingSeller.status === "REJECTED"
+                          ? "bg-rose-100 text-rose-800"
+                          : "bg-amber-100 text-amber-800"
                       }`}
                     >
-                      {s.status}
+                      Status: {inspectingSeller.status}
                     </span>
-                  </td>
-                  <td className="py-3 px-4 text-right space-x-1.5">
-                    {s.status !== "APPROVED" && (
+                    <button
+                      onClick={() => setInspectingSeller(null)}
+                      className="p-1 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
+                    >
+                      <XCircle className="w-6 h-6" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Identity & Bank Details Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs">
+                  <div className="space-y-1.5">
+                    <span className="font-bold text-slate-400 uppercase text-[10px] tracking-wider block">
+                      Identity & Contact Info
+                    </span>
+                    <p><strong className="text-slate-700">Applicant:</strong> {inspectingSeller.user?.name} ({inspectingSeller.user?.email})</p>
+                    <p className="flex items-center gap-1.5">
+                      <strong className="text-slate-700">Phone:</strong> {inspectingSeller.phone}
+                      {inspectingSeller.isPhoneVerified ? (
+                        <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">
+                          ✓ OTP Verified
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-800">
+                          Unverified
+                        </span>
+                      )}
+                    </p>
+                    <p><strong className="text-slate-700">CNIC Number:</strong> <span className="font-mono font-bold text-slate-900">{inspectingSeller.cnic || "N/A"}</span></p>
+                    <p><strong className="text-slate-700">FBR NTN:</strong> {inspectingSeller.taxNumber || "N/A"}</p>
+                    <p><strong className="text-slate-700">Pickup Address:</strong> {inspectingSeller.address || "N/A"}</p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <span className="font-bold text-slate-400 uppercase text-[10px] tracking-wider block">
+                      Bank Account for Settlements
+                    </span>
+                    <p><strong className="text-slate-700">Bank Name:</strong> {inspectingSeller.bankName || "Not specified"}</p>
+                    <p><strong className="text-slate-700">Account Title:</strong> <span className="font-bold text-slate-900">{inspectingSeller.accountTitle || "Not specified"}</span></p>
+                    <p><strong className="text-slate-700">Account Number:</strong> {inspectingSeller.accountNumber || "N/A"}</p>
+                    <p><strong className="text-slate-700">IBAN:</strong> <span className="font-mono font-bold text-emerald-800">{inspectingSeller.iban || "N/A"}</span></p>
+                    <p className="text-[10px] text-amber-700 font-semibold pt-1">
+                      ⚠️ Verify that the Account Title matches the name on the CNIC document.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Uploaded Documents Inspection Cards */}
+                <div className="space-y-3">
+                  <h4 className="text-xs font-black uppercase text-slate-900 tracking-wider">
+                    Uploaded Verification Documents (KYC Proofs)
+                  </h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* CNIC Front Card */}
+                    <div className="p-3 bg-white rounded-2xl border border-slate-200 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-800 text-xs">CNIC Front Side</span>
+                        {inspectingSeller.cnicFrontUrl && (
+                          <a
+                            href={inspectingSeller.cnicFrontUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[10px] text-brand-600 font-bold hover:underline flex items-center gap-0.5"
+                          >
+                            <span>Full View</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                      </div>
+                      {inspectingSeller.cnicFrontUrl ? (
+                        <a href={inspectingSeller.cnicFrontUrl} target="_blank" rel="noreferrer" className="block group">
+                          <img
+                            src={inspectingSeller.cnicFrontUrl}
+                            alt="CNIC Front"
+                            className="w-full h-44 object-contain bg-slate-100 rounded-xl border group-hover:opacity-90 transition"
+                          />
+                        </a>
+                      ) : (
+                        <div className="w-full h-44 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 text-xs">
+                          Not uploaded
+                        </div>
+                      )}
+                    </div>
+
+                    {/* CNIC Back Card */}
+                    <div className="p-3 bg-white rounded-2xl border border-slate-200 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-800 text-xs">CNIC Back Side</span>
+                        {inspectingSeller.cnicBackUrl && (
+                          <a
+                            href={inspectingSeller.cnicBackUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[10px] text-brand-600 font-bold hover:underline flex items-center gap-0.5"
+                          >
+                            <span>Full View</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                      </div>
+                      {inspectingSeller.cnicBackUrl ? (
+                        <a href={inspectingSeller.cnicBackUrl} target="_blank" rel="noreferrer" className="block group">
+                          <img
+                            src={inspectingSeller.cnicBackUrl}
+                            alt="CNIC Back"
+                            className="w-full h-44 object-contain bg-slate-100 rounded-xl border group-hover:opacity-90 transition"
+                          />
+                        </a>
+                      ) : (
+                        <div className="w-full h-44 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 text-xs">
+                          Not uploaded
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Bank Cheque / Proof Card */}
+                    <div className="p-3 bg-white rounded-2xl border border-slate-200 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-800 text-xs">Bank Cheque / Statement</span>
+                        {inspectingSeller.bankProofUrl && (
+                          <a
+                            href={inspectingSeller.bankProofUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[10px] text-brand-600 font-bold hover:underline flex items-center gap-0.5"
+                          >
+                            <span>Full View</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                      </div>
+                      {inspectingSeller.bankProofUrl ? (
+                        <a href={inspectingSeller.bankProofUrl} target="_blank" rel="noreferrer" className="block group">
+                          <img
+                            src={inspectingSeller.bankProofUrl}
+                            alt="Bank Cheque Proof"
+                            className="w-full h-44 object-contain bg-slate-100 rounded-xl border group-hover:opacity-90 transition"
+                          />
+                        </a>
+                      ) : (
+                        <div className="w-full h-44 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 text-xs">
+                          Not uploaded
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rejection Reason Form */}
+                {showRejectInput && (
+                  <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl space-y-2 text-xs">
+                    <label className="block font-bold text-rose-900">
+                      Reason for Rejection <span className="text-rose-500">*</span>
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={sellerRejectReason}
+                      onChange={(e) => setSellerRejectReason(e.target.value)}
+                      placeholder="e.g. CNIC photo is blurry, please upload clear picture, or Bank Account Title does not match CNIC name."
+                      className="w-full px-3 py-2 bg-white rounded-xl border border-rose-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                    />
+                    <div className="flex justify-end gap-2 pt-1">
                       <button
-                        onClick={() => handleUpdateSellerStatus(s.id, "APPROVED")}
-                        className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[10px] transition"
+                        type="button"
+                        onClick={() => setShowRejectInput(false)}
+                        className="px-3 py-1.5 bg-white text-slate-700 rounded-xl font-bold border border-slate-200 hover:bg-slate-50 transition"
                       >
-                        Approve
+                        Cancel
                       </button>
-                    )}
-                    {s.status !== "REJECTED" && (
                       <button
-                        onClick={() => handleUpdateSellerStatus(s.id, "REJECTED")}
-                        className="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-700 font-bold rounded-lg text-[10px] transition"
+                        type="button"
+                        disabled={isUpdatingSellerStatus || !sellerRejectReason.trim()}
+                        onClick={() => handleUpdateSellerStatus(inspectingSeller.id, "REJECTED", sellerRejectReason.trim())}
+                        className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold transition disabled:opacity-50"
                       >
-                        Reject
+                        {isUpdatingSellerStatus ? "Rejecting..." : "Confirm Rejection with Reason"}
                       </button>
-                    )}
-                    {s.status === "APPROVED" && (
-                      <button
-                        onClick={() => handleUpdateSellerStatus(s.id, "SUSPENDED")}
-                        className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-[10px] transition"
-                      >
-                        Suspend
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Modal Footer Actions */}
+                {!showRejectInput && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => setInspectingSeller(null)}
+                      className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition"
+                    >
+                      Close Window
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      {inspectingSeller.status !== "APPROVED" && (
+                        <button
+                          type="button"
+                          disabled={isUpdatingSellerStatus}
+                          onClick={() => handleUpdateSellerStatus(inspectingSeller.id, "APPROVED")}
+                          className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-sm active:scale-98"
+                        >
+                          <Check className="w-4 h-4" />
+                          <span>Verify & Approve Store</span>
+                        </button>
+                      )}
+
+                      {inspectingSeller.status !== "REJECTED" && (
+                        <button
+                          type="button"
+                          onClick={() => setShowRejectInput(true)}
+                          className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs transition active:scale-98"
+                        >
+                          Reject Application
+                        </button>
+                      )}
+
+                      {inspectingSeller.status === "APPROVED" && (
+                        <button
+                          type="button"
+                          disabled={isUpdatingSellerStatus}
+                          onClick={() => handleUpdateSellerStatus(inspectingSeller.id, "SUSPENDED")}
+                          className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition"
+                        >
+                          Suspend Store
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

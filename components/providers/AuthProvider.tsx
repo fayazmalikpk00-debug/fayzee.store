@@ -15,6 +15,8 @@ export interface UserSession {
     storeSlug: string;
     status: string;
     rating: number;
+    rejectionReason?: string | null;
+    isPhoneVerified?: boolean;
   } | null;
 }
 

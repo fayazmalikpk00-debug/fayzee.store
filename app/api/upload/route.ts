@@ -7,20 +7,14 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
-    // 1. Authenticate and authorize seller session
+    // 1. Authenticate user session
     const user = await getSessionUser();
-    if (
-      !user ||
-      (user.role !== "SELLER" &&
-        user.role !== "ADMIN" &&
-        user.role !== "SUPER_ADMIN")
-    ) {
+    if (!user) {
       return NextResponse.json(
         {
-          error:
-            "Unauthorized: You must be logged in as an authorized seller or administrator to upload images.",
+          error: "Unauthorized: You must be logged in to upload images or documents.",
         },
-        { status: 403 }
+        { status: 401 }
       );
     }
 
