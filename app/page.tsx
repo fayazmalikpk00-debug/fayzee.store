@@ -1,10 +1,12 @@
 import { FlashCountdown } from "@/components/marketplace/FlashCountdown";
+import { HomeProductsFeed } from "@/components/marketplace/HomeProductsFeed";
 import { ProductCard } from "@/components/marketplace/ProductCard";
 import prisma from "@/lib/db";
 import {
   getCategories,
   getFeaturedProducts,
   getFlashSaleProducts,
+  getProducts,
   getTrendingProducts,
 } from "@/services/productService";
 import {
@@ -21,12 +23,12 @@ import Link from "next/link";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [categories, flashSale, trendingProducts, featuredProducts, topSellers] =
+  const [allProductsData, categories, flashSale, trendingProducts, topSellers] =
     await Promise.all([
+      getProducts({ limit: 16, sortBy: "newest" }),
       getCategories(),
       getFlashSaleProducts(),
       getTrendingProducts(8),
-      getFeaturedProducts(8),
       prisma.sellerProfile.findMany({
         where: { status: "APPROVED" },
         take: 4,
@@ -154,46 +156,12 @@ export default async function HomePage() {
       </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        {/* 2. Featured Categories */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-[#1C2A39] flex items-center gap-2">
-                <span>Browse Categories</span>
-              </h2>
-              <p className="text-sm text-[#777777]">Shop curated top departments</p>
-            </div>
-            <Link href="/products" className="text-sm font-bold text-[#FF5E00] hover:text-[#FF8C00] hover:underline">
-              View All
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-5">
-            {categories.map((cat) => (
-              <Link
-                key={cat.id}
-                href={`/category/${cat.slug}`}
-                className="group p-4 sm:p-5 bg-white rounded-2xl border border-[#DDE2E6] hover:border-[#FF5E00] hover:shadow-card-hover transition-all flex items-center gap-4"
-              >
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-[#F7F9FA] overflow-hidden shrink-0 border border-[#DDE2E6]">
-                  <img
-                    src={cat.image || "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=200"}
-                    alt={cat.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
-                  />
-                </div>
-                <div className="min-w-0">
-                  <h4 className="text-sm sm:text-base font-bold text-[#1C2A39] group-hover:text-[#FF5E00] truncate transition">
-                    {cat.name}
-                  </h4>
-                  <p className="text-xs text-[#777777] mt-0.5">
-                    {cat._count.products} Products
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
+        {/* 2. All Products Feed (Directly under Hero, with on-demand Categories) */}
+        <HomeProductsFeed
+          initialProducts={allProductsData.products}
+          totalCount={allProductsData.total}
+          categories={categories}
+        />
 
         {/* 3. Flash Sale Section with Real Countdown */}
         {flashSale && flashSale.items.length > 0 && (
