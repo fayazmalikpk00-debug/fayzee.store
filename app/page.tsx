@@ -37,6 +37,13 @@ export default async function HomePage() {
       }),
     ]);
 
+  // AI Top Pick: 1st priority trending, 2nd priority featured, 3rd priority top active product
+  const aiTopPick =
+    trendingProducts[0] ||
+    allProductsData.products.find((p: any) => p.isFeatured) ||
+    allProductsData.products[0] ||
+    null;
+
   return (
     <div className="space-y-12 pb-16">
       {/* 1. Hero Promotional Banner */}
@@ -87,37 +94,45 @@ export default async function HomePage() {
                   <span className="font-bold flex items-center gap-1.5 text-white">
                     <Sparkles className="w-4 h-4 text-[#FF5E00]" /> Fayzee AI Top Pick
                   </span>
-                  <span className="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-md font-bold text-xs">
-                    In Stock
+                  <span
+                    className={`px-2.5 py-0.5 rounded-md font-bold text-xs ${
+                      ((aiTopPick?.stockQuantity ?? 1) > 0)
+                        ? "bg-emerald-500/20 text-emerald-300"
+                        : "bg-amber-500/20 text-amber-300"
+                    }`}
+                  >
+                    {((aiTopPick?.stockQuantity ?? 1) > 0) ? "In Stock" : "Limited Stock"}
                   </span>
                 </div>
-                {trendingProducts[0] ? (
+                {aiTopPick ? (
                   <div className="space-y-4">
                     <img
                       src={
-                        trendingProducts[0].images[0]?.url ||
+                        aiTopPick.images[0]?.url ||
                         "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=800"
                       }
-                      alt={trendingProducts[0].title}
+                      alt={aiTopPick.title}
                       className="w-full h-52 object-cover rounded-2xl shadow-md"
                     />
                     <div>
                       <h4 className="font-bold text-white text-lg truncate">
-                        {trendingProducts[0].title}
+                        {aiTopPick.title}
                       </h4>
                       <p className="text-sm text-slate-300 line-clamp-2 mt-1 leading-normal">
-                        {trendingProducts[0].shortDescription}
+                        {aiTopPick.shortDescription ||
+                          aiTopPick.description?.slice(0, 110) ||
+                          "Authentic marketplace item with verified seller warranty."}
                       </p>
                     </div>
                     <div className="flex items-center justify-between pt-3 border-t border-white/10">
                       <div>
                         <span className="text-xs text-slate-400">Special Price</span>
                         <p className="text-2xl font-black text-[#FF5E00]">
-                          Rs. {Math.round(trendingProducts[0].salePrice || trendingProducts[0].price).toLocaleString()}
+                          Rs. {Math.round(aiTopPick.salePrice || aiTopPick.price).toLocaleString()}
                         </p>
                       </div>
                       <Link
-                        href={`/products/${trendingProducts[0].slug}`}
+                        href={`/products/${aiTopPick.slug}`}
                         className="px-5 py-2.5 bg-[#FF5E00] hover:bg-[#FF8C00] text-white text-sm font-bold rounded-xl transition shadow-sm"
                       >
                         View Product
