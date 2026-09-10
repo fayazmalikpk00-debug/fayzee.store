@@ -134,8 +134,30 @@ export default function OrdersPage() {
               </div>
 
               <div className="pt-2 flex items-center justify-between">
-                <span className="text-xs text-[#777777]">
-                  Payment: <strong className="text-[#1C2A39]">{order.paymentMethod}</strong> ({order.paymentStatus})
+                <span className="text-xs text-[#777777] flex items-center gap-1.5 flex-wrap">
+                  <span>Payment:</span>
+                  <strong className="text-[#1C2A39]">
+                    {order.paymentMethod === "COD"
+                      ? "Cash on Delivery"
+                      : order.paymentMethod === "ONLINE_CARD"
+                      ? "Card (3D Secure)"
+                      : order.paymentMethod === "JAZZ_CASH"
+                      ? "JazzCash"
+                      : order.paymentMethod === "EASYPAISA"
+                      ? "EasyPaisa"
+                      : order.paymentMethod}
+                  </strong>
+                  <span
+                    className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      order.paymentStatus === "PAID"
+                        ? "bg-emerald-100 text-emerald-800"
+                        : order.paymentStatus === "CANCELLED"
+                        ? "bg-rose-100 text-rose-800"
+                        : "bg-amber-100 text-amber-800"
+                    }`}
+                  >
+                    {order.paymentStatus === "PAID" ? "✓ Paid" : order.paymentStatus}
+                  </span>
                 </span>
                 <Link
                   href={`/orders/${order.id}`}

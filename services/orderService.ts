@@ -1,5 +1,6 @@
 import prisma from "@/lib/db";
 import { PaymentService } from "@/lib/payment";
+import { PaymentDetailsPayload } from "@/lib/payment/types";
 
 export interface CreateOrderInput {
   userId: string;
@@ -12,31 +13,37 @@ export interface CreateOrderInput {
     postalCode: string;
     country: string;
   };
-  paymentMethod: "COD" | "ONLINE_CARD";
+  paymentMethod: string;
+  paymentDetails?: PaymentDetailsPayload;
   couponCode?: string;
   notes?: string;
 }
 
 export async function createOrder(input: CreateOrderInput) {
-  const { userId, shippingAddress, paymentMethod, couponCode, notes } = input;
+  const { userId, shippingAddress, paymentMethod, paymentDetails, couponCode, notes } = input;
 
-  // 1. Fetch user's cart
-  const cart = await prisma.cart.findUnique({
-    where: { userId },
-    include: {
-      items: {
-        include: {
-          product: {
-            include: {
-              variants: true,
-              seller: true,
+  const [cart, user] = await Promise.all([
+    prisma.cart.findUnique({
+      where: { userId },
+      include: {
+        items: {
+          include: {
+            product: {
+              include: {
+                variants: true,
+                seller: true,
+              },
             },
+            variant: true,
           },
-          variant: true,
         },
       },
-    },
-  });
+    }),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, name: true },
+    }),
+  ]);
 
   if (!cart || cart.items.length === 0) {
     throw new Error("Your cart is empty.");
@@ -192,10 +199,16 @@ export async function createOrder(input: CreateOrderInput) {
       orderId: order.id,
       orderNumber: order.orderNumber,
       amount: grandTotal,
-      customerEmail: "customer@fayzee.com",
+      currency: "PKR",
+      customerEmail: user?.email || "customer@fayzee.store",
       customerName: shippingAddress.fullName,
       customerPhone: shippingAddress.phone,
+      paymentDetails,
     });
+
+    if (!paymentResult.success) {
+      throw new Error(paymentResult.error || "Payment transaction was declined by the gateway.");
+    }
 
     // E. Create Payment record
     await tx.payment.create({

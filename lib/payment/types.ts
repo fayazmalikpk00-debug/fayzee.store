@@ -1,4 +1,9 @@
-export type PaymentMethodType = "COD" | "ONLINE_CARD" | "WALLET";
+export type PaymentMethodType =
+  | "COD"
+  | "ONLINE_CARD"
+  | "JAZZ_CASH"
+  | "EASYPAISA"
+  | "WALLET";
 
 export type PaymentStatusType =
   | "PENDING"
@@ -7,6 +12,23 @@ export type PaymentStatusType =
   | "FAILED"
   | "REFUNDED"
   | "CANCELLED";
+
+export interface PaymentDetailsPayload {
+  method: PaymentMethodType;
+  // Credit / Debit Card Details
+  cardNumber?: string;
+  cardHolder?: string;
+  cardExpiry?: string;
+  cardCvv?: string;
+  cardBrand?: string;
+  cardLast4?: string;
+  // Mobile Wallets (JazzCash / EasyPaisa)
+  walletPhone?: string;
+  walletCnicLast6?: string;
+  // 3D Secure / OTP Authorization
+  otpCode?: string;
+  authCode?: string;
+}
 
 export interface PaymentInitiationRequest {
   orderId: string;
@@ -17,6 +39,7 @@ export interface PaymentInitiationRequest {
   customerName: string;
   customerPhone?: string;
   returnUrl?: string;
+  paymentDetails?: PaymentDetailsPayload;
   metadata?: Record<string, any>;
 }
 
@@ -26,6 +49,7 @@ export interface PaymentInitiationResult {
   status: PaymentStatusType;
   redirectUrl?: string;
   paymentInstructions?: string;
+  gatewayDetails?: Record<string, any>;
   error?: string;
 }
 
@@ -45,3 +69,4 @@ export interface PaymentProvider {
   verifyPayment(transactionId: string, payload?: any): Promise<PaymentVerificationResult>;
   refundPayment(transactionId: string, amount: number): Promise<{ success: boolean; refundId?: string; error?: string }>;
 }
+

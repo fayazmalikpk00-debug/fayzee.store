@@ -5,10 +5,13 @@ import {
   Check,
   CheckCircle2,
   Clock,
+  CreditCard,
   ExternalLink,
+  Lock,
   MapPin,
   Package,
   ShieldCheck,
+  Smartphone,
   Store,
   Truck,
   XCircle,
@@ -37,6 +40,16 @@ export default async function OrderDetailPage({
         : order.shippingAddress;
   } catch {
     shippingAddress = {};
+  }
+
+  const latestPayment = order.payments && order.payments.length > 0 ? order.payments[0] : null;
+  let gatewayDetails: any = null;
+  if (latestPayment?.gatewayResponse) {
+    try {
+      gatewayDetails = JSON.parse(latestPayment.gatewayResponse);
+    } catch {
+      gatewayDetails = null;
+    }
   }
 
   const isCancelled = order.status === "CANCELLED";
@@ -312,39 +325,167 @@ export default async function OrderDetailPage({
           <p className="text-[#333333] font-medium">Phone: {shippingAddress.phone || order.user?.phone || "N/A"}</p>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl border border-[#DDE2E6] text-xs space-y-2">
-          <h3 className="text-sm font-bold text-[#1C2A39] flex items-center gap-1.5 pb-2 border-b border-[#DDE2E6]">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" /> Payment Information
-          </h3>
-          <div className="flex justify-between">
-            <span className="text-[#777777]">Method:</span>
-            <span className="font-bold text-[#1C2A39]">
-              {order.paymentMethod === "COD" ? "Cash On Delivery (COD)" : order.paymentMethod}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-[#777777]">Payment Status:</span>
+        <div className="bg-white p-6 rounded-3xl border border-[#DDE2E6] text-xs space-y-3 shadow-xs">
+          <div className="flex items-center justify-between pb-2 border-b border-[#DDE2E6]">
+            <h3 className="text-sm font-bold text-[#1C2A39] flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" /> Payment Information
+            </h3>
             <span
-              className={`font-bold ${
+              className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide ${
                 order.paymentStatus === "PAID"
-                  ? "text-emerald-600"
+                  ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
                   : order.paymentStatus === "CANCELLED"
-                  ? "text-rose-600"
-                  : "text-amber-600"
+                  ? "bg-rose-100 text-rose-800 border border-rose-300"
+                  : "bg-amber-100 text-amber-800 border border-amber-300"
               }`}
             >
               {order.paymentStatus === "PAID"
-                ? "Paid & Settled"
+                ? "✓ Paid & Settled"
                 : order.paymentStatus === "PENDING"
                 ? "Pending Collection (COD)"
                 : order.paymentStatus}
             </span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-[#777777]">Grand Total:</span>
-            <span className="font-black text-[#FF5E00] text-sm">
-              {formatPrice(order.grandTotal)}
-            </span>
+
+          {/* Payment Method Details */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-[#777777]">Payment Channel:</span>
+              <span className="font-bold text-[#1C2A39] flex items-center gap-1.5">
+                {order.paymentMethod === "ONLINE_CARD" && (
+                  <>
+                    <CreditCard className="w-3.5 h-3.5 text-sky-600" />
+                    <span>Credit / Debit Card</span>
+                  </>
+                )}
+                {order.paymentMethod === "JAZZ_CASH" && (
+                  <>
+                    <Smartphone className="w-3.5 h-3.5 text-amber-600" />
+                    <span>JazzCash Mobile Account</span>
+                  </>
+                )}
+                {order.paymentMethod === "EASYPAISA" && (
+                  <>
+                    <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>EasyPaisa Mobile Account</span>
+                  </>
+                )}
+                {order.paymentMethod === "COD" && (
+                  <>
+                    <Package className="w-3.5 h-3.5 text-[#FF5E00]" />
+                    <span>Cash on Delivery (COD)</span>
+                  </>
+                )}
+                {!["ONLINE_CARD", "JAZZ_CASH", "EASYPAISA", "COD"].includes(order.paymentMethod) && (
+                  <span>{order.paymentMethod}</span>
+                )}
+              </span>
+            </div>
+
+            {/* Gateway details for online payments */}
+            {order.paymentMethod === "ONLINE_CARD" && (
+              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-1.5 text-[11px]">
+                {gatewayDetails?.brand && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Card Brand & Number:</span>
+                    <span className="font-mono font-bold text-slate-800">
+                      {gatewayDetails.brand} •••• {gatewayDetails.cardLast4 || "••••"}
+                    </span>
+                  </div>
+                )}
+                {gatewayDetails?.holderName && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Cardholder:</span>
+                    <span className="font-bold text-slate-800">{gatewayDetails.holderName}</span>
+                  </div>
+                )}
+                {latestPayment?.transactionId && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Transaction ID:</span>
+                    <span className="font-mono font-bold text-slate-700 select-all">
+                      {latestPayment.transactionId}
+                    </span>
+                  </div>
+                )}
+                {gatewayDetails?.authCode && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Bank Auth Code:</span>
+                    <span className="font-mono font-bold text-emerald-700">
+                      AUTH-{gatewayDetails.authCode}
+                    </span>
+                  </div>
+                )}
+                <div className="pt-1 flex items-center gap-1.5 text-emerald-700 font-bold text-[10px]">
+                  <Lock className="w-3 h-3" />
+                  <span>3D Secure 2.0 Authenticated & Encrypted (TLS 256-bit)</span>
+                </div>
+              </div>
+            )}
+
+            {order.paymentMethod === "JAZZ_CASH" && (
+              <div className="bg-amber-50/50 p-3 rounded-2xl border border-amber-200 space-y-1.5 text-[11px]">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Mobile Account:</span>
+                  <span className="font-mono font-bold text-slate-800">
+                    {gatewayDetails?.accountPhone || shippingAddress.phone || "03XXXXXXXXX"}
+                  </span>
+                </div>
+                {latestPayment?.transactionId && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">JazzCash TID:</span>
+                    <span className="font-mono font-bold text-amber-900 select-all">
+                      {latestPayment.transactionId}
+                    </span>
+                  </div>
+                )}
+                <div className="pt-1 flex items-center gap-1.5 text-amber-800 font-bold text-[10px]">
+                  <CheckCircle2 className="w-3 h-3 text-amber-600" />
+                  <span>Verified via MPIN & OTP Instant Clearing</span>
+                </div>
+              </div>
+            )}
+
+            {order.paymentMethod === "EASYPAISA" && (
+              <div className="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-200 space-y-1.5 text-[11px]">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">EasyPaisa Account:</span>
+                  <span className="font-mono font-bold text-slate-800">
+                    {gatewayDetails?.accountPhone || shippingAddress.phone || "03XXXXXXXXX"}
+                  </span>
+                </div>
+                {latestPayment?.transactionId && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">EasyPaisa TID:</span>
+                    <span className="font-mono font-bold text-emerald-900 select-all">
+                      {latestPayment.transactionId}
+                    </span>
+                  </div>
+                )}
+                <div className="pt-1 flex items-center gap-1.5 text-emerald-800 font-bold text-[10px]">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                  <span>Verified via In-App Mobile Prompt & Instant Clearing</span>
+                </div>
+              </div>
+            )}
+
+            {order.paymentMethod === "COD" && (
+              <div className="bg-orange-50/50 p-3 rounded-2xl border border-orange-200 space-y-1 text-[11px] text-orange-950">
+                <p className="font-bold flex items-center gap-1">
+                  <span>Payable at Doorstep:</span>
+                  <span className="text-[#FF5E00] font-black">{formatPrice(order.grandTotal)}</span>
+                </p>
+                <p className="text-[10px] text-orange-800">
+                  Please keep exact cash ready upon delivery handover. The rider will provide a physical receipt.
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-between pt-1 border-t border-slate-100">
+              <span className="text-[#777777]">Grand Total:</span>
+              <span className="font-black text-[#FF5E00] text-sm">
+                {formatPrice(order.grandTotal)}
+              </span>
+            </div>
           </div>
         </div>
       </div>

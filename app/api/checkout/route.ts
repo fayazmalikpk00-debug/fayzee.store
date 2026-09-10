@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { shippingAddress, paymentMethod, couponCode, notes } = body;
+    const { shippingAddress, paymentMethod, paymentDetails, couponCode, notes } = body;
 
     if (!shippingAddress || !shippingAddress.fullName || !shippingAddress.street || !shippingAddress.city || !shippingAddress.phone) {
       return NextResponse.json(
@@ -22,9 +22,10 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!paymentMethod || (paymentMethod !== "COD" && paymentMethod !== "ONLINE_CARD")) {
+    const validMethods = ["COD", "ONLINE_CARD", "JAZZ_CASH", "EASYPAISA", "WALLET"];
+    if (!paymentMethod || !validMethods.includes(paymentMethod)) {
       return NextResponse.json(
-        { error: "Please select a valid payment method (Cash on Delivery or Online Card)." },
+        { error: "Please select a valid payment method (Cash on Delivery, Debit/Credit Card, JazzCash, or EasyPaisa)." },
         { status: 400 }
       );
     }
@@ -33,6 +34,7 @@ export async function POST(req: Request) {
       userId: user.id,
       shippingAddress,
       paymentMethod,
+      paymentDetails,
       couponCode,
       notes,
     });

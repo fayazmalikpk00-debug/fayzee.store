@@ -926,6 +926,12 @@ export default function SellerDashboardPage() {
                             >
                               {item.order.paymentMethod === "COD"
                                 ? "Cash On Delivery (COD)"
+                                : item.order.paymentMethod === "ONLINE_CARD"
+                                ? "Prepaid (Card)"
+                                : item.order.paymentMethod === "JAZZ_CASH"
+                                ? "Prepaid (JazzCash)"
+                                : item.order.paymentMethod === "EASYPAISA"
+                                ? "Prepaid (EasyPaisa)"
                                 : "Prepaid Online"}
                             </span>
                           </td>
