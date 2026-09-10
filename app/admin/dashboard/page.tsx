@@ -30,9 +30,12 @@ import {
   Store,
   Tag,
   Trash2,
+  Truck,
   Users,
   Wallet,
   XCircle,
+  Copy,
+  ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -43,8 +46,24 @@ export default function AdminDashboardPage() {
   const [sellers, setSellers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    "analytics" | "sellers" | "categories" | "products" | "finance" | "audit"
+    "analytics" | "sellers" | "categories" | "products" | "finance" | "courier" | "audit"
   >("analytics");
+
+  // Logistics & Courier API State
+  const [courierSettings, setCourierSettings] = useState({
+    activeProvider: "POSTEX",
+    isSandbox: true,
+    postexApiToken: "",
+    traxApiKey: "",
+    tcsUsername: "",
+    tcsPassword: "",
+    tcsCostCenterCode: "",
+    defaultPickupCity: "Karachi",
+    webhookSecret: "",
+  });
+  const [savingCourierSettings, setSavingCourierSettings] = useState(false);
+  const [courierSettingsSavedMsg, setCourierSettingsSavedMsg] = useState("");
+  const [copiedWebhook, setCopiedWebhook] = useState(false);
 
   // Finance & Settlements State
   const [adminFinanceData, setAdminFinanceData] = useState<any>(null);
@@ -89,13 +108,14 @@ export default function AdminDashboardPage() {
 
   const fetchData = async () => {
     try {
-      const [analyticsRes, sellersRes, catRes, prodRes, finRes, payRes] = await Promise.all([
+      const [analyticsRes, sellersRes, catRes, prodRes, finRes, payRes, courierRes] = await Promise.all([
         fetch("/api/admin/analytics"),
         fetch("/api/admin/sellers"),
         fetch("/api/admin/categories"),
         fetch("/api/admin/products"),
         fetch("/api/admin/finance"),
         fetch("/api/admin/payouts"),
+        fetch("/api/admin/courier-settings"),
       ]);
 
       const analyticsData = await analyticsRes.json();
@@ -104,6 +124,7 @@ export default function AdminDashboardPage() {
       const prodData = await prodRes.json();
       const finData = await finRes.json();
       const payData = await payRes.json();
+      const courierData = await courierRes.json();
 
       if (analyticsData.metrics) setData(analyticsData);
       if (sellersData.sellers) setSellers(sellersData.sellers);
@@ -127,6 +148,19 @@ export default function AdminDashboardPage() {
         }
       }
       if (payData.payouts) setAdminPayouts(payData.payouts);
+      if (courierData?.settings) {
+        setCourierSettings({
+          activeProvider: courierData.settings.activeProvider || "POSTEX",
+          isSandbox: courierData.settings.isSandbox ?? true,
+          postexApiToken: courierData.settings.postexApiToken || "",
+          traxApiKey: courierData.settings.traxApiKey || "",
+          tcsUsername: courierData.settings.tcsUsername || "",
+          tcsPassword: courierData.settings.tcsPassword || "",
+          tcsCostCenterCode: courierData.settings.tcsCostCenterCode || "",
+          defaultPickupCity: courierData.settings.defaultPickupCity || "Karachi",
+          webhookSecret: courierData.settings.webhookSecret || "",
+        });
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -154,6 +188,29 @@ export default function AdminDashboardPage() {
       alert(err.message || "Failed to save settings");
     } finally {
       setSavingAdminSettings(false);
+    }
+  };
+
+  const handleSaveCourierSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingCourierSettings(true);
+    setCourierSettingsSavedMsg("");
+    try {
+      const res = await fetch("/api/admin/courier-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(courierSettings),
+      });
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || "Failed to update courier settings");
+
+      setCourierSettingsSavedMsg("Logistics & Courier API settings saved successfully!");
+      setTimeout(() => setCourierSettingsSavedMsg(""), 4000);
+      fetchData();
+    } catch (err: any) {
+      alert(err.message || "Failed to save courier settings");
+    } finally {
+      setSavingCourierSettings(false);
     }
   };
 
@@ -371,6 +428,22 @@ export default function AdminDashboardPage() {
           {adminFinanceData?.metrics?.pendingPayoutsCount > 0 && (
             <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-rose-500 text-white animate-pulse">
               {adminFinanceData.metrics.pendingPayoutsCount}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab("courier")}
+          className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
+            activeTab === "courier"
+              ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
+              : "text-[#0B0F14] hover:bg-[#F5F3EE]"
+          }`}
+        >
+          <Truck className="w-3.5 h-3.5 text-[#C8A96B]" />
+          <span>Courier & Delivery API</span>
+          {courierSettings.isSandbox && (
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20">
+              SANDBOX
             </span>
           )}
         </button>
@@ -1467,6 +1540,466 @@ export default function AdminDashboardPage() {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* TAB: Logistics & Courier API Settings */}
+      {activeTab === "courier" && (
+        <div className="space-y-6">
+          {/* Header Banner */}
+          <div className="bg-[#0B0F14] rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-xl border border-[#C8A96B]/30">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-[#C8A96B]/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-[#C8A96B]/20 border border-[#C8A96B]/40 flex items-center justify-center text-[#C8A96B]">
+                    <Truck className="w-4 h-4" />
+                  </div>
+                  <span className="text-[11px] font-mono font-bold tracking-widest text-[#C8A96B] uppercase">
+                    Centralized Logistics Engine
+                  </span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-[#F5F3EE]">
+                  Courier Delivery & Rider Dispatch API
+                </h2>
+                <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
+                  Connect leading Pakistani courier services (PostEx, Trax, TCS) to power automated 1-click parcel booking, 
+                  rider warehouse pickup requests, Cash on Delivery (COD) collection, and customer tracking.
+                </p>
+              </div>
+
+              <div className="flex flex-col items-start md:items-end gap-2">
+                <div className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 ${
+                  courierSettings.isSandbox 
+                    ? "bg-amber-500/10 border-amber-500/30 text-amber-300"
+                    : "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                }`}>
+                  <span className={`w-2 h-2 rounded-full ${courierSettings.isSandbox ? "bg-amber-400 animate-ping" : "bg-emerald-400"}`} />
+                  <span>{courierSettings.isSandbox ? "Sandbox / Simulation Mode" : "Live Production Active"}</span>
+                </div>
+                <span className="text-[10px] text-slate-400">
+                  Active Carrier: <strong className="text-white">{courierSettings.activeProvider}</strong>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Settings Saved Notification */}
+          {courierSettingsSavedMsg && (
+            <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-xs font-bold flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{courierSettingsSavedMsg}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSaveCourierSettings} className="space-y-6">
+            {/* Step 1: Active Courier Carrier Selection */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                    <span>1. Select Active Courier Partner</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Choose the primary delivery service used for automated order booking and rider calls.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* PostEx Option */}
+                <div
+                  onClick={() => setCourierSettings({ ...courierSettings, activeProvider: "POSTEX" })}
+                  className={`p-4 rounded-2xl border-2 cursor-pointer transition relative ${
+                    courierSettings.activeProvider === "POSTEX"
+                      ? "border-[#0B0F14] bg-[#0B0F14]/5 shadow-sm"
+                      : "border-slate-200 hover:border-slate-300 bg-white"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white font-black text-xs flex items-center justify-center">
+                        P
+                      </div>
+                      <span className="font-bold text-xs text-slate-900">PostEx Logistics</span>
+                    </div>
+                    {courierSettings.activeProvider === "POSTEX" && (
+                      <span className="w-5 h-5 rounded-full bg-[#0B0F14] text-white flex items-center justify-center text-[10px]">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500 mb-2">
+                    Modern eCommerce logistics with fast 1-click booking, rapid COD bank transfers, and live tracking.
+                  </p>
+                  <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                    Recommended for FAYZEE
+                  </span>
+                </div>
+
+                {/* Trax Option */}
+                <div
+                  onClick={() => setCourierSettings({ ...courierSettings, activeProvider: "TRAX" })}
+                  className={`p-4 rounded-2xl border-2 cursor-pointer transition relative ${
+                    courierSettings.activeProvider === "TRAX"
+                      ? "border-[#0B0F14] bg-[#0B0F14]/5 shadow-sm"
+                      : "border-slate-200 hover:border-slate-300 bg-white"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-blue-600 text-white font-black text-xs flex items-center justify-center">
+                        T
+                      </div>
+                      <span className="font-bold text-xs text-slate-900">Trax Logistics</span>
+                    </div>
+                    {courierSettings.activeProvider === "TRAX" && (
+                      <span className="w-5 h-5 rounded-full bg-[#0B0F14] text-white flex items-center justify-center text-[10px]">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500 mb-2">
+                    Pakistan's extensive 350+ cities delivery network, nationwide warehouse pickups, and Sonik API.
+                  </p>
+                  <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-800">
+                    Extensive Coverage
+                  </span>
+                </div>
+
+                {/* TCS Option */}
+                <div
+                  onClick={() => setCourierSettings({ ...courierSettings, activeProvider: "TCS" })}
+                  className={`p-4 rounded-2xl border-2 cursor-pointer transition relative ${
+                    courierSettings.activeProvider === "TCS"
+                      ? "border-[#0B0F14] bg-[#0B0F14]/5 shadow-sm"
+                      : "border-slate-200 hover:border-slate-300 bg-white"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-red-600 text-white font-black text-xs flex items-center justify-center">
+                        TCS
+                      </div>
+                      <span className="font-bold text-xs text-slate-900">TCS Express</span>
+                    </div>
+                    {courierSettings.activeProvider === "TCS" && (
+                      <span className="w-5 h-5 rounded-full bg-[#0B0F14] text-white flex items-center justify-center text-[10px]">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500 mb-2">
+                    Established express courier network with corporate account credentials and cost center codes.
+                  </p>
+                  <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700">
+                    Corporate Accounts
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 2: Environment Mode & Simulation Toggle */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">2. Sandbox Simulation vs. Live Production</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Safe testing mode allows testing the entire dispatch flow without charging or calling real riders.
+                  </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={courierSettings.isSandbox}
+                    onChange={(e) => setCourierSettings({ ...courierSettings, isSandbox: e.target.checked })}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                  <span className="ml-3 text-xs font-bold text-slate-700">
+                    {courierSettings.isSandbox ? "Sandbox ON (Simulation)" : "Live API Active"}
+                  </span>
+                </label>
+              </div>
+
+              {courierSettings.isSandbox ? (
+                <div className="p-4 bg-amber-50/60 border border-amber-200 rounded-2xl text-xs text-amber-900 space-y-1">
+                  <p className="font-bold flex items-center gap-1.5 text-amber-800">
+                    <Sparkles className="w-4 h-4 text-amber-600" />
+                    Sandbox Mode is currently Enabled:
+                  </p>
+                  <p className="text-slate-600 leading-relaxed">
+                    Sellers can click <strong>"⚡ Book Courier Dispatch"</strong> on orders right away. The system will 
+                    instantly generate real-looking CN tracking numbers (e.g. <code>PEX-892104</code>), change order statuses to <strong>SHIPPED</strong>, 
+                    and attach tracking links. When you are ready to book real pickups, turn Sandbox OFF and enter your live merchant token.
+                  </p>
+                </div>
+              ) : (
+                <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-2xl text-xs text-emerald-900 space-y-1">
+                  <p className="font-bold flex items-center gap-1.5 text-emerald-800">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    Live Production Mode is Active:
+                  </p>
+                  <p className="text-slate-600 leading-relaxed">
+                    All 1-click booking requests from sellers will call the active courier's official API to generate genuine consignment 
+                    notes and dispatch physical riders to the seller's warehouse address.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Step 3: API Credentials Configuration */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-5">
+              <div>
+                <h3 className="text-sm font-black text-slate-900">3. Courier API Credentials</h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Enter your marketplace merchant API tokens below. These are kept encrypted and secure on the platform server.
+                </p>
+              </div>
+
+              {/* PostEx Credentials */}
+              {courierSettings.activeProvider === "POSTEX" && (
+                <div className="space-y-4 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                      PostEx Merchant API Token
+                    </span>
+                    <a
+                      href="https://merchant.postex.pk"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[11px] text-brand-600 font-bold hover:underline flex items-center gap-1"
+                    >
+                      <span>Open PostEx Merchant Portal</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+
+                  <div>
+                    <input
+                      type="password"
+                      value={courierSettings.postexApiToken}
+                      onChange={(e) => setCourierSettings({ ...courierSettings, postexApiToken: e.target.value })}
+                      placeholder="Paste your PostEx API Token (e.g. eyJhbGciOi...)"
+                      className="w-full px-3 py-2.5 bg-white rounded-xl border border-slate-200 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30 focus:border-[#C8A96B]"
+                    />
+                    <span className="text-[10px] text-slate-400 mt-1 block">
+                      Navigate to: PostEx Portal → Settings → API Tokens → Generate / Copy Token.
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Trax Credentials */}
+              {courierSettings.activeProvider === "TRAX" && (
+                <div className="space-y-4 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-blue-500" />
+                      Trax Sonik API Key
+                    </span>
+                    <a
+                      href="https://sonik.trax.pk"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[11px] text-brand-600 font-bold hover:underline flex items-center gap-1"
+                    >
+                      <span>Open Trax Portal</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+
+                  <div>
+                    <input
+                      type="password"
+                      value={courierSettings.traxApiKey}
+                      onChange={(e) => setCourierSettings({ ...courierSettings, traxApiKey: e.target.value })}
+                      placeholder="Paste your Trax API Key (e.g. trx_live_...)"
+                      className="w-full px-3 py-2.5 bg-white rounded-xl border border-slate-200 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30 focus:border-[#C8A96B]"
+                    />
+                    <span className="text-[10px] text-slate-400 mt-1 block">
+                      Navigate to: Trax Sonik Portal → Developer Settings → API Key.
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* TCS Credentials */}
+              {courierSettings.activeProvider === "TCS" && (
+                <div className="space-y-4 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-red-500" />
+                    TCS Express Corporate Credentials
+                  </span>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">TCS API Username</label>
+                      <input
+                        type="text"
+                        value={courierSettings.tcsUsername}
+                        onChange={(e) => setCourierSettings({ ...courierSettings, tcsUsername: e.target.value })}
+                        placeholder="Corporate username"
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">TCS API Password</label>
+                      <input
+                        type="password"
+                        value={courierSettings.tcsPassword}
+                        onChange={(e) => setCourierSettings({ ...courierSettings, tcsPassword: e.target.value })}
+                        placeholder="••••••••"
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Cost Center Code</label>
+                      <input
+                        type="text"
+                        value={courierSettings.tcsCostCenterCode}
+                        onChange={(e) => setCourierSettings({ ...courierSettings, tcsCostCenterCode: e.target.value })}
+                        placeholder="e.g. 100234"
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Default City & Webhook Secret */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Marketplace Default Origin City
+                  </label>
+                  <input
+                    type="text"
+                    value={courierSettings.defaultPickupCity}
+                    onChange={(e) => setCourierSettings({ ...courierSettings, defaultPickupCity: e.target.value })}
+                    placeholder="e.g. Karachi"
+                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-1 block">
+                    Fallback city for pickup calculation if a new seller hasn't entered their warehouse city yet.
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Webhook Secret Key (Optional)
+                  </label>
+                  <input
+                    type="password"
+                    value={courierSettings.webhookSecret}
+                    onChange={(e) => setCourierSettings({ ...courierSettings, webhookSecret: e.target.value })}
+                    placeholder="Optional webhook authentication key"
+                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-1 block">
+                    Secures incoming webhook notifications from the courier network.
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 4: Webhook Auto-Update URL */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-3">
+              <h3 className="text-sm font-black text-slate-900 flex items-center gap-1.5">
+                <Send className="w-4 h-4 text-[#C8A96B]" />
+                <span>4. Automated Order Delivery Webhook</span>
+              </h3>
+              <p className="text-xs text-slate-500">
+                Copy this URL and paste it into your PostEx or Trax webhook dashboard. When a rider delivers the parcel or 
+                collects the cash, FAYZEE will instantly mark the order as <strong>DELIVERED</strong> and COD as <strong>PAID</strong>.
+              </p>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value="https://fayzee.store/api/webhooks/courier"
+                  className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono font-bold text-slate-800 select-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText("https://fayzee.store/api/webhooks/courier");
+                    setCopiedWebhook(true);
+                    setTimeout(() => setCopiedWebhook(false), 3000);
+                  }}
+                  className="px-4 py-2.5 bg-[#0B0F14] hover:bg-[#1a222c] text-[#C8A96B] rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0"
+                >
+                  {copiedWebhook ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedWebhook ? "Copied!" : "Copy Webhook"}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Step 5: How It Works Guide for Marketplace Owner */}
+            <div className="bg-[#FAF9F5] rounded-3xl border border-[#E8E5DC] p-6 space-y-4">
+              <h3 className="text-xs font-black uppercase tracking-wider text-[#0B0F14] flex items-center gap-2">
+                <Store className="w-4 h-4 text-[#C8A96B]" />
+                <span>Marketplace Logistics Workflow (Daraz Centralized Model)</span>
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+                <div className="p-3.5 bg-white rounded-2xl border border-slate-200 space-y-1">
+                  <span className="w-5 h-5 rounded-full bg-[#0B0F14] text-[#C8A96B] font-black text-[10px] flex items-center justify-center">1</span>
+                  <p className="font-bold text-slate-900 pt-1">Central Account</p>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    Aap (Malak Fayaz) PostEx ya Trax par ek central merchant account register karte hain. COD ka saara paisa aapke bank account mein aayega.
+                  </p>
+                </div>
+
+                <div className="p-3.5 bg-white rounded-2xl border border-slate-200 space-y-1">
+                  <span className="w-5 h-5 rounded-full bg-[#0B0F14] text-[#C8A96B] font-black text-[10px] flex items-center justify-center">2</span>
+                  <p className="font-bold text-slate-900 pt-1">Automatic Dispatch</p>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    Seller order aane par "1-Click Courier Booking" click karta hai. Hamara system rider ko seller ke warehouse address par bhejta hai.
+                  </p>
+                </div>
+
+                <div className="p-3.5 bg-white rounded-2xl border border-slate-200 space-y-1">
+                  <span className="w-5 h-5 rounded-full bg-[#0B0F14] text-[#C8A96B] font-black text-[10px] flex items-center justify-center">3</span>
+                  <p className="font-bold text-slate-900 pt-1">Live Tracking</p>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    Tracking CN number (jaise PEX-XXXX) customer aur seller dono ko turant milta hai aur live track hota hai.
+                  </p>
+                </div>
+
+                <div className="p-3.5 bg-white rounded-2xl border border-slate-200 space-y-1">
+                  <span className="w-5 h-5 rounded-full bg-[#0B0F14] text-[#C8A96B] font-black text-[10px] flex items-center justify-center">4</span>
+                  <p className="font-bold text-slate-900 pt-1">Commission & Payout</p>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    Delivery hone ke baad aapka platform commission deduct ho kar baaqi amount seller ke FAYZEE wallet mein credit ho jata hai.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Save Settings Action Button */}
+            <div className="flex justify-end pt-2">
+              <button
+                type="submit"
+                disabled={savingCourierSettings}
+                className="px-6 py-3 bg-[#0B0F14] hover:bg-[#1a222c] text-[#C8A96B] rounded-2xl text-xs font-black transition shadow-lg flex items-center gap-2 active:scale-98 disabled:opacity-50"
+              >
+                {savingCourierSettings ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-[#C8A96B]" />
+                    <span>Saving Courier Configuration...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4 text-[#C8A96B]" />
+                    <span>Save Logistics & Courier API Settings</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 

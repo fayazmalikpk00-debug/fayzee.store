@@ -123,9 +123,11 @@ export default function SellerDashboardPage() {
 
   // Shipping Modal & Fulfillment Actions State
   const [shippingModalItem, setShippingModalItem] = useState<any | null>(null);
-  const [courierName, setCourierName] = useState("TCS Express");
+  const [courierName, setCourierName] = useState("PostEx Courier");
+  const [courierWeight, setCourierWeight] = useState("0.5");
   const [trackingCode, setTrackingCode] = useState("");
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isAutoBooking, setIsAutoBooking] = useState(false);
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>("ALL");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -603,6 +605,44 @@ ${paymentLine}${noteLine}
     } finally {
       setIsUpdatingStatus(false);
       setShippingModalItem(null);
+    }
+  };
+
+  const handleAutoBookCourier = async (item: any) => {
+    if (!item) return;
+    setIsAutoBooking(true);
+    try {
+      const providerKey = courierName.includes("PostEx")
+        ? "POSTEX"
+        : courierName.includes("Trax")
+        ? "TRAX"
+        : courierName.includes("TCS")
+        ? "TCS"
+        : "POSTEX";
+
+      const res = await fetch("/api/seller/orders/book-courier", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderItemId: item.id,
+          courierProvider: providerKey,
+          weightInKg: Number(courierWeight) || 0.5,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Courier auto-booking failed");
+
+      await fetchSellerData();
+      setSuccessToast(
+        `⚡ ${data.message || "Booked with Courier!"} CN: ${data.booking?.trackingNumber}`
+      );
+      setTimeout(() => setSuccessToast(""), 6000);
+      setShippingModalItem(null);
+    } catch (err: any) {
+      alert(err.message || "Failed to book courier");
+    } finally {
+      setIsAutoBooking(false);
     }
   };
 
@@ -2847,10 +2887,87 @@ ${paymentLine}${noteLine}
               })()}
             </div>
 
+            {/* ⚡ 1-Click Automated Courier Booking Box */}
+            <div className="bg-[#FAF9F6] p-4 rounded-2xl border border-[#E8E5DC] space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-xs font-black text-[#0B0F14] uppercase tracking-wide">
+                    ⚡ 1-Click Automated Courier Booking
+                  </span>
+                </div>
+                <span className="text-[10px] font-black text-[#C8A96B] bg-[#0B0F14] px-2.5 py-0.5 rounded-full border border-[#C8A96B]/30">
+                  Recommended
+                </span>
+              </div>
+              <p className="text-[11px] text-[#8A8F98] leading-relaxed">
+                Automatically books a courier rider to pick up this parcel from your store/warehouse and delivers it directly to the customer.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-700 mb-1">
+                    Courier Provider:
+                  </label>
+                  <select
+                    value={courierName}
+                    onChange={(e) => setCourierName(e.target.value)}
+                    className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30"
+                  >
+                    <option value="PostEx Courier">PostEx (Instant Pickup & Fast COD)</option>
+                    <option value="Trax Logistics">Trax Logistics (Express COD)</option>
+                    <option value="TCS Express">TCS Express (Corporate Network)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-700 mb-1">
+                    Estimated Parcel Weight (KG):
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    value={courierWeight}
+                    onChange={(e) => setCourierWeight(e.target.value)}
+                    placeholder="0.5"
+                    className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="button"
+                disabled={isAutoBooking || isUpdatingStatus}
+                onClick={() => handleAutoBookCourier(shippingModalItem)}
+                className="w-full py-3 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] rounded-xl text-xs font-black transition shadow-sm border border-[#C8A96B]/40 flex items-center justify-center gap-2 active:scale-98 disabled:opacity-50"
+              >
+                {isAutoBooking ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-[#C8A96B]" />
+                    <span>Booking Courier Rider & Generating CN...</span>
+                  </>
+                ) : (
+                  <>
+                    <Truck className="w-4 h-4 text-[#C8A96B]" />
+                    <span>⚡ Call Courier Rider & Book Dispatch Now</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Separator */}
+            <div className="relative flex py-1 items-center">
+              <div className="flex-grow border-t border-slate-200"></div>
+              <span className="flex-shrink mx-3 text-[10px] uppercase font-black text-slate-400">
+                OR Manual Tracking Entry
+              </span>
+              <div className="flex-grow border-t border-slate-200"></div>
+            </div>
+
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Courier / Shipping Partner
+                  Manual Courier Partner
                 </label>
                 <select
                   value={courierName}
@@ -2858,11 +2975,11 @@ ${paymentLine}${noteLine}
                   className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30 focus:border-[#C8A96B]"
                 >
                   <option value="TCS Express">TCS Express</option>
-                  <option value="Leopards Courier">Leopards Courier</option>
-                  <option value="Trax Logistics">Trax Logistics</option>
                   <option value="PostEx Courier">PostEx</option>
+                  <option value="Trax Logistics">Trax Logistics</option>
+                  <option value="Leopards Courier">Leopards Courier</option>
                   <option value="M&P Express">M&P Express</option>
-                  <option value="Direct Rider Delivery">Direct Store Rider</option>
+                  <option value="Direct Store Rider">Direct Store Rider</option>
                 </select>
               </div>
 
@@ -2878,7 +2995,7 @@ ${paymentLine}${noteLine}
                   className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30 focus:border-[#C8A96B]"
                 />
                 <span className="text-[10px] text-slate-400 mt-1 block">
-                  This code will be visible to the customer on their order tracking page.
+                  Manual tracking code if you already booked physically at courier branch.
                 </span>
               </div>
             </div>
@@ -2893,12 +3010,12 @@ ${paymentLine}${noteLine}
               </button>
               <button
                 type="button"
-                disabled={isUpdatingStatus}
+                disabled={isUpdatingStatus || isAutoBooking}
                 onClick={() => {
                   const combinedTracking = `${courierName} - ${trackingCode.trim() || "TRK-" + Math.floor(100000 + Math.random() * 900000)}`;
                   handleUpdateStatus(shippingModalItem.id, "SHIPPED", combinedTracking);
                 }}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 active:scale-98 disabled:opacity-50"
+                className="px-4 py-2 bg-stone-800 hover:bg-stone-900 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 active:scale-98 disabled:opacity-50"
               >
                 {isUpdatingStatus ? (
                   <>
@@ -2907,8 +3024,8 @@ ${paymentLine}${noteLine}
                   </>
                 ) : (
                   <>
-                    <Truck className="w-3.5 h-3.5" />
-                    <span>Confirm & Mark Shipped</span>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Save Manual Dispatch</span>
                   </>
                 )}
               </button>

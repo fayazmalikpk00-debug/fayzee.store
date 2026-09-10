@@ -639,3 +639,18 @@ model PlatformFinancialSetting {
   updatedAt             DateTime @updatedAt
 }
 
+model PlatformCourierSetting {
+  id                String   @id @default("default")
+  activeProvider    String   @default("POSTEX") // POSTEX, TRAX, TCS, MANUAL
+  isSandbox         Boolean  @default(true)      // true = Test Mode, false = Live Production Mode
+  postexApiToken    String?
+  traxApiKey        String?
+  tcsUsername       String?
+  tcsPassword       String?
+  tcsCostCenterCode String?
+  defaultPickupCity String   @default("Karachi")
+  webhookSecret     String?
+  updatedAt         DateTime @updatedAt
+}
+
+
