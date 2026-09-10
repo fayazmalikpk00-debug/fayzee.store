@@ -310,10 +310,22 @@ export default function SellerRegisterPage() {
           </ul>
         </div>
 
-        <div className="pt-2">
+        <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <a
+            href={`https://wa.me/923306767357?text=${encodeURIComponent(
+              `Assalam-o-Alaikum Super Admin, maine FAYZEE par naya seller account register kiya hai.\nStore: ${storeName}\nEmail: ${email}\nPhone: ${phone}\nBaraye meharbani mere KYC documents check karke verify kar dein.`
+            )}`}
+            target="_blank"
+            rel="noreferrer"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-2xl shadow-sm transition active:scale-98"
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>Chat with Super Admin on WhatsApp (+92 330 6767357)</span>
+          </a>
+
           <Link
             href="/seller/dashboard"
-            className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] text-xs font-black rounded-2xl shadow-card border border-[#C8A96B]/30 transition"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] text-xs font-black rounded-2xl shadow-card border border-[#C8A96B]/30 transition"
           >
             <span>Open Seller Dashboard</span>
             <ArrowRight className="w-4 h-4" />

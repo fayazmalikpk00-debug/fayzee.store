@@ -781,9 +781,22 @@ ${paymentLine}${noteLine}
               </p>
             </div>
           </div>
-          <span className="px-3 py-1 rounded-full text-[10px] font-black bg-amber-200 text-amber-900 shrink-0 self-start sm:self-auto uppercase tracking-wide">
-            Under Review
-          </span>
+          <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+            <a
+              href={`https://wa.me/923306767357?text=${encodeURIComponent(
+                `Assalam-o-Alaikum Super Admin, mera store '${user.sellerProfile?.storeName || ""}' KYC verification ke liye pending hai. Please check and verify.`
+              )}`}
+              target="_blank"
+              rel="noreferrer"
+              className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs active:scale-98"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>WhatsApp Admin</span>
+            </a>
+            <span className="px-3 py-1.5 rounded-full text-[10px] font-black bg-amber-200 text-amber-900 uppercase tracking-wide">
+              Under Review
+            </span>
+          </div>
         </div>
       )}
 
