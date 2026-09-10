@@ -396,8 +396,8 @@ export function ProductDetailView({ product }: { product: any }) {
               className="w-full h-full object-cover object-center transition-all duration-300 ease-in-out"
             />
             {product.discountPercent && product.discountPercent > 0 ? (
-              <span className="absolute top-3 left-3 sm:top-4 sm:left-4 px-2.5 py-1 bg-[#FF5E00] text-white text-[11px] sm:text-xs font-black rounded-lg shadow-md">
-                -{product.discountPercent}% OFF
+              <span className="absolute top-3 left-3 sm:top-4 sm:left-4 px-2.5 py-1 bg-[#FF5E00] text-white text-[11px] sm:text-xs font-black rounded-lg shadow-md z-10">
+                -{Math.round(product.discountPercent)}% OFF
               </span>
             ) : null}
           </div>
@@ -471,9 +471,16 @@ export function ProductDetailView({ product }: { product: any }) {
               {formatPrice(currentPrice)}
             </span>
             {originalPrice && (
-              <span className="text-xs sm:text-sm text-[#777777] line-through">
-                {formatPrice(originalPrice)}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-base sm:text-lg text-[#777777] line-through">
+                  {formatPrice(originalPrice)}
+                </span>
+                {product.discountPercent && product.discountPercent > 0 ? (
+                  <span className="px-2 py-0.5 bg-[#FF5E00]/10 border border-[#FF5E00]/30 text-[#FF5E00] text-xs font-black rounded-md">
+                    -{Math.round(product.discountPercent)}% OFF
+                  </span>
+                ) : null}
+              </div>
             )}
             <span className={`ml-auto text-xs font-bold flex items-center gap-1 ${
               currentStock > 0 ? "text-emerald-600" : "text-red-600"

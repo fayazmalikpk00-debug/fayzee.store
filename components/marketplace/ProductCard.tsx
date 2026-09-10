@@ -72,7 +72,7 @@ export function ProductCard({
   return (
     <div className="group relative bg-white rounded-2xl border border-[#DDE2E6] hover:border-[#FF5E00]/60 hover:shadow-card-hover hover:-translate-y-1.5 transition-all duration-300 ease-out flex flex-col overflow-hidden will-change-transform">
       {/* Badges */}
-      <div className="absolute top-3 left-3 z-10 flex flex-col items-start gap-1">
+      <div className="absolute top-3 left-3 z-20 flex flex-col items-start gap-1.5 pointer-events-none">
         {isFeatured ? (
           <span className="px-2 py-0.5 bg-[#1C2A39]/95 backdrop-blur-xs text-[#FF8C00] text-[10px] font-black rounded-md border border-[#FF5E00]/50 shadow-xs flex items-center gap-1 animate-pulse-glow">
             <span className="w-1.5 h-1.5 rounded-full bg-[#FF5E00] animate-ping"></span>
@@ -80,8 +80,8 @@ export function ProductCard({
           </span>
         ) : null}
         {discountPercent && discountPercent > 0 ? (
-          <span className="px-2.5 py-0.5 bg-[#FF5E00] text-white text-xs font-extrabold rounded-md shadow-sm animate-badge-wiggle inline-block">
-            -{discountPercent}%
+          <span className="px-2.5 py-1 bg-[#FF5E00] text-white text-xs font-black rounded-lg shadow-md animate-badge-wiggle inline-flex items-center justify-center">
+            -{Math.round(discountPercent)}%
           </span>
         ) : null}
       </div>
@@ -89,7 +89,7 @@ export function ProductCard({
       {/* Wishlist toggle */}
       <button
         onClick={handleLikeToggle}
-        className="absolute top-3 right-3 z-10 p-2 rounded-full bg-white/95 backdrop-blur-xs text-slate-400 hover:text-red-500 hover:scale-110 active:scale-75 transition-all duration-200 shadow-xs relative"
+        className="absolute top-3 right-3 z-20 p-2 rounded-full bg-white/95 backdrop-blur-xs text-slate-400 hover:text-red-500 hover:scale-110 active:scale-75 transition-all duration-200 shadow-xs"
         title="Save to Wishlist"
       >
         <Heart
@@ -154,8 +154,15 @@ export function ProductCard({
               {formatPrice(displayPrice)}
             </div>
             {originalPrice && (
-              <div className="text-xs sm:text-sm text-[#777777] line-through truncate">
-                {formatPrice(originalPrice)}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-xs sm:text-sm text-[#777777] line-through truncate">
+                  {formatPrice(originalPrice)}
+                </span>
+                {discountPercent && discountPercent > 0 ? (
+                  <span className="text-[10px] font-extrabold text-[#FF5E00] bg-[#FF5E00]/10 border border-[#FF5E00]/20 px-1.5 py-0.2 rounded shrink-0">
+                    -{Math.round(discountPercent)}%
+                  </span>
+                ) : null}
               </div>
             )}
           </div>
