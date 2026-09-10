@@ -1,3 +1,4 @@
+import { InfiniteProductGrid } from "@/components/marketplace/InfiniteProductGrid";
 import { ProductCard } from "@/components/marketplace/ProductCard";
 import prisma from "@/lib/db";
 import { getBrands, getCategories, getProducts } from "@/services/productService";
@@ -272,45 +273,13 @@ export default async function ProductsPage({
           </div>
         </aside>
 
-        {/* Product Cards Grid */}
-        <div className="lg:col-span-3 space-y-8">
-          {products.length === 0 ? (
-            <div className="bg-white rounded-3xl p-12 text-center border border-[#DDE2E6] space-y-4">
-              <div className="w-16 h-16 bg-[#F7F9FA] rounded-full flex items-center justify-center mx-auto text-[#777777] border border-[#DDE2E6]">
-                🔍
-              </div>
-              <h3 className="text-base font-bold text-[#1C2A39]">No products found</h3>
-              <p className="text-xs text-[#777777] max-w-sm mx-auto">
-                We couldn't find any products matching your current filters. Try relaxing your search criteria or ask Fayzee AI.
-              </p>
-              <Link
-                href="/products"
-                className="inline-block px-4 py-2 bg-[#FF5E00] hover:bg-[#FF8C00] text-white text-xs font-bold rounded-xl transition shadow-xs"
-              >
-                Reset All Filters
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-              {products.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  id={product.id}
-                  title={product.title}
-                  slug={product.slug}
-                  price={product.price}
-                  salePrice={product.salePrice}
-                  discountPercent={product.discountPercent}
-                  rating={product.rating}
-                  reviewCount={product.reviewCount}
-                  image={product.images[0]?.url}
-                  category={product.category.name}
-                  seller={product.seller}
-                  inStock={product.stockQuantity > 0}
-                />
-              ))}
-            </div>
-          )}
+        {/* Product Cards Grid with Daraz-style Infinite Scroll */}
+        <div className="lg:col-span-3">
+          <InfiniteProductGrid
+            initialProducts={products}
+            totalCount={total}
+            queryParams={searchParams}
+          />
         </div>
       </div>
     </div>

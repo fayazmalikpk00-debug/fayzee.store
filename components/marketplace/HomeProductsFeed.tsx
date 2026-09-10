@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface CategoryItem {
   id: string;
@@ -41,21 +41,89 @@ export function HomeProductsFeed({
   const [showCategoriesGrid, setShowCategoriesGrid] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  // Infinite Scroll State
+  const [page, setPage] = useState<number>(1);
+  const [total, setTotal] = useState<number>(totalCount);
+  const [hasMore, setHasMore] = useState<boolean>(initialProducts.length < totalCount);
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+  const observerRef = useRef<HTMLDivElement | null>(null);
+
+  const loadMoreProducts = useCallback(async () => {
+    if (isLoading || isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const url =
+        selectedCategory === "all"
+          ? `/api/products?page=${nextPage}&limit=16`
+          : `/api/products?category=${encodeURIComponent(selectedCategory)}&page=${nextPage}&limit=16`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        const newItems = data.products || [];
+        if (newItems.length > 0) {
+          setProducts((prev) => {
+            const existingIds = new Set(prev.map((p) => p.id));
+            const unique = newItems.filter((p: any) => !existingIds.has(p.id));
+            return [...prev, ...unique];
+          });
+          setPage(nextPage);
+          if (data.total !== undefined) setTotal(data.total);
+          setHasMore(newItems.length >= 16 && (products.length + newItems.length < (data.total || total)));
+        } else {
+          setHasMore(false);
+        }
+      } else {
+        setHasMore(false);
+      }
+    } catch (err) {
+      console.error("Failed to load more products:", err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [page, isLoading, isLoadingMore, hasMore, selectedCategory, products.length, total]);
+
+  useEffect(() => {
+    const target = observerRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && hasMore && !isLoading && !isLoadingMore) {
+          loadMoreProducts();
+        }
+      },
+      { rootMargin: "350px" }
+    );
+
+    observer.observe(target);
+    return () => {
+      observer.disconnect();
+    };
+  }, [loadMoreProducts, hasMore, isLoading, isLoadingMore]);
+
   const handleCategorySelect = async (slug: string) => {
     if (selectedCategory === slug) return;
     setSelectedCategory(slug);
+    setPage(1);
 
     if (slug === "all") {
       setProducts(initialProducts);
+      setTotal(totalCount);
+      setHasMore(initialProducts.length < totalCount);
       return;
     }
 
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/products?category=${encodeURIComponent(slug)}&limit=16`);
+      const res = await fetch(`/api/products?category=${encodeURIComponent(slug)}&page=1&limit=16`);
       if (res.ok) {
         const data = await res.json();
-        setProducts(data.products || []);
+        const newItems = data.products || [];
+        setProducts(newItems);
+        const catTotal = data.total ?? newItems.length;
+        setTotal(catTotal);
+        setHasMore(newItems.length >= 16 && newItems.length < catTotal);
       }
     } catch (err) {
       console.error("Failed to load category products:", err);
@@ -301,6 +369,30 @@ export function HomeProductsFeed({
             >
               Show All Products
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Sentinel for Infinite Scroll */}
+      <div ref={observerRef} className="h-6 w-full" />
+
+      {/* Loading More Indicator */}
+      {isLoadingMore && (
+        <div className="py-6 text-center flex flex-col items-center justify-center gap-2 animate-fadeIn">
+          <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-[#DDE2E6] shadow-sm">
+            <Loader2 className="w-5 h-5 animate-spin text-[#FF5E00]" />
+            <span className="text-xs sm:text-sm font-bold text-[#1C2A39]">
+              Loading more products...
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* End of Catalog Indicator */}
+      {!hasMore && products.length > 0 && (
+        <div className="pt-4 pb-2 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#F7F9FA] border border-[#DDE2E6] text-xs text-[#777777] font-semibold">
+            <span>✓ You have viewed all {products.length} products</span>
           </div>
         </div>
       )}
