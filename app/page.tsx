@@ -171,12 +171,65 @@ export default async function HomePage() {
       </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        {/* 2. All Products Feed (Directly under Hero, with on-demand Categories) */}
-        <HomeProductsFeed
-          initialProducts={allProductsData.products}
-          totalCount={allProductsData.total}
-          categories={categories}
-        />
+        {/* 2. Trending Products (Top of Homepage) */}
+        <section className="space-y-4 pt-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FF5E00]/10 text-xs font-bold text-[#FF5E00] mb-2">
+                <Flame className="w-3.5 h-3.5" />
+                <span>Featured Collection</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-[#1C2A39] flex items-center gap-2">
+                <span>Trending Marketplace Picks</span>
+              </h2>
+              <p className="text-sm text-[#777777]">High-demand products with top customer ratings and seller guarantee</p>
+            </div>
+            <Link href="/products" className="text-sm font-bold text-[#FF5E00] hover:text-[#FF8C00] hover:underline">
+              See All
+            </Link>
+          </div>
+
+          {trendingProducts.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+              {trendingProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  title={product.title}
+                  slug={product.slug}
+                  price={product.price}
+                  salePrice={product.salePrice}
+                  discountPercent={product.discountPercent}
+                  rating={product.rating}
+                  reviewCount={product.reviewCount}
+                  image={product.images[0]?.url}
+                  category={product.category.name}
+                  seller={product.seller}
+                  inStock={product.stockQuantity > 0}
+                  isFeatured={Boolean(product.isFeatured)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-3xl p-8 sm:p-12 text-center border border-[#DDE2E6] space-y-3 shadow-2xs">
+              <div className="w-12 h-12 rounded-2xl bg-[#F7F9FA] text-[#FF5E00] flex items-center justify-center mx-auto border border-[#DDE2E6]">
+                <Flame className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-[#1C2A39]">No products listed yet</h3>
+              <p className="text-sm text-[#777777] max-w-md mx-auto">
+                Verified seller products will appear here as soon as they are added to the catalog.
+              </p>
+              <div className="pt-2">
+                <Link
+                  href="/products"
+                  className="inline-block px-5 py-2.5 bg-[#FF5E00] hover:bg-[#FF8C00] text-white text-sm font-bold rounded-xl transition shadow-xs"
+                >
+                  Explore Categories
+                </Link>
+              </div>
+            </div>
+          )}
+        </section>
 
         {/* 3. Flash Sale Section with Real Countdown */}
         {flashSale && flashSale.items.length > 0 && (
@@ -263,62 +316,12 @@ export default async function HomePage() {
           </section>
         )}
 
-        {/* 4. Trending Products */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-[#1C2A39] flex items-center gap-2">
-                <Flame className="w-5 h-5 text-[#FF5E00]" />
-                <span>Trending Marketplace Picks</span>
-              </h2>
-              <p className="text-sm text-[#777777]">High-demand products with top customer ratings</p>
-            </div>
-            <Link href="/products" className="text-sm font-bold text-[#FF5E00] hover:text-[#FF8C00] hover:underline">
-              See All
-            </Link>
-          </div>
-
-          {trendingProducts.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-              {trendingProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  id={product.id}
-                  title={product.title}
-                  slug={product.slug}
-                  price={product.price}
-                  salePrice={product.salePrice}
-                  discountPercent={product.discountPercent}
-                  rating={product.rating}
-                  reviewCount={product.reviewCount}
-                  image={product.images[0]?.url}
-                  category={product.category.name}
-                  seller={product.seller}
-                  inStock={product.stockQuantity > 0}
-                  isFeatured={Boolean(product.isFeatured)}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white rounded-3xl p-8 sm:p-12 text-center border border-[#DDE2E6] space-y-3 shadow-2xs">
-              <div className="w-12 h-12 rounded-2xl bg-[#F7F9FA] text-[#FF5E00] flex items-center justify-center mx-auto border border-[#DDE2E6]">
-                <Flame className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-bold text-[#1C2A39]">No products listed yet</h3>
-              <p className="text-sm text-[#777777] max-w-md mx-auto">
-                Verified seller products will appear here as soon as they are added to the catalog.
-              </p>
-              <div className="pt-2">
-                <Link
-                  href="/products"
-                  className="inline-block px-5 py-2.5 bg-[#FF5E00] hover:bg-[#FF8C00] text-white text-sm font-bold rounded-xl transition shadow-xs"
-                >
-                  Explore Categories
-                </Link>
-              </div>
-            </div>
-          )}
-        </section>
+        {/* 4. All Products Feed (With on-demand Categories & Infinite Scroll) */}
+        <HomeProductsFeed
+          initialProducts={allProductsData.products}
+          totalCount={allProductsData.total}
+          categories={categories}
+        />
 
         {/* 5. Verified Top Sellers */}
         <section className="p-6 sm:p-8 bg-[#1C2A39] text-white rounded-3xl space-y-6">
