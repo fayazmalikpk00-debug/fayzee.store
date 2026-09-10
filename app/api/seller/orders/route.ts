@@ -24,7 +24,8 @@ export async function PATCH(req: Request) {
     }
 
     const body = await req.json();
-    const { orderItemId, fulfillmentStatus } = body;
+    const fulfillmentStatus = body.fulfillmentStatus || body.status;
+    const { orderItemId, trackingNumber } = body;
 
     if (!orderItemId || !fulfillmentStatus) {
       return NextResponse.json(
@@ -36,7 +37,8 @@ export async function PATCH(req: Request) {
     const updated = await updateSellerOrderItemStatus(
       orderItemId,
       user.sellerProfile.id,
-      fulfillmentStatus
+      fulfillmentStatus,
+      trackingNumber
     );
 
     return NextResponse.json({

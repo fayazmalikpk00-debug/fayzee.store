@@ -139,13 +139,16 @@ export async function createOrder(input: CreateOrderInput) {
         shippingTotal: totalShipping,
         taxTotal: 0,
         grandTotal,
-        status: "CONFIRMED",
+        status: "PENDING",
         paymentMethod,
         paymentStatus: paymentMethod === "COD" ? "PENDING" : "PROCESSING",
         shippingAddress: JSON.stringify(shippingAddress),
         notes: notes || null,
         items: {
-          create: itemsToCreate,
+          create: itemsToCreate.map((item) => ({
+            ...item,
+            fulfillmentStatus: "PENDING",
+          })),
         },
       },
       include: {
@@ -294,7 +297,7 @@ export async function getOrderById(orderId: string, userId?: string) {
 
 // Scoped to seller so a seller can ONLY view and update items belonging to their store
 export async function getSellerOrders(sellerId: string) {
-  return prisma.orderItem.findMany({
+  const items = await prisma.orderItem.findMany({
     where: { sellerId },
     include: {
       order: {
@@ -310,23 +313,96 @@ export async function getSellerOrders(sellerId: string) {
     },
     orderBy: { createdAt: "desc" },
   });
+
+  return items.map((item) => {
+    let parsedAddress: any = null;
+    try {
+      if (item.order.shippingAddress) {
+        parsedAddress = typeof item.order.shippingAddress === "string"
+          ? JSON.parse(item.order.shippingAddress)
+          : item.order.shippingAddress;
+      }
+    } catch {
+      parsedAddress = null;
+    }
+
+    return {
+      ...item,
+      order: {
+        ...item.order,
+        parsedShippingAddress: parsedAddress,
+      },
+    };
+  });
 }
 
 export async function updateSellerOrderItemStatus(
   orderItemId: string,
   sellerId: string,
-  status: string
+  status: string,
+  trackingNumber?: string
 ) {
   const item = await prisma.orderItem.findFirst({
     where: { id: orderItemId, sellerId },
+    include: {
+      order: true,
+    },
   });
 
   if (!item) {
     throw new Error("Order item not found or you are not authorized to manage it.");
   }
 
-  return prisma.orderItem.update({
+  // 1. Update this specific order item's fulfillment status
+  const updatedItem = await prisma.orderItem.update({
     where: { id: orderItemId },
     data: { fulfillmentStatus: status },
   });
+
+  // 2. Fetch all items for this parent order to calculate aggregate order status
+  const allOrderItems = await prisma.orderItem.findMany({
+    where: { orderId: item.orderId },
+  });
+
+  const statuses = allOrderItems.map((i) => i.fulfillmentStatus);
+  let newOrderStatus = item.order.status;
+
+  if (statuses.every((s) => s === "DELIVERED")) {
+    newOrderStatus = "DELIVERED";
+  } else if (statuses.some((s) => s === "SHIPPED")) {
+    newOrderStatus = "SHIPPED";
+  } else if (statuses.some((s) => s === "PROCESSING" || s === "CONFIRMED")) {
+    newOrderStatus = "PROCESSING";
+  } else if (statuses.every((s) => s === "CANCELLED")) {
+    newOrderStatus = "CANCELLED";
+  } else if (statuses.every((s) => s === "PENDING")) {
+    newOrderStatus = "PENDING";
+  }
+
+  // 3. Update parent order status and tracking info
+  const orderUpdateData: any = {
+    status: newOrderStatus,
+    updatedAt: new Date(),
+  };
+
+  if (trackingNumber) {
+    orderUpdateData.trackingNumber = trackingNumber;
+  }
+
+  // If order is delivered and payment was COD, update paymentStatus to PAID
+  if (newOrderStatus === "DELIVERED" && item.order.paymentMethod === "COD") {
+    orderUpdateData.paymentStatus = "PAID";
+    await prisma.payment.updateMany({
+      where: { orderId: item.orderId },
+      data: { status: "PAID", updatedAt: new Date() },
+    });
+  }
+
+  await prisma.order.update({
+    where: { id: item.orderId },
+    data: orderUpdateData,
+  });
+
+  return updatedItem;
 }
+
