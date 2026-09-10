@@ -1,7 +1,10 @@
 import { FayzeeAIAssistant } from "@/components/ai/FayzeeAIAssistant";
 import { Footer } from "@/components/layout/Footer";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { Navbar } from "@/components/layout/Navbar";
+import { TopProgressBar } from "@/components/layout/TopProgressBar";
 import { BackToTop } from "@/components/marketplace/BackToTop";
+import { CartToast } from "@/components/marketplace/CartToast";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { CartProvider } from "@/components/providers/CartProvider";
 import type { Metadata, Viewport } from "next";
@@ -47,13 +50,16 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body className="flex flex-col min-h-full antialiased font-sans bg-white text-[#333333] selection:bg-[#FF5E00] selection:text-white">
+        <TopProgressBar />
         <AuthProvider>
           <CartProvider>
             <Navbar />
-            <main className="flex-1 w-full max-w-full overflow-x-hidden min-w-0">{children}</main>
+            <main className="flex-1 w-full max-w-full overflow-x-hidden min-w-0 pb-16 md:pb-0">{children}</main>
             <Footer />
             <FayzeeAIAssistant />
             <BackToTop />
+            <CartToast />
+            <MobileBottomNav />
           </CartProvider>
         </AuthProvider>
       </body>

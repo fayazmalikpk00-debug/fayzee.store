@@ -28,6 +28,7 @@ export function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   // Cart bounce animation state on item add
   const [isCartBouncing, setIsCartBouncing] = useState(false);
@@ -131,24 +132,71 @@ export function Navbar() {
         {/* CENTER: Desktop Global Search Bar */}
         <form
           onSubmit={handleSearch}
-          className="flex-1 max-w-2xl mx-3 lg:mx-6 relative hidden md:block"
+          className={`flex-1 transition-all duration-300 mx-3 lg:mx-6 relative hidden md:block ${
+            isSearchFocused ? "max-w-2xl scale-[1.01]" : "max-w-xl"
+          }`}
         >
-          <div className="relative">
+          <div className="relative group">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setTimeout(() => setIsSearchFocused(false), 250)}
               placeholder="Search across 10,000+ authentic electronics, fashion, and home goods..."
-              className="w-full pl-12 pr-28 py-2.5 sm:py-3 bg-white text-sm sm:text-base text-[#333333] placeholder:text-slate-400 rounded-full border border-[#DDE2E6] focus:border-[#FF5E00] focus:outline-none focus:ring-4 focus:ring-[#FF5E00]/15 transition shadow-inner"
+              className={`w-full pl-12 pr-28 py-2.5 sm:py-3 bg-white text-sm sm:text-base text-[#333333] placeholder:text-slate-400 rounded-full border transition-all duration-300 shadow-inner ${
+                isSearchFocused
+                  ? "border-[#FF5E00] ring-4 ring-[#FF5E00]/25 shadow-lg shadow-[#FF5E00]/10"
+                  : "border-[#DDE2E6] hover:border-slate-400"
+              }`}
             />
-            <Search className="w-5 h-5 text-[#333333]/70 absolute left-4 top-1/2 -translate-y-1/2" />
+            <Search
+              className={`w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-200 ${
+                isSearchFocused ? "text-[#FF5E00]" : "text-[#333333]/70"
+              }`}
+            />
             <button
               type="submit"
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 px-5 py-2 bg-[#FF5E00] hover:bg-[#FF8C00] text-white text-sm font-bold rounded-full shadow-sm transition"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 px-5 py-2 bg-[#FF5E00] hover:bg-[#FF8C00] active:scale-95 text-white text-sm font-bold rounded-full shadow-sm transition-all duration-200"
             >
               Search
             </button>
           </div>
+
+          {/* Quick Trending Searches Dropdown */}
+          {isSearchFocused && (
+            <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl border border-slate-200 shadow-2xl p-3.5 z-50 animate-slide-down">
+              <div className="flex items-center justify-between text-xs text-slate-500 font-bold px-1 mb-2">
+                <span className="flex items-center gap-1 text-[#FF5E00]">
+                  <span>🔥 Trending Searches</span>
+                </span>
+                <span className="text-[10px] text-slate-400">Popular Now</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  "Samsung Galaxy",
+                  "Wireless Earbuds",
+                  "Sneakers",
+                  "Smart Watch",
+                  "Air Fryer",
+                  "Gaming Laptops",
+                  "Power Bank",
+                ].map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onMouseDown={() => {
+                      setSearchQuery(tag);
+                      router.push(`/search?q=${encodeURIComponent(tag)}`);
+                    }}
+                    className="px-2.5 py-1 bg-slate-100 hover:bg-orange-50 hover:text-[#FF5E00] hover:border-[#FF5E00]/30 border border-slate-200/60 text-slate-700 rounded-lg text-xs font-semibold transition-all active:scale-95"
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </form>
 
         {/* RIGHT: Profile / Account | Wishlist | Shopping Cart */}

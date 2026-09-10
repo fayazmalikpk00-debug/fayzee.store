@@ -208,6 +208,12 @@ export function FayzeeAIAssistant() {
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    const handleOpenEvent = () => setIsOpen(true);
+    window.addEventListener("open-fayzee-ai", handleOpenEvent);
+    return () => window.removeEventListener("open-fayzee-ai", handleOpenEvent);
+  }, []);
+
   // Auto focus input whenever AI finishes responding (loading becomes false)
   useEffect(() => {
     if (!loading && isOpen) {
@@ -396,10 +402,10 @@ export function FayzeeAIAssistant() {
 
   return (
     <>
-      {/* Floating Entry Button */}
+      {/* Floating Entry Button (Desktop view, mobile has sticky bottom nav) */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-4 sm:bottom-6 right-3 sm:right-6 z-40 flex items-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 rounded-full bg-[#FF5E00] hover:bg-[#FF8C00] text-white font-bold text-xs sm:text-sm shadow-floating hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 border border-white/20 backdrop-blur-md group"
+        className="fixed bottom-6 right-6 z-40 hidden md:flex items-center gap-2 px-5 py-3 rounded-full bg-[#FF5E00] hover:bg-[#FF8C00] text-white font-bold text-sm shadow-floating hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 border border-white/20 backdrop-blur-md group"
         aria-label="Open Fayzee AI Shopping Assistant"
       >
         <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-300 shrink-0 group-hover:rotate-12 transition-transform" />

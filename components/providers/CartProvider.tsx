@@ -33,11 +33,20 @@ export interface CartType {
   items: CartItemType[];
 }
 
+export interface CartToastData {
+  id: string;
+  title: string;
+  price: number;
+  image?: string;
+}
+
 interface CartContextType {
   cart: CartType | null;
   cartCount: number;
   cartSubtotal: number;
   loading: boolean;
+  toastItem: CartToastData | null;
+  dismissToast: () => void;
   addToCart: (productId: string, variantId?: string, quantity?: number) => Promise<boolean>;
   updateQuantity: (cartItemId: string, quantity: number) => Promise<void>;
   removeItem: (cartItemId: string) => Promise<void>;
@@ -50,6 +59,8 @@ const CartContext = createContext<CartContextType>({
   cartCount: 0,
   cartSubtotal: 0,
   loading: true,
+  toastItem: null,
+  dismissToast: () => {},
   addToCart: async () => false,
   updateQuantity: async () => {},
   removeItem: async () => {},
@@ -60,6 +71,18 @@ const CartContext = createContext<CartContextType>({
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartType | null>(null);
   const [loading, setLoading] = useState(true);
+  const [toastItem, setToastItem] = useState<CartToastData | null>(null);
+
+  const dismissToast = () => setToastItem(null);
+
+  useEffect(() => {
+    if (toastItem) {
+      const timer = setTimeout(() => {
+        setToastItem(null);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastItem]);
 
   const refreshCart = async () => {
     try {
@@ -89,6 +112,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
       if (data.cart) {
         setCart(data.cart);
+        const addedItem = data.cart.items?.find((i: CartItemType) => i.productId === productId);
+        if (addedItem) {
+          setToastItem({
+            id: addedItem.id,
+            title: addedItem.product.title,
+            price:
+              addedItem.variant?.salePrice ||
+              addedItem.variant?.price ||
+              addedItem.product.salePrice ||
+              addedItem.product.price,
+            image: addedItem.product.images?.[0]?.url,
+          });
+        }
       } else {
         await refreshCart();
       }
@@ -163,6 +199,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         cartCount,
         cartSubtotal,
         loading,
+        toastItem,
+        dismissToast,
         addToCart,
         updateQuantity,
         removeItem,

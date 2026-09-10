@@ -43,6 +43,7 @@ export function ProductCard({
   const { addToCart } = useCart();
   const [added, setAdded] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [sparkleActive, setSparkleActive] = useState(false);
 
   const displayPrice = salePrice || price;
   const originalPrice = salePrice ? price : null;
@@ -57,6 +58,17 @@ export function ProductCard({
     }
   };
 
+  const handleLikeToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const nextState = !isLiked;
+    setIsLiked(nextState);
+    if (nextState) {
+      setSparkleActive(true);
+      setTimeout(() => setSparkleActive(false), 800);
+    }
+  };
+
   return (
     <div className="group relative bg-white rounded-2xl border border-[#DDE2E6] hover:border-[#FF5E00]/60 hover:shadow-card-hover hover:-translate-y-1.5 transition-all duration-300 ease-out flex flex-col overflow-hidden will-change-transform">
       {/* Badges */}
@@ -68,7 +80,7 @@ export function ProductCard({
           </span>
         ) : null}
         {discountPercent && discountPercent > 0 ? (
-          <span className="px-2.5 py-0.5 bg-[#FF5E00] text-white text-xs font-extrabold rounded-md shadow-sm">
+          <span className="px-2.5 py-0.5 bg-[#FF5E00] text-white text-xs font-extrabold rounded-md shadow-sm animate-badge-wiggle inline-block">
             -{discountPercent}%
           </span>
         ) : null}
@@ -76,15 +88,25 @@ export function ProductCard({
 
       {/* Wishlist toggle */}
       <button
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setIsLiked(!isLiked);
-        }}
-        className="absolute top-3 right-3 z-10 p-2 rounded-full bg-white/90 backdrop-blur-xs text-slate-400 hover:text-red-500 hover:scale-110 active:scale-75 transition-all duration-200 shadow-xs"
+        onClick={handleLikeToggle}
+        className="absolute top-3 right-3 z-10 p-2 rounded-full bg-white/95 backdrop-blur-xs text-slate-400 hover:text-red-500 hover:scale-110 active:scale-75 transition-all duration-200 shadow-xs relative"
         title="Save to Wishlist"
       >
-        <Heart className={`w-4 h-4 transition-transform duration-200 ${isLiked ? "fill-red-500 text-red-500 scale-110" : ""}`} />
+        <Heart
+          className={`w-4 h-4 transition-transform duration-200 ${
+            isLiked
+              ? "fill-red-500 text-red-500 animate-heart-pop"
+              : "hover:scale-110"
+          }`}
+        />
+        {sparkleActive && (
+          <span className="absolute inset-0 pointer-events-none flex items-center justify-center">
+            <span className="absolute w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping -top-1" />
+            <span className="absolute w-1.5 h-1.5 rounded-full bg-red-400 animate-ping -bottom-1" />
+            <span className="absolute w-1.5 h-1.5 rounded-full bg-[#FF5E00] animate-ping -left-1" />
+            <span className="absolute w-1.5 h-1.5 rounded-full bg-pink-400 animate-ping -right-1" />
+          </span>
+        )}
       </button>
 
       {/* Image container */}

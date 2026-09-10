@@ -241,3 +241,67 @@ svg {
   transform: scale(0.94);
 }
 
+/* 7. Flash Sale Diagonal Progress Stripes (Daraz style) */
+@keyframes progressStripes {
+  0% { background-position: 1rem 0; }
+  100% { background-position: 0 0; }
+}
+
+.animate-stripes {
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.28) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.28) 50%,
+    rgba(255, 255, 255, 0.28) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 1rem 1rem;
+  animation: progressStripes 1s linear infinite;
+}
+
+/* 8. Discount Badges Gentle Periodic Tilt & Wiggle */
+@keyframes badgeWiggle {
+  0%, 88%, 100% { transform: rotate(0deg); }
+  90% { transform: rotate(-5deg) scale(1.06); }
+  94% { transform: rotate(5deg) scale(1.06); }
+  98% { transform: rotate(-2deg); }
+}
+
+.animate-badge-wiggle {
+  animation: badgeWiggle 4.5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* 9. Wishlist Heart Pop */
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  35% { transform: scale(0.75); }
+  65% { transform: scale(1.35); }
+  85% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+.animate-heart-pop {
+  animation: heartPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+/* 10. Dynamic Toast Slide-In & Slide-Out */
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-toast-slide {
+  animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+

@@ -191,7 +191,7 @@ export default async function HomePage() {
                     <h2 className="text-xl sm:text-2xl font-black text-[#1C2A39]">
                       {flashSale.title}
                     </h2>
-                    <span className="px-2.5 py-0.5 bg-[#DC2626] text-white text-xs font-extrabold rounded-md">
+                    <span className="px-2.5 py-0.5 bg-[#DC2626] text-white text-xs font-extrabold rounded-md shadow-xs animate-pulse">
                       Limited Stock
                     </span>
                   </div>
@@ -240,9 +240,9 @@ export default async function HomePage() {
                     </div>
 
                     <div className="mt-2.5 space-y-1">
-                      <div className="w-full bg-[#E8EDF2] rounded-full h-2 overflow-hidden">
+                      <div className="w-full bg-[#E8EDF2] rounded-full h-2.5 overflow-hidden shadow-inner">
                         <div
-                          className="bg-[#FF5E00] h-full rounded-full"
+                          className="bg-[#FF5E00] h-full rounded-full animate-stripes transition-all duration-500"
                           style={{
                             width: `${Math.min(
                               100,
