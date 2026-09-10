@@ -112,16 +112,16 @@ export async function sendPasswordResetEmail({
                   <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; background-color: #ffffff; border-radius: 24px; overflow: hidden; border: 1px solid #DDE2E6; box-shadow: 0 4px 6px -1px rgba(28, 42, 57, 0.06);">
                     <!-- Header -->
                     <tr>
-                      <td style="background-color: #1C2A39; padding: 32px 24px; text-align: center;">
+                      <td style="background-color: #0B0F14; padding: 32px 24px; text-align: center; border-bottom: 2px solid #C8A96B;">
                         <h1 style="color: #ffffff; font-size: 26px; font-weight: 900; letter-spacing: -0.5px; margin: 0;">FAYZEE</h1>
-                        <p style="color: #FF5E00; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin: 6px 0 0 0;">Shop More • Live Better</p>
+                        <p style="color: #C8A96B; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin: 6px 0 0 0;">Shop More • Live Better</p>
                       </td>
                     </tr>
                     
                     <!-- Content -->
                     <tr>
                       <td style="padding: 36px 32px;">
-                        <h2 style="color: #1C2A39; font-size: 20px; font-weight: 800; margin: 0 0 16px 0;">Password Reset Request</h2>
+                        <h2 style="color: #0B0F14; font-size: 20px; font-weight: 800; margin: 0 0 16px 0;">Password Reset Request</h2>
                         <p style="color: #333333; font-size: 14px; line-height: 1.6; margin: 0 0 16px 0;">
                           Hello <strong>${userName}</strong>,
                         </p>
@@ -133,7 +133,7 @@ export async function sendPasswordResetEmail({
                         <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 28px 0;">
                           <tr>
                             <td align="center">
-                              <a href="${resetUrl}" target="_blank" style="background-color: #FF5E00; color: #ffffff; font-size: 14px; font-weight: 800; text-decoration: none; padding: 14px 32px; border-radius: 14px; display: inline-block; box-shadow: 0 4px 12px rgba(255, 94, 0, 0.3);">
+                              <a href="${resetUrl}" target="_blank" style="background-color: #0B0F14; color: #C8A96B; font-size: 14px; font-weight: 800; text-decoration: none; padding: 14px 32px; border-radius: 14px; display: inline-block; border: 1px solid #C8A96B; box-shadow: 0 4px 12px rgba(11, 15, 20, 0.25);">
                                 Reset My Password
                               </a>
                             </td>
@@ -141,30 +141,30 @@ export async function sendPasswordResetEmail({
                         </table>
                         
                         <!-- Expiration & Security Note -->
-                        <div style="background-color: #F7F9FA; border-radius: 12px; padding: 14px 16px; margin: 24px 0 16px 0; border-left: 4px solid #FF5E00; border: 1px solid #DDE2E6; border-left-width: 4px; border-left-color: #FF5E00;">
+                        <div style="background-color: #FAF9F6; border-radius: 12px; padding: 14px 16px; margin: 24px 0 16px 0; border: 1px solid #E8E5DC; border-left: 4px solid #C8A96B;">
                           <p style="color: #333333; font-size: 12px; line-height: 1.5; margin: 0;">
                             ⏳ <strong>Security Notice:</strong> This link will expire in <strong>30 minutes</strong> and can only be used once. If you did not request a password reset, you can safely ignore this email — your account and password remain completely secure.
                           </p>
                         </div>
 
                         <!-- Direct Link Fallback -->
-                        <p style="color: #777777; font-size: 12px; line-height: 1.5; margin: 20px 0 8px 0;">
+                        <p style="color: #8A8F98; font-size: 12px; line-height: 1.5; margin: 20px 0 8px 0;">
                           Button not working? Copy and paste this URL into your browser:
                         </p>
-                        <p style="color: #FF5E00; font-size: 11px; word-break: break-all; margin: 0; background-color: #F7F9FA; padding: 8px 12px; border-radius: 8px; border: 1px solid #DDE2E6;">
-                          <a href="${resetUrl}" style="color: #FF5E00; text-decoration: underline;">${resetUrl}</a>
+                        <p style="color: #0B0F14; font-size: 11px; word-break: break-all; margin: 0; background-color: #FAF9F6; padding: 8px 12px; border-radius: 8px; border: 1px solid #E8E5DC;">
+                          <a href="${resetUrl}" style="color: #A07C38; text-decoration: underline;">${resetUrl}</a>
                         </p>
                       </td>
                     </tr>
                     
                     <!-- Footer -->
                     <tr>
-                      <td style="background-color: #1C2A39; padding: 24px 32px; text-align: center;">
-                        <p style="color: #E8EDF2; font-size: 11px; margin: 0 0 6px 0;">
+                      <td style="background-color: #0B0F14; padding: 24px 32px; text-align: center;">
+                        <p style="color: #8A8F98; font-size: 11px; margin: 0 0 6px 0;">
                           &copy; ${new Date().getFullYear()} FAYZEE Marketplace. All rights reserved.
                         </p>
-                        <p style="color: #A0B2C6; font-size: 11px; margin: 0;">
-                          Pakistan's Premier Multi-Vendor E-Commerce Platform • <a href="https://fayzee.store" style="color: #FF8C00; text-decoration: underline;">fayzee.store</a>
+                        <p style="color: #8A8F98; font-size: 11px; margin: 0;">
+                          Pakistan's Premier Multi-Vendor E-Commerce Platform • <a href="https://fayzee.store" style="color: #C8A96B; text-decoration: underline;">fayzee.store</a>
                         </p>
                       </td>
                     </tr>

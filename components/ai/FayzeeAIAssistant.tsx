@@ -143,7 +143,7 @@ function formatInlineMarkdown(str: string): React.ReactNode[] {
         <Link
           key={i}
           href={linkMatch[2]}
-          className="text-[#FF5E00] underline hover:text-[#FF8C00] font-medium inline-flex items-center gap-0.5"
+          className="text-[#C8A96B] underline hover:text-[#D4B15A] font-medium inline-flex items-center gap-0.5"
         >
           {linkMatch[1]}
         </Link>
@@ -405,33 +405,33 @@ export function FayzeeAIAssistant() {
       {/* Floating Entry Button (Desktop view, mobile has sticky bottom nav) */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-40 hidden md:flex items-center gap-2 px-5 py-3 rounded-full bg-[#FF5E00] hover:bg-[#FF8C00] text-white font-bold text-sm shadow-floating hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 border border-white/20 backdrop-blur-md group"
+        className="fixed bottom-6 right-6 z-40 hidden md:flex items-center gap-2 px-5 py-3 rounded-full bg-[#0B0F14] hover:bg-[#161F2B] text-white font-bold text-sm shadow-floating hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 border border-[#C8A96B]/40 backdrop-blur-md group"
         aria-label="Open Fayzee AI Shopping Assistant"
       >
-        <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-300 shrink-0 group-hover:rotate-12 transition-transform" />
-        <span className="font-extrabold tracking-tight">Fayzee AI</span>
-        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
+        <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#C8A96B] shrink-0 group-hover:rotate-12 transition-transform" />
+        <span className="font-extrabold tracking-tight text-white">Fayzee AI</span>
+        <span className="w-2 h-2 rounded-full bg-[#C8A96B] animate-ping shrink-0" />
       </button>
 
       {/* Slide-in Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-16 sm:bottom-24 left-2 right-2 sm:left-auto sm:right-6 sm:w-[420px] max-w-full sm:max-w-[420px] h-[calc(100dvh-95px)] sm:h-[620px] max-h-[85vh] bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-[#DDE2E6] z-50 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200">
+        <div className="fixed bottom-16 sm:bottom-24 left-2 right-2 sm:left-auto sm:right-6 sm:w-[420px] max-w-full sm:max-w-[420px] h-[calc(100dvh-95px)] sm:h-[620px] max-h-[85vh] bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-[#E8E5DC] z-50 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200">
           {/* Header */}
-          <div className="bg-[#1C2A39] p-3.5 sm:p-4 text-white flex items-center justify-between shadow-md shrink-0 border-b border-white/10">
+          <div className="bg-[#0B0F14] p-3.5 sm:p-4 text-white flex items-center justify-between shadow-md shrink-0 border-b border-[#C8A96B]/20">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-[#FF5E00] flex items-center justify-center shadow-inner shrink-0 ring-2 ring-white/20">
-                <Bot className="w-5 h-5 text-white" />
+              <div className="w-9 h-9 rounded-xl bg-[#161F2B] border border-[#C8A96B]/40 flex items-center justify-center shadow-inner shrink-0 ring-1 ring-white/10">
+                <Bot className="w-5 h-5 text-[#C8A96B]" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <h3 className="font-black text-sm text-white tracking-tight truncate">
                     Fayzee AI Co-Pilot
                   </h3>
-                  <span className="px-1.5 py-0.2 text-[9px] font-extrabold uppercase bg-emerald-500/20 text-emerald-300 rounded border border-emerald-500/30 shrink-0">
+                  <span className="px-1.5 py-0.2 text-[9px] font-extrabold uppercase bg-[#C8A96B]/20 text-[#C8A96B] rounded border border-[#C8A96B]/30 shrink-0">
                     Live
                   </span>
                 </div>
-                <p className="text-[10px] sm:text-[11px] text-slate-300 truncate">
+                <p className="text-[10px] sm:text-[11px] text-[#8A8F98] truncate">
                   Grounded in authentic marketplace inventory
                 </p>
               </div>
@@ -441,14 +441,14 @@ export function FayzeeAIAssistant() {
               <button
                 onClick={handleClearChat}
                 title="Clear conversation"
-                className="p-1.5 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg transition"
+                className="p-1.5 text-[#8A8F98] hover:text-white hover:bg-white/10 rounded-lg transition"
                 aria-label="Clear chat"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1.5 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg transition"
+                className="p-1.5 text-[#8A8F98] hover:text-white hover:bg-white/10 rounded-lg transition"
                 aria-label="Close chat"
               >
                 <X className="w-5 h-5" />
@@ -459,12 +459,12 @@ export function FayzeeAIAssistant() {
           {/* Messages Container */}
           <div
             ref={chatContainerRef}
-            className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3.5 bg-[#F7F9FA]"
+            className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3.5 bg-[#F5F3EE]"
           >
             {historyLoading && (
               <div className="flex justify-center py-2">
-                <div className="flex items-center gap-2 text-[11px] text-slate-400 bg-white/80 px-3 py-1.5 rounded-full border border-[#DDE2E6]">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#FF5E00]" />
+                <div className="flex items-center gap-2 text-[11px] text-[#8A8F98] bg-white px-3 py-1.5 rounded-full border border-[#E8E5DC]">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#C8A96B]" />
                   <span>Loading conversation history...</span>
                 </div>
               </div>
@@ -483,18 +483,18 @@ export function FayzeeAIAssistant() {
                   <div
                     className={`max-w-[88%] sm:max-w-[85%] rounded-2xl px-3.5 py-2.5 shadow-xs relative group ${
                       isUser
-                        ? "bg-orange-50 border border-orange-200 text-[#333333] rounded-tr-xs"
-                        : "bg-white text-[#333333] border border-[#DDE2E6] rounded-tl-xs"
+                        ? "bg-[#0B0F14] border border-[#0B0F14] text-white rounded-tr-xs"
+                        : "bg-white text-[#0B0F14] border border-[#E8E5DC] rounded-tl-xs"
                     }`}
                   >
                     <MarkdownContent text={m.content} />
 
                     {/* Copy & Regenerate Actions */}
                     {!isUser && (
-                      <div className="flex items-center justify-end gap-1 mt-1 pt-1 border-t border-slate-100/80 text-[10px] text-slate-400">
+                      <div className="flex items-center justify-end gap-1 mt-1 pt-1 border-t border-[#E8E5DC] text-[10px] text-[#8A8F98]">
                         <button
                           onClick={() => handleCopy(m.id, m.content)}
-                          className="hover:text-[#FF5E00] flex items-center gap-1 transition px-1 py-0.5 rounded"
+                          className="hover:text-[#C8A96B] flex items-center gap-1 transition px-1 py-0.5 rounded"
                           title="Copy response"
                         >
                           {copiedId === m.id ? (
@@ -514,7 +514,7 @@ export function FayzeeAIAssistant() {
                           <button
                             onClick={handleRegenerate}
                             disabled={loading}
-                            className="hover:text-[#FF5E00] flex items-center gap-1 transition px-1 py-0.5 rounded ml-1"
+                            className="hover:text-[#C8A96B] flex items-center gap-1 transition px-1 py-0.5 rounded ml-1"
                             title="Regenerate response"
                           >
                             <RefreshCw className="w-3 h-3" />
@@ -541,19 +541,19 @@ export function FayzeeAIAssistant() {
                   {/* Rich Metadata: Product Cards */}
                   {m.metadata?.products && m.metadata.products.length > 0 && (
                     <div className="mt-2.5 w-full space-y-2">
-                      <div className="flex items-center justify-between px-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+                      <div className="flex items-center justify-between px-1 text-[10px] font-extrabold uppercase tracking-wider text-[#8A8F98]">
                         <span>Authentic Database Matches ({m.metadata.products.length})</span>
-                        <span className="text-[#FF5E00] font-bold">100% Genuine</span>
+                        <span className="text-[#C8A96B] font-bold">100% Genuine</span>
                       </div>
 
                       <div className="space-y-2">
                         {m.metadata.products.map((prod) => (
                           <div
                             key={prod.id}
-                            className="p-2.5 bg-white rounded-xl border border-slate-200/90 hover:border-brand-400 hover:shadow-sm transition-all flex gap-3 group"
+                            className="p-2.5 bg-white rounded-xl border border-[#E8E5DC] hover:border-[#C8A96B]/60 hover:shadow-xs transition-all flex gap-3 group"
                           >
                             {/* Image */}
-                            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg bg-slate-100 overflow-hidden shrink-0 relative border border-slate-100">
+                            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg bg-[#F5F3EE] overflow-hidden shrink-0 relative border border-[#E8E5DC]">
                               <img
                                 src={prod.image || "/images/product-placeholder.svg"}
                                 alt={prod.title}
@@ -567,32 +567,32 @@ export function FayzeeAIAssistant() {
                                 <Link
                                   href={`/products/${prod.slug}`}
                                   onClick={() => setIsOpen(false)}
-                                  className="text-xs font-bold text-[#1C2A39] hover:text-[#FF5E00] line-clamp-1 block leading-snug"
+                                  className="text-xs font-bold text-[#0B0F14] hover:text-[#C8A96B] line-clamp-1 block leading-snug transition"
                                 >
                                   {prod.title}
                                 </Link>
-                                <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-500">
-                                  <span>Seller: <strong className="text-slate-700">{prod.seller}</strong></span>
+                                <div className="flex items-center gap-2 mt-0.5 text-[10px] text-[#8A8F98]">
+                                  <span>Seller: <strong className="text-[#0B0F14]">{prod.seller}</strong></span>
                                   <span>•</span>
-                                  <span className="flex items-center gap-0.5 text-amber-500 font-semibold">
-                                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                                  <span className="flex items-center gap-0.5 text-[#C8A96B] font-semibold">
+                                    <Star className="w-3 h-3 fill-[#C8A96B] text-[#C8A96B]" />
                                     {prod.rating.toFixed(1)}
                                   </span>
                                 </div>
                               </div>
 
-                              <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-slate-100">
+                              <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-[#E8E5DC]">
                                 <div className="flex items-baseline gap-1.5">
-                                  <span className="text-xs font-black text-[#FF5E00]">
+                                  <span className="text-xs font-black text-[#0B0F14]">
                                     {formatPrice(prod.price)}
                                   </span>
                                   {prod.originalPrice && (
-                                    <span className="text-[10px] text-[#777777] line-through">
+                                    <span className="text-[10px] text-[#8A8F98] line-through">
                                       {formatPrice(prod.originalPrice)}
                                     </span>
                                   )}
                                   {prod.discountPercent && (
-                                    <span className="text-[9px] font-bold text-[#FF5E00] bg-orange-50 px-1 rounded">
+                                    <span className="text-[9px] font-bold text-[#C8A96B] bg-[#0B0F14] px-1 rounded">
                                       -{prod.discountPercent}%
                                     </span>
                                   )}
@@ -602,7 +602,7 @@ export function FayzeeAIAssistant() {
                                   <Link
                                     href={`/products/${prod.slug}`}
                                     onClick={() => setIsOpen(false)}
-                                    className="px-2 py-1 text-[10px] font-bold text-[#333333] hover:text-[#FF5E00] rounded hover:bg-slate-50 transition"
+                                    className="px-2 py-1 text-[10px] font-bold text-[#0B0F14] hover:text-[#C8A96B] rounded hover:bg-[#F5F3EE] transition"
                                   >
                                     View
                                   </Link>
@@ -612,21 +612,21 @@ export function FayzeeAIAssistant() {
                                     disabled={addingCartId === prod.id}
                                     className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition flex items-center gap-1 min-h-[28px] ${
                                       addedIds[prod.id]
-                                        ? "bg-emerald-600 text-white"
-                                        : "bg-[#FF5E00] hover:bg-[#FF8C00] text-white shadow-xs"
+                                        ? "bg-emerald-700 text-white"
+                                        : "bg-[#0B0F14] hover:bg-[#1A222C] text-white shadow-xs border border-[#0B0F14]"
                                     }`}
                                     aria-label="Add product to cart"
                                   >
                                     {addingCartId === prod.id ? (
-                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                      <Loader2 className="w-3 h-3 animate-spin text-[#C8A96B]" />
                                     ) : addedIds[prod.id] ? (
                                       <>
-                                        <Check className="w-3 h-3" />
+                                        <Check className="w-3 h-3 text-[#C8A96B]" />
                                         <span>Added</span>
                                       </>
                                     ) : (
                                       <>
-                                        <ShoppingBag className="w-3 h-3" />
+                                        <ShoppingBag className="w-3 h-3 text-[#C8A96B]" />
                                         <span>Add</span>
                                       </>
                                     )}
@@ -642,12 +642,12 @@ export function FayzeeAIAssistant() {
 
                   {/* Rich Metadata: Comparison Card */}
                   {m.metadata?.comparison && m.metadata.comparison.products.length >= 2 && (
-                    <div className="mt-2.5 w-full bg-white p-3 rounded-2xl border border-slate-200 shadow-xs text-xs space-y-2.5">
-                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-100">
-                        <span className="font-extrabold text-xs text-[#1C2A39] flex items-center gap-1.5">
+                    <div className="mt-2.5 w-full bg-white p-3 rounded-2xl border border-[#E8E5DC] shadow-xs text-xs space-y-2.5">
+                      <div className="flex items-center justify-between pb-1.5 border-b border-[#E8E5DC]">
+                        <span className="font-extrabold text-xs text-[#0B0F14] flex items-center gap-1.5">
                           <span>⚖️ Side-by-Side Comparison</span>
                         </span>
-                        <span className="text-[10px] font-semibold text-[#FF5E00]">
+                        <span className="text-[10px] font-bold text-[#C8A96B]">
                           {m.metadata.comparison.products.length} Products
                         </span>
                       </div>
@@ -656,11 +656,11 @@ export function FayzeeAIAssistant() {
                         {m.metadata.comparison.products.map((p) => (
                           <div
                             key={p.id}
-                            className="p-2.5 bg-slate-50/80 rounded-xl border border-slate-200/80 flex flex-col justify-between"
+                            className="p-2.5 bg-[#F5F3EE] rounded-xl border border-[#E8E5DC] flex flex-col justify-between"
                           >
                             <div>
-                              <p className="font-bold text-slate-800 line-clamp-1">{p.title}</p>
-                              <p className="text-xs font-black text-[#FF5E00] mt-1">{formatPrice(p.price)}</p>
+                              <p className="font-bold text-[#0B0F14] line-clamp-1">{p.title}</p>
+                              <p className="text-xs font-black text-[#0B0F14] mt-1">{formatPrice(p.price)}</p>
                             </div>
                           </div>
                         ))}
@@ -670,16 +670,16 @@ export function FayzeeAIAssistant() {
 
                   {/* Rich Metadata: Cart Action Toast */}
                   {m.metadata?.cartAction && (
-                    <div className="mt-2 w-full p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-2 text-xs text-emerald-900">
+                    <div className="mt-2 w-full p-2.5 bg-white border border-[#E8E5DC] rounded-xl flex items-center justify-between gap-2 text-xs text-[#0B0F14] shadow-xs">
                       <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                        <div className="w-7 h-7 rounded-lg bg-[#0B0F14] text-[#C8A96B] flex items-center justify-center shrink-0">
                           <ShoppingBag className="w-3.5 h-3.5" />
                         </div>
                         <div className="min-w-0">
-                          <p className="font-bold text-emerald-900 truncate">
+                          <p className="font-bold text-[#0B0F14] truncate">
                             {m.metadata.cartAction.productTitle}
                           </p>
-                          <p className="text-[10px] text-emerald-700">
+                          <p className="text-[10px] text-[#8A8F98]">
                             Added to your cart • Total: Rs. {m.metadata.cartAction.cartTotal?.toLocaleString()}
                           </p>
                         </div>
@@ -688,7 +688,7 @@ export function FayzeeAIAssistant() {
                       <Link
                         href="/cart"
                         onClick={() => setIsOpen(false)}
-                        className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white text-[10px] font-bold rounded-lg shrink-0 transition"
+                        className="px-2.5 py-1 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] text-[10px] font-bold rounded-lg shrink-0 transition border border-[#C8A96B]/30"
                       >
                         View Cart →
                       </Link>
@@ -697,25 +697,25 @@ export function FayzeeAIAssistant() {
 
                   {/* Rich Metadata: Cart Contents Snapshot */}
                   {m.metadata?.cartContents && (
-                    <div className="mt-2.5 w-full bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs text-xs space-y-2">
-                      <div className="flex items-center justify-between font-bold pb-2 border-b border-slate-100">
-                        <span className="text-[#1C2A39] flex items-center gap-1.5">
-                          <ShoppingBag className="w-4 h-4 text-[#FF5E00]" />
+                    <div className="mt-2.5 w-full bg-white p-3.5 rounded-2xl border border-[#E8E5DC] shadow-xs text-xs space-y-2">
+                      <div className="flex items-center justify-between font-bold pb-2 border-b border-[#E8E5DC]">
+                        <span className="text-[#0B0F14] flex items-center gap-1.5">
+                          <ShoppingBag className="w-4 h-4 text-[#C8A96B]" />
                           <span>Cart Updated ({m.metadata.cartContents.totalItems} items)</span>
                         </span>
-                        <span className="text-[#FF5E00]">Active</span>
+                        <span className="text-[#C8A96B] font-extrabold text-[10px]">Active</span>
                       </div>
                       <div className="flex justify-between items-center pt-1">
-                        <div className="text-[11px] text-[#777777]">
+                        <div className="text-[11px] text-[#8A8F98]">
                           <span>Subtotal: </span>
-                          <span className="font-bold text-[#1C2A39]">
+                          <span className="font-bold text-[#0B0F14]">
                             {formatPrice(m.metadata.cartContents.totalAmount)}
                           </span>
                         </div>
                         <Link
                           href="/checkout"
                           onClick={() => setIsOpen(false)}
-                          className="px-3 py-1.5 bg-[#FF5E00] hover:bg-[#FF8C00] text-white text-[11px] font-bold rounded-lg transition"
+                          className="px-3 py-1.5 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] border border-[#C8A96B]/30 text-[11px] font-bold rounded-lg transition"
                         >
                           Checkout →
                         </Link>
@@ -729,20 +729,20 @@ export function FayzeeAIAssistant() {
                       {m.metadata.orders.map((o) => (
                         <div
                           key={o.orderNumber}
-                          className="p-3 bg-white rounded-2xl border border-slate-200 text-xs shadow-xs space-y-1.5"
+                          className="p-3 bg-white rounded-2xl border border-[#E8E5DC] text-xs shadow-xs space-y-1.5"
                         >
                           <div className="flex justify-between items-center font-bold">
-                            <span className="text-[#1C2A39] truncate">Order #{o.orderNumber}</span>
+                            <span className="text-[#0B0F14] truncate">Order #{o.orderNumber}</span>
                             <span className="px-2 py-0.5 text-[9px] font-black uppercase rounded-full bg-emerald-100 text-emerald-800">
                               {o.status}
                             </span>
                           </div>
-                          <div className="flex justify-between text-[11px] text-slate-500">
+                          <div className="flex justify-between text-[11px] text-[#8A8F98]">
                             <span>Placed: {o.date}</span>
-                            <span className="font-bold text-[#1C2A39]">{formatPrice(o.grandTotal)}</span>
+                            <span className="font-bold text-[#0B0F14]">{formatPrice(o.grandTotal)}</span>
                           </div>
                           {o.items && o.items[0] && (
-                            <p className="text-[10px] text-slate-600 truncate border-t border-slate-100 pt-1">
+                            <p className="text-[10px] text-[#8A8F98] truncate border-t border-[#E8E5DC] pt-1">
                               Item: {o.items[0].title} ({o.items[0].quantity}x)
                             </p>
                           )}
@@ -755,8 +755,8 @@ export function FayzeeAIAssistant() {
             })}
 
             {loading && (
-              <div className="flex items-center gap-2.5 p-3 bg-white rounded-2xl border border-slate-200/90 text-xs text-[#333333] w-fit shadow-xs animate-in fade-in">
-                <Bot className="w-4 h-4 text-[#FF5E00] animate-spin" />
+              <div className="flex items-center gap-2.5 p-3 bg-white rounded-2xl border border-[#E8E5DC] text-xs text-[#0B0F14] w-fit shadow-xs animate-in fade-in">
+                <Bot className="w-4 h-4 text-[#C8A96B] animate-spin" />
                 <span className="font-medium">Searching catalog & reasoning...</span>
               </div>
             )}
@@ -766,7 +766,7 @@ export function FayzeeAIAssistant() {
 
           {/* Quick Prompts Carousel */}
           {messages.length <= 3 && (
-            <div className="p-2 bg-slate-100/90 border-t border-slate-200/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-[11px] shrink-0">
+            <div className="p-2 bg-white border-t border-[#E8E5DC] flex items-center gap-1.5 overflow-x-auto no-scrollbar text-[11px] shrink-0">
               {quickPrompts.map((q, i) => (
                 <button
                   key={i}
@@ -775,7 +775,7 @@ export function FayzeeAIAssistant() {
                     handleSend(q);
                     focusInput();
                   }}
-                  className="px-2.5 py-1 bg-white hover:bg-orange-50 hover:text-[#FF5E00] hover:border-[#FF5E00] text-[#333333] font-medium rounded-full border border-slate-200/80 shrink-0 transition whitespace-nowrap active:scale-95 shadow-2xs"
+                  className="px-2.5 py-1 bg-[#F5F3EE] hover:bg-[#0B0F14] hover:text-[#C8A96B] hover:border-[#0B0F14] text-[#0B0F14] font-medium rounded-full border border-[#E8E5DC] shrink-0 transition whitespace-nowrap active:scale-95 shadow-2xs"
                 >
                   {q}
                 </button>
@@ -790,7 +790,7 @@ export function FayzeeAIAssistant() {
               handleSend();
             }}
             onClick={() => focusInput()}
-            className="p-2.5 sm:p-3 bg-white border-t border-slate-200 flex items-center gap-2 shrink-0 cursor-text"
+            className="p-2.5 sm:p-3 bg-white border-t border-[#E8E5DC] flex items-center gap-2 shrink-0 cursor-text"
           >
             <input
               ref={inputRef}
@@ -806,20 +806,20 @@ export function FayzeeAIAssistant() {
                   : "Ask Fayzee AI (e.g. phone under 50k, compare S24 vs iPhone)..."
               }
               readOnly={loading}
-              className={`flex-1 px-3.5 py-2 text-xs bg-slate-50 rounded-full border border-slate-200 focus:outline-none focus:border-[#FF5E00] focus:ring-2 focus:ring-[#FF5E00]/15 min-w-0 transition-all ${
+              className={`flex-1 px-3.5 py-2 text-xs bg-[#F5F3EE] text-[#0B0F14] rounded-full border border-[#E8E5DC] focus:outline-none focus:border-[#0B0F14] focus:ring-2 focus:ring-[#C8A96B]/20 min-w-0 transition-all ${
                 loading ? "opacity-75 cursor-wait" : ""
               }`}
             />
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className="p-2 sm:p-2.5 bg-[#FF5E00] hover:bg-[#FF8C00] disabled:opacity-40 text-white rounded-full transition shadow-sm shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center active:scale-95"
+              className="p-2 sm:p-2.5 bg-[#0B0F14] hover:bg-[#1A222C] disabled:opacity-40 text-white rounded-full transition shadow-sm shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center active:scale-95 border border-[#0B0F14]"
               aria-label="Send query"
             >
               {loading ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#C8A96B]" />
               ) : (
-                <Send className="w-3.5 h-3.5" />
+                <Send className="w-3.5 h-3.5 text-[#C8A96B]" />
               )}
             </button>
           </form>

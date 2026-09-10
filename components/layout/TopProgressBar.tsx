@@ -75,7 +75,7 @@ function TopProgressBarInner() {
       aria-hidden="true"
     >
       <div
-        className="h-full bg-gradient-to-r from-[#FF5E00] via-[#FF8C00] to-yellow-400 shadow-sm shadow-[#FF5E00]/50 transition-all duration-200 ease-out"
+        className="h-full bg-gradient-to-r from-[#C8A96B] via-[#E2CB99] to-[#C8A96B] shadow-sm shadow-[#C8A96B]/50 transition-all duration-200 ease-out"
         style={{
           width: `${progress}%`,
           opacity: progress === 100 ? 0 : 1,

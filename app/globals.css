@@ -3,14 +3,17 @@
 @tailwind utilities;
 
 :root {
-  --fayzee-primary: #FF5E00;
-  --fayzee-primary-hover: #FF8C00;
-  --fayzee-navy: #1C2A39;
-  --fayzee-text: #333333;
-  --fayzee-text-muted: #777777;
-  --fayzee-background: #FFFFFF;
-  --fayzee-surface: #F7F9FA;
-  --fayzee-border: #DDE2E6;
+  --fayzee-primary: #0B0F14;
+  --fayzee-primary-hover: #1A222C;
+  --fayzee-accent: #C8A96B;
+  --fayzee-accent-hover: #D4B15A;
+  --fayzee-gold: #C8A96B;
+  --fayzee-navy: #0B0F14;
+  --fayzee-text: #0B0F14;
+  --fayzee-text-muted: #8A8F98;
+  --fayzee-background: #F5F3EE;
+  --fayzee-surface: #FFFFFF;
+  --fayzee-border: #E8E5DC;
   --fayzee-white: #FFFFFF;
 
   /* Semantic status colors */
@@ -97,54 +100,72 @@ svg {
 }
 
 ::-webkit-scrollbar-track {
-  background: #F7F9FA;
+  background: #F5F3EE;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #D5D0C5;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #8A8F98;
 }
 
 .gradient-brand {
-  background: linear-gradient(135deg, #1C2A39 0%, #15202B 100%);
+  background: linear-gradient(135deg, #0B0F14 0%, #161F2B 100%);
 }
 
 .gradient-accent {
-  background: linear-gradient(135deg, #FF5E00 0%, #FF8C00 100%);
+  background: linear-gradient(135deg, #C8A96B 0%, #DFBE6E 100%);
+}
+
+.gradient-gold {
+  background: linear-gradient(135deg, #C8A96B 0%, #E2CB99 100%);
 }
 
 .gradient-ai {
-  background: linear-gradient(135deg, #FF5E00 0%, #FF8C00 100%);
+  background: linear-gradient(135deg, #0B0F14 0%, #203A63 100%);
 }
 
 .glass-panel {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(12px);
   border: 1px solid var(--fayzee-border);
 }
 
-/* Standardized Button Classes based on Fayzee Brand Rules */
+/* Standardized Button Classes based on Fayzee Premium Brand Rules */
 .btn-primary {
   background-color: var(--fayzee-primary);
   color: var(--fayzee-white);
+  border: 1px solid transparent;
   transition: all 0.2s ease;
 }
 .btn-primary:hover {
   background-color: var(--fayzee-primary-hover);
+  border-color: var(--fayzee-accent);
+}
+
+.btn-accent {
+  background-color: var(--fayzee-accent);
+  color: var(--fayzee-primary);
+  border: 1px solid transparent;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+.btn-accent:hover {
+  background-color: var(--fayzee-accent-hover);
 }
 
 .btn-secondary {
   background-color: var(--fayzee-white);
-  border: 1px solid var(--fayzee-navy);
+  border: 1px solid var(--fayzee-border);
   color: var(--fayzee-navy);
   transition: all 0.2s ease;
 }
 .btn-secondary:hover {
   background-color: var(--fayzee-navy);
+  border-color: var(--fayzee-navy);
   color: var(--fayzee-white);
 }
 
@@ -197,11 +218,11 @@ svg {
 /* 3. Flash Sale & Deals Pulse Glow */
 @keyframes pulseGlow {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(255, 94, 0, 0.5);
+    box-shadow: 0 0 0 0 rgba(200, 169, 107, 0.45);
     transform: scale(1);
   }
   50% {
-    box-shadow: 0 0 20px 6px rgba(255, 94, 0, 0.28);
+    box-shadow: 0 0 20px 6px rgba(200, 169, 107, 0.25);
     transform: scale(1.02);
   }
 }

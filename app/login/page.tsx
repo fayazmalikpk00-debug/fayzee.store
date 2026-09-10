@@ -54,12 +54,12 @@ function LoginForm() {
     <div className="space-y-6">
       <div className="text-center space-y-2">
         <Link href="/" className="inline-block group">
-          <div className="w-16 h-16 rounded-2xl bg-white p-1.5 shadow-md mx-auto flex items-center justify-center border border-[#DDE2E6] group-hover:scale-105 transition-transform">
+          <div className="w-16 h-16 rounded-2xl bg-white p-1.5 shadow-card mx-auto flex items-center justify-center border border-[#E8E5DC] group-hover:scale-105 transition-transform">
             <img src="/logo.png" alt="FAYZEE" className="w-full h-full object-contain" />
           </div>
         </Link>
-        <h1 className="text-2xl font-black text-[#1C2A39]">Sign in to FAYZEE</h1>
-        <p className="text-xs text-[#777777]">
+        <h1 className="text-2xl font-black text-[#0B0F14]">Sign in to FAYZEE</h1>
+        <p className="text-xs text-[#8A8F98]">
           Enter your email and password to access your account
         </p>
       </div>
@@ -71,9 +71,9 @@ function LoginForm() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-3xl border border-[#DDE2E6] shadow-sm space-y-4">
+      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-3xl border border-[#E8E5DC] shadow-card space-y-4">
         <div>
-          <label className="block text-xs font-bold text-[#1C2A39] mb-1">Email Address</label>
+          <label className="block text-xs font-bold text-[#0B0F14] mb-1">Email Address</label>
           <div className="relative">
             <input
               type="email"
@@ -81,18 +81,18 @@ function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@example.com"
-              className="w-full pl-10 pr-3.5 py-2.5 bg-[#F7F9FA] text-xs text-[#333333] rounded-xl border border-[#DDE2E6] focus:outline-none focus:border-[#FF5E00]"
+              className="w-full pl-10 pr-3.5 py-2.5 bg-[#F5F3EE] text-xs text-[#0B0F14] placeholder:text-[#8A8F98] rounded-xl border border-[#E8E5DC] focus:outline-none focus:border-[#C8A96B] focus:bg-white transition"
             />
-            <Mail className="w-4 h-4 text-[#777777] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Mail className="w-4 h-4 text-[#8A8F98] absolute left-3 top-1/2 -translate-y-1/2" />
           </div>
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-1">
-            <label className="block text-xs font-bold text-[#1C2A39]">Password</label>
+            <label className="block text-xs font-bold text-[#0B0F14]">Password</label>
             <Link
               href="/forgot-password"
-              className="text-[11px] font-semibold text-[#FF5E00] hover:text-[#FF8C00] hover:underline"
+              className="text-[11px] font-semibold text-[#C8A96B] hover:text-[#D4B15A] hover:underline"
             >
               Forgot Password?
             </Link>
@@ -104,24 +104,24 @@ function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full pl-10 pr-3.5 py-2.5 bg-[#F7F9FA] text-xs text-[#333333] rounded-xl border border-[#DDE2E6] focus:outline-none focus:border-[#FF5E00]"
+              className="w-full pl-10 pr-3.5 py-2.5 bg-[#F5F3EE] text-xs text-[#0B0F14] placeholder:text-[#8A8F98] rounded-xl border border-[#E8E5DC] focus:outline-none focus:border-[#C8A96B] focus:bg-white transition"
             />
-            <Lock className="w-4 h-4 text-[#777777] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Lock className="w-4 h-4 text-[#8A8F98] absolute left-3 top-1/2 -translate-y-1/2" />
           </div>
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 bg-[#FF5E00] hover:bg-[#FF8C00] disabled:opacity-50 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-1.5 active:scale-98"
+          className="w-full py-3 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] border border-[#C8A96B]/40 disabled:opacity-50 font-bold text-xs rounded-2xl shadow-card transition flex items-center justify-center gap-1.5 active:scale-98"
         >
           {loading ? <span>Authenticating...</span> : <span>Sign In to Account</span>}
           <ArrowRight className="w-4 h-4" />
         </button>
 
-        <div className="text-center pt-2 text-xs text-[#777777]">
+        <div className="text-center pt-2 text-xs text-[#8A8F98]">
           Don't have an account yet?{" "}
-          <Link href="/register" className="font-bold text-[#FF5E00] hover:text-[#FF8C00] hover:underline">
+          <Link href="/register" className="font-bold text-[#C8A96B] hover:text-[#D4B15A] hover:underline">
             Register Here
           </Link>
         </div>

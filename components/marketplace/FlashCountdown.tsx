@@ -33,12 +33,12 @@ export function FlashCountdown({ targetDate }: { targetDate: string | Date }) {
   const pad = (n: number) => String(n).padStart(2, "0");
 
   return (
-    <div className="flex items-center gap-1.5 text-xs font-bold text-white">
-      <span className="bg-[#1C2A39] px-2 py-1 rounded-md shadow-xs">{pad(timeLeft.hours)}</span>
-      <span className="text-[#1C2A39] font-extrabold">:</span>
-      <span className="bg-[#1C2A39] px-2 py-1 rounded-md shadow-xs">{pad(timeLeft.minutes)}</span>
-      <span className="text-[#1C2A39] font-extrabold">:</span>
-      <span className="bg-[#1C2A39] px-2 py-1 rounded-md shadow-xs text-[#FF5E00]">{pad(timeLeft.seconds)}</span>
+    <div className="flex items-center gap-1.5 text-xs font-black">
+      <span className="bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/30 px-2.5 py-1 rounded-md shadow-xs">{pad(timeLeft.hours)}</span>
+      <span className="text-[#0B0F14] font-black">:</span>
+      <span className="bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/30 px-2.5 py-1 rounded-md shadow-xs">{pad(timeLeft.minutes)}</span>
+      <span className="text-[#0B0F14] font-black">:</span>
+      <span className="bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/30 px-2.5 py-1 rounded-md shadow-xs">{pad(timeLeft.seconds)}</span>
     </div>
   );
 }

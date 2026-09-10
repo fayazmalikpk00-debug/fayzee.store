@@ -138,19 +138,19 @@ export function HomeProductsFeed({
   return (
     <section className="space-y-6" id="all-products">
       {/* 1. Section Header with Live Title & On-Demand Categories Button */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2 border-b border-[#DDE2E6]">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2 border-b border-[#E8E5DC]">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FF5E00]/10 text-xs font-bold text-[#FF5E00] mb-2">
-            <Sparkles className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0B0F14] text-xs font-bold text-[#C8A96B] border border-[#C8A96B]/30 mb-2">
+            <Sparkles className="w-3.5 h-3.5 text-[#C8A96B]" />
             <span>Marketplace Catalog</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-[#1C2A39] flex items-center gap-2.5">
+          <h2 className="text-2xl sm:text-3xl font-black text-[#0B0F14] flex items-center gap-2.5">
             <span>All Products</span>
-            <span className="text-xs sm:text-sm font-bold px-2.5 py-0.5 rounded-full bg-[#F0F3F5] text-[#555555] border border-[#DDE2E6]">
+            <span className="text-xs sm:text-sm font-bold px-2.5 py-0.5 rounded-full bg-[#F5F3EE] text-[#0B0F14] border border-[#E8E5DC]">
               {selectedCategory === "all" ? `${totalCount} items` : `${products.length} items`}
             </span>
           </h2>
-          <p className="text-sm text-[#777777] mt-1">
+          <p className="text-sm text-[#8A8F98] mt-1">
             Browse authentic electronics, fashion, appliances, and footwear directly from verified sellers
           </p>
         </div>
@@ -162,42 +162,42 @@ export function HomeProductsFeed({
             onClick={() => setShowCategoriesGrid((prev) => !prev)}
             className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all shadow-xs ${
               showCategoriesGrid
-                ? "bg-[#1C2A39] text-white"
-                : "bg-white text-[#1C2A39] border border-[#DDE2E6] hover:border-[#FF5E00] hover:text-[#FF5E00]"
+                ? "bg-[#0B0F14] text-white"
+                : "bg-white text-[#0B0F14] border border-[#E8E5DC] hover:border-[#0B0F14]"
             }`}
           >
-            <Grid className="w-4 h-4 text-[#FF5E00]" />
+            <Grid className="w-4 h-4 text-[#C8A96B]" />
             <span>{showCategoriesGrid ? "Hide Categories" : `Browse Categories (${categories.length})`}</span>
             {showCategoriesGrid ? (
-              <ChevronUp className="w-4 h-4 text-slate-300" />
+              <ChevronUp className="w-4 h-4 text-[#C8A96B]" />
             ) : (
-              <ChevronDown className="w-4 h-4 text-slate-400" />
+              <ChevronDown className="w-4 h-4 text-[#8A8F98]" />
             )}
           </button>
 
           <Link
             href="/products"
-            className="px-4 py-2.5 bg-[#FF5E00] hover:bg-[#FF8C00] text-white text-xs sm:text-sm font-bold rounded-xl transition flex items-center gap-1.5 shadow-xs"
+            className="px-4 py-2.5 bg-[#0B0F14] hover:bg-[#1A222C] text-white text-xs sm:text-sm font-bold rounded-xl transition flex items-center gap-1.5 shadow-xs border border-[#0B0F14]"
           >
             <span>Full Catalog</span>
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-4 h-4 text-[#C8A96B]" />
           </Link>
         </div>
       </div>
 
       {/* 2. On-Demand Expandable Category Grid (Shown ONLY when user clicks) */}
       {showCategoriesGrid && (
-        <div className="p-5 sm:p-6 bg-[#F7F9FA] rounded-3xl border border-[#DDE2E6] shadow-inner space-y-4 animate-slide-down">
+        <div className="p-5 sm:p-6 bg-[#F5F3EE] rounded-3xl border border-[#E8E5DC] shadow-inner space-y-4 animate-slide-down">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Layers className="w-5 h-5 text-[#FF5E00]" />
-              <h3 className="text-base sm:text-lg font-bold text-[#1C2A39]">
+              <Layers className="w-5 h-5 text-[#C8A96B]" />
+              <h3 className="text-base sm:text-lg font-black text-[#0B0F14]">
                 Select a Department to Filter Products
               </h3>
             </div>
             <button
               onClick={() => setShowCategoriesGrid(false)}
-              className="text-xs text-[#777777] hover:text-[#1C2A39] flex items-center gap-1 font-semibold"
+              className="text-xs text-[#8A8F98] hover:text-[#0B0F14] flex items-center gap-1 font-semibold transition"
             >
               <X className="w-3.5 h-3.5" /> Close
             </button>
@@ -216,11 +216,11 @@ export function HomeProductsFeed({
                   }}
                   className={`group p-3 rounded-2xl border text-left transition-all flex flex-col items-center text-center gap-2 ${
                     isSelected
-                      ? "bg-[#1C2A39] border-[#1C2A39] text-white shadow-md"
-                      : "bg-white border-[#DDE2E6] hover:border-[#FF5E00] hover:shadow-card-hover text-[#1C2A39]"
+                      ? "bg-[#0B0F14] border-[#0B0F14] text-white shadow-md"
+                      : "bg-white border-[#E8E5DC] hover:border-[#C8A96B] hover:shadow-card-hover text-[#0B0F14]"
                   }`}
                 >
-                  <div className="w-12 h-12 rounded-xl bg-[#F0F3F5] overflow-hidden shrink-0 border border-[#DDE2E6]/60">
+                  <div className="w-12 h-12 rounded-xl bg-[#F5F3EE] overflow-hidden shrink-0 border border-[#E8E5DC]">
                     <img
                       src={cat.image || "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=150"}
                       alt={cat.name}
@@ -230,14 +230,14 @@ export function HomeProductsFeed({
                   <div className="min-w-0 w-full">
                     <p
                       className={`text-xs font-bold truncate transition ${
-                        isSelected ? "text-white" : "group-hover:text-[#FF5E00]"
+                        isSelected ? "text-[#C8A96B]" : "group-hover:text-[#C8A96B]"
                       }`}
                     >
                       {cat.name}
                     </p>
                     <span
                       className={`text-[11px] block mt-0.5 ${
-                        isSelected ? "text-slate-300" : "text-[#777777]"
+                        isSelected ? "text-slate-300" : "text-[#8A8F98]"
                       }`}
                     >
                       {cat._count?.products || 0} items
@@ -257,15 +257,15 @@ export function HomeProductsFeed({
           onClick={() => handleCategorySelect("all")}
           className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all shadow-2xs flex items-center gap-1.5 shrink-0 ${
             selectedCategory === "all"
-              ? "bg-[#FF5E00] text-white shadow-md"
-              : "bg-white text-[#333333] border border-[#DDE2E6] hover:border-[#FF5E00] hover:text-[#FF5E00]"
+              ? "bg-[#0B0F14] text-white shadow-md border border-[#0B0F14]"
+              : "bg-white text-[#0B0F14] border border-[#E8E5DC] hover:border-[#0B0F14]"
           }`}
         >
-          <Sparkles className="w-3.5 h-3.5" />
+          <Sparkles className="w-3.5 h-3.5 text-[#C8A96B]" />
           <span>All Products</span>
           <span
             className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-              selectedCategory === "all" ? "bg-white/20 text-white" : "bg-gray-100 text-gray-600"
+              selectedCategory === "all" ? "bg-white/20 text-[#C8A96B]" : "bg-[#F5F3EE] text-[#0B0F14]"
             }`}
           >
             {totalCount}
@@ -281,15 +281,15 @@ export function HomeProductsFeed({
               onClick={() => handleCategorySelect(cat.slug)}
               className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all shadow-2xs flex items-center gap-1.5 shrink-0 ${
                 isSelected
-                  ? "bg-[#1C2A39] text-white shadow-md font-bold"
-                  : "bg-white text-[#333333] border border-[#DDE2E6] hover:border-[#FF5E00] hover:text-[#FF5E00]"
+                  ? "bg-[#0B0F14] text-[#C8A96B] shadow-md font-bold border border-[#0B0F14]"
+                  : "bg-white text-[#0B0F14] border border-[#E8E5DC] hover:border-[#0B0F14]"
               }`}
             >
               <span>{cat.name}</span>
               {cat._count?.products !== undefined && (
                 <span
                   className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                    isSelected ? "bg-white/20 text-white" : "bg-gray-100 text-gray-600"
+                    isSelected ? "bg-white/10 text-[#C8A96B]" : "bg-[#F5F3EE] text-[#8A8F98]"
                   }`}
                 >
                   {cat._count.products}
@@ -302,23 +302,23 @@ export function HomeProductsFeed({
 
       {/* 4. Active Category Indicator (If filtered) */}
       {selectedCategory !== "all" && activeCategoryObj && (
-        <div className="flex items-center justify-between bg-[#F0F4F8] border border-[#DDE2E6] px-4 py-2 rounded-xl text-xs sm:text-sm text-[#1C2A39]">
+        <div className="flex items-center justify-between bg-white border border-[#E8E5DC] px-4 py-2 rounded-xl text-xs sm:text-sm text-[#0B0F14] shadow-xs">
           <div className="flex items-center gap-2 truncate">
-            <span className="text-[#777777]">Filtered by:</span>
-            <span className="font-bold text-[#FF5E00]">{activeCategoryObj.name}</span>
-            <span className="text-xs text-[#777777]">({products.length} products found)</span>
+            <span className="text-[#8A8F98]">Filtered by:</span>
+            <span className="font-black text-[#0B0F14]">{activeCategoryObj.name}</span>
+            <span className="text-xs text-[#8A8F98]">({products.length} products found)</span>
           </div>
           <div className="flex items-center gap-2">
             <Link
               href={`/category/${activeCategoryObj.slug}`}
-              className="text-xs font-bold text-[#1C2A39] hover:text-[#FF5E00] hover:underline"
+              className="text-xs font-bold text-[#0B0F14] hover:text-[#C8A96B] hover:underline transition"
             >
               Open Category Page →
             </Link>
             <button
               type="button"
               onClick={() => handleCategorySelect("all")}
-              className="text-xs text-[#DC2626] font-bold hover:underline ml-2"
+              className="text-xs text-red-600 font-bold hover:underline ml-2"
             >
               Reset Filter
             </button>
@@ -329,8 +329,8 @@ export function HomeProductsFeed({
       {/* 5. Products Grid or Loading State */}
       {isLoading ? (
         <div className="space-y-3">
-          <div className="flex items-center gap-2 text-xs font-bold text-[#FF5E00] pb-1">
-            <Loader2 className="w-4 h-4 animate-spin" />
+          <div className="flex items-center gap-2 text-xs font-bold text-[#0B0F14] pb-1">
+            <Loader2 className="w-4 h-4 animate-spin text-[#C8A96B]" />
             <span>Fetching department products...</span>
           </div>
           <ProductSkeletonGrid count={8} />
@@ -357,19 +357,19 @@ export function HomeProductsFeed({
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-3xl p-8 sm:p-12 text-center border border-[#DDE2E6] space-y-3 shadow-2xs">
-          <div className="w-12 h-12 rounded-2xl bg-[#F7F9FA] text-[#FF5E00] flex items-center justify-center mx-auto border border-[#DDE2E6]">
+        <div className="bg-white rounded-3xl p-8 sm:p-12 text-center border border-[#E8E5DC] space-y-3 shadow-2xs">
+          <div className="w-12 h-12 rounded-2xl bg-[#0B0F14] text-[#C8A96B] flex items-center justify-center mx-auto border border-[#C8A96B]/30">
             <PackageOpen className="w-6 h-6" />
           </div>
-          <h3 className="text-lg font-bold text-[#1C2A39]">No products in this category</h3>
-          <p className="text-sm text-[#777777] max-w-md mx-auto">
+          <h3 className="text-lg font-bold text-[#0B0F14]">No products in this category</h3>
+          <p className="text-sm text-[#8A8F98] max-w-md mx-auto">
             We haven't listed items in this category yet. Check back soon or explore our other departments.
           </p>
           <div className="pt-2">
             <button
               type="button"
               onClick={() => handleCategorySelect("all")}
-              className="inline-block px-5 py-2.5 bg-[#FF5E00] hover:bg-[#FF8C00] text-white text-sm font-bold rounded-xl transition shadow-xs"
+              className="inline-block px-5 py-2.5 bg-[#0B0F14] hover:bg-[#1A222C] text-white text-sm font-bold rounded-xl transition shadow-xs border border-[#0B0F14]"
             >
               Show All Products
             </button>
@@ -385,8 +385,8 @@ export function HomeProductsFeed({
         <div className="space-y-4 pt-2">
           <ProductSkeletonGrid count={4} />
           <div className="py-2 text-center flex items-center justify-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin text-[#FF5E00]" />
-            <span className="text-xs font-bold text-[#777777]">Loading more items...</span>
+            <Loader2 className="w-4 h-4 animate-spin text-[#C8A96B]" />
+            <span className="text-xs font-bold text-[#8A8F98]">Loading more items...</span>
           </div>
         </div>
       )}
@@ -394,7 +394,7 @@ export function HomeProductsFeed({
       {/* End of Catalog Indicator */}
       {!hasMore && products.length > 0 && (
         <div className="pt-4 pb-2 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#F7F9FA] border border-[#DDE2E6] text-xs text-[#777777] font-semibold">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#E8E5DC] text-xs text-[#8A8F98] font-semibold">
             <span>✓ You have viewed all {products.length} products</span>
           </div>
         </div>
@@ -404,10 +404,10 @@ export function HomeProductsFeed({
       <div className="pt-4 flex justify-center">
         <Link
           href="/products"
-          className="px-8 py-3.5 bg-white hover:bg-[#F7F9FA] text-[#1C2A39] hover:text-[#FF5E00] border-2 border-[#DDE2E6] hover:border-[#FF5E00] font-extrabold text-sm sm:text-base rounded-2xl transition-all shadow-xs flex items-center gap-2 group"
+          className="px-8 py-3.5 bg-white hover:bg-[#F5F3EE] text-[#0B0F14] border-2 border-[#E8E5DC] hover:border-[#0B0F14] font-extrabold text-sm sm:text-base rounded-2xl transition-all shadow-xs flex items-center gap-2 group"
         >
           <span>Explore All {totalCount} Marketplace Products</span>
-          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition duration-200" />
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition duration-200 text-[#C8A96B]" />
         </Link>
       </div>
     </section>

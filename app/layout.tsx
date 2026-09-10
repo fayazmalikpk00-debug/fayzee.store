@@ -15,7 +15,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
-  themeColor: "#1C2A39",
+  themeColor: "#0B0F14",
 };
 
 export const metadata: Metadata = {
@@ -49,7 +49,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="h-full">
-      <body className="flex flex-col min-h-full antialiased font-sans bg-white text-[#333333] selection:bg-[#FF5E00] selection:text-white">
+      <body className="flex flex-col min-h-full antialiased font-sans bg-[#F5F3EE] text-[#0B0F14] selection:bg-[#0B0F14] selection:text-[#C8A96B]">
         <TopProgressBar />
         <AuthProvider>
           <CartProvider>

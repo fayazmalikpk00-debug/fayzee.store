@@ -72,12 +72,12 @@ function ResetPasswordForm() {
     <div className="space-y-6">
       <div className="text-center space-y-2">
         <Link href="/" className="inline-block group">
-          <div className="w-16 h-16 rounded-2xl bg-white p-1.5 shadow-md mx-auto flex items-center justify-center border border-[#DDE2E6] group-hover:scale-105 transition-transform">
+          <div className="w-16 h-16 rounded-2xl bg-white p-1.5 shadow-card mx-auto flex items-center justify-center border border-[#E8E5DC] group-hover:scale-105 transition-transform">
             <img src="/logo.png" alt="FAYZEE" className="w-full h-full object-contain" />
           </div>
         </Link>
-        <h1 className="text-2xl font-black text-[#1C2A39]">Set New Password</h1>
-        <p className="text-xs text-[#777777]">
+        <h1 className="text-2xl font-black text-[#0B0F14]">Set New Password</h1>
+        <p className="text-xs text-[#8A8F98]">
           Create a strong password for your FAYZEE account
         </p>
       </div>
@@ -102,20 +102,20 @@ function ResetPasswordForm() {
       )}
 
       {success ? (
-        <div className="bg-white p-8 rounded-3xl border border-[#DDE2E6] shadow-sm text-center space-y-5">
+        <div className="bg-white p-8 rounded-3xl border border-[#E8E5DC] shadow-card text-center space-y-5">
           <div className="w-14 h-14 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto text-[#16A34A]">
             <CheckCircle2 className="w-8 h-8" />
           </div>
           <div className="space-y-1">
-            <h2 className="text-lg font-bold text-[#1C2A39]">Password Reset Complete!</h2>
-            <p className="text-xs text-[#777777]">
+            <h2 className="text-lg font-bold text-[#0B0F14]">Password Reset Complete!</h2>
+            <p className="text-xs text-[#8A8F98]">
               Your password has been securely updated. You can now log in with your new credentials.
             </p>
           </div>
           <button
             type="button"
             onClick={() => router.push("/login")}
-            className="w-full py-3 bg-[#FF5E00] hover:bg-[#FF8C00] text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-1.5 active:scale-98"
+            className="w-full py-3 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] border border-[#C8A96B]/40 font-bold text-xs rounded-2xl shadow-card transition flex items-center justify-center gap-1.5 active:scale-98"
           >
             <span>Proceed to Sign In</span>
             <ArrowRight className="w-4 h-4" />
@@ -124,10 +124,10 @@ function ResetPasswordForm() {
       ) : (
         <form
           onSubmit={handleSubmit}
-          className="bg-white p-6 rounded-3xl border border-[#DDE2E6] shadow-sm space-y-4"
+          className="bg-white p-6 rounded-3xl border border-[#E8E5DC] shadow-card space-y-4"
         >
           <div>
-            <label className="block text-xs font-bold text-[#1C2A39] mb-1">
+            <label className="block text-xs font-bold text-[#0B0F14] mb-1">
               New Password
             </label>
             <div className="relative">
@@ -138,24 +138,24 @@ function ResetPasswordForm() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="At least 8 characters (letters & numbers)"
-                className="w-full pl-10 pr-10 py-2.5 bg-[#F7F9FA] text-xs text-[#333333] rounded-xl border border-[#DDE2E6] focus:outline-none focus:border-[#FF5E00] transition disabled:opacity-50"
+                className="w-full pl-10 pr-10 py-2.5 bg-[#F5F3EE] text-xs text-[#0B0F14] placeholder:text-[#8A8F98] rounded-xl border border-[#E8E5DC] focus:outline-none focus:border-[#C8A96B] focus:bg-white transition disabled:opacity-50"
               />
-              <Lock className="w-4 h-4 text-[#777777] absolute left-3 top-1/2 -translate-y-1/2" />
+              <Lock className="w-4 h-4 text-[#8A8F98] absolute left-3 top-1/2 -translate-y-1/2" />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#777777] hover:text-[#1C2A39] transition"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8A8F98] hover:text-[#0B0F14] transition"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            <p className="text-[11px] text-[#777777] mt-1">
+            <p className="text-[11px] text-[#8A8F98] mt-1">
               Must be at least 8 characters with letters & numbers.
             </p>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#1C2A39] mb-1">
+            <label className="block text-xs font-bold text-[#0B0F14] mb-1">
               Confirm New Password
             </label>
             <div className="relative">
@@ -166,24 +166,24 @@ function ResetPasswordForm() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Re-enter your new password"
-                className="w-full pl-10 pr-3.5 py-2.5 bg-[#F7F9FA] text-xs text-[#333333] rounded-xl border border-[#DDE2E6] focus:outline-none focus:border-[#FF5E00] transition disabled:opacity-50"
+                className="w-full pl-10 pr-3.5 py-2.5 bg-[#F5F3EE] text-xs text-[#0B0F14] placeholder:text-[#8A8F98] rounded-xl border border-[#E8E5DC] focus:outline-none focus:border-[#C8A96B] focus:bg-white transition disabled:opacity-50"
               />
-              <Lock className="w-4 h-4 text-[#777777] absolute left-3 top-1/2 -translate-y-1/2" />
+              <Lock className="w-4 h-4 text-[#8A8F98] absolute left-3 top-1/2 -translate-y-1/2" />
             </div>
           </div>
 
           <button
             type="submit"
             disabled={loading || !token}
-            className="w-full py-3 bg-[#FF5E00] hover:bg-[#FF8C00] disabled:opacity-50 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-1.5 active:scale-98"
+            className="w-full py-3 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] border border-[#C8A96B]/40 disabled:opacity-50 font-bold text-xs rounded-2xl shadow-card transition flex items-center justify-center gap-1.5 active:scale-98"
           >
             {loading ? <span>Updating Password...</span> : <span>Reset Password</span>}
             <ArrowRight className="w-4 h-4" />
           </button>
 
-          <div className="text-center pt-2 text-xs text-[#777777]">
+          <div className="text-center pt-2 text-xs text-[#8A8F98]">
             Remembered your password?{" "}
-            <Link href="/login" className="font-bold text-[#FF5E00] hover:text-[#FF8C00] hover:underline">
+            <Link href="/login" className="font-bold text-[#C8A96B] hover:text-[#D4B15A] hover:underline">
               Return to Sign In
             </Link>
           </div>

@@ -91,17 +91,17 @@ export function InfiniteProductGrid({
 
   if (products.length === 0) {
     return (
-      <div className="bg-white rounded-3xl p-12 text-center border border-[#DDE2E6] space-y-4">
-        <div className="w-16 h-16 bg-[#F7F9FA] rounded-full flex items-center justify-center mx-auto text-[#777777] border border-[#DDE2E6]">
+      <div className="bg-white rounded-3xl p-12 text-center border border-[#E8E5DC] space-y-4 shadow-xs">
+        <div className="w-16 h-16 bg-[#F5F3EE] rounded-full flex items-center justify-center mx-auto text-[#8A8F98] border border-[#E8E5DC]">
           🔍
         </div>
-        <h3 className="text-base font-bold text-[#1C2A39]">No products found</h3>
-        <p className="text-xs text-[#777777] max-w-sm mx-auto">
+        <h3 className="text-base font-bold text-[#0B0F14]">No products found</h3>
+        <p className="text-xs text-[#8A8F98] max-w-sm mx-auto">
           We couldn&apos;t find any products matching your current filters. Try relaxing your search criteria or explore other departments.
         </p>
         <Link
           href="/products"
-          className="inline-block px-4 py-2 bg-[#FF5E00] hover:bg-[#FF8C00] text-white text-xs font-bold rounded-xl transition shadow-xs"
+          className="inline-block px-5 py-2.5 bg-[#0B0F14] hover:bg-[#1A222C] text-white text-xs font-bold rounded-xl transition shadow-xs border border-[#0B0F14]"
         >
           Reset All Filters
         </Link>
@@ -140,8 +140,8 @@ export function InfiniteProductGrid({
         <div className="space-y-4 pt-2">
           <ProductSkeletonGrid count={3} columns="grid-cols-2 md:grid-cols-3" />
           <div className="py-2 text-center flex items-center justify-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin text-[#FF5E00]" />
-            <span className="text-xs font-bold text-[#777777]">Loading more products...</span>
+            <Loader2 className="w-4 h-4 animate-spin text-[#C8A96B]" />
+            <span className="text-xs font-bold text-[#8A8F98]">Loading more products...</span>
           </div>
         </div>
       )}
@@ -149,7 +149,7 @@ export function InfiniteProductGrid({
       {/* End of catalog indicator */}
       {!hasMore && products.length > 0 && (
         <div className="pt-6 pb-4 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#F7F9FA] border border-[#DDE2E6] text-xs text-[#777777] font-semibold">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#E8E5DC] text-xs text-[#8A8F98] font-semibold">
             <span>✓ You have viewed all {products.length} products</span>
           </div>
         </div>

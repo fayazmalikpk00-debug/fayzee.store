@@ -53,27 +53,29 @@ export default async function ProductsPage({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#DDE2E6]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E8E5DC]">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-[#1C2A39]">
+          <h1 className="text-2xl sm:text-3xl font-black text-[#0B0F14]">
             {searchQuery ? `Search Results for "${searchQuery}"` : "All Products Catalog"}
           </h1>
-          <p className="text-xs text-[#777777] mt-1">
+          <p className="text-xs text-[#8A8F98] mt-1">
             Showing {products.length} of {total} authentic products
           </p>
         </div>
 
         {/* Sort selector */}
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full pb-1">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1C2A39] shrink-0">
-            <SlidersHorizontal className="w-4 h-4 text-[#777777]" />
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#0B0F14] shrink-0">
+            <SlidersHorizontal className="w-4 h-4 text-[#8A8F98]" />
             <span className="hidden sm:inline">Sort By:</span>
           </div>
           <div className="flex items-center gap-1.5 text-xs shrink-0">
             <Link
               href={{ query: { ...searchParams, sort: "newest" } }}
               className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition ${
-                sortBy === "newest" ? "bg-[#FF5E00] text-white" : "bg-white text-[#333333] border border-[#DDE2E6] hover:border-[#FF5E00]"
+                sortBy === "newest"
+                  ? "bg-[#0B0F14] text-white border border-[#0B0F14]"
+                  : "bg-white text-[#0B0F14] border border-[#E8E5DC] hover:border-[#C8A96B]"
               }`}
             >
               Newest
@@ -81,7 +83,9 @@ export default async function ProductsPage({
             <Link
               href={{ query: { ...searchParams, sort: "price_asc" } }}
               className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition ${
-                sortBy === "price_asc" ? "bg-[#FF5E00] text-white" : "bg-white text-[#333333] border border-[#DDE2E6] hover:border-[#FF5E00]"
+                sortBy === "price_asc"
+                  ? "bg-[#0B0F14] text-white border border-[#0B0F14]"
+                  : "bg-white text-[#0B0F14] border border-[#E8E5DC] hover:border-[#C8A96B]"
               }`}
             >
               Price: Low to High
@@ -89,7 +93,9 @@ export default async function ProductsPage({
             <Link
               href={{ query: { ...searchParams, sort: "price_desc" } }}
               className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition ${
-                sortBy === "price_desc" ? "bg-[#FF5E00] text-white" : "bg-white text-[#333333] border border-[#DDE2E6] hover:border-[#FF5E00]"
+                sortBy === "price_desc"
+                  ? "bg-[#0B0F14] text-white border border-[#0B0F14]"
+                  : "bg-white text-[#0B0F14] border border-[#E8E5DC] hover:border-[#C8A96B]"
               }`}
             >
               Price: High to Low
@@ -97,7 +103,9 @@ export default async function ProductsPage({
             <Link
               href={{ query: { ...searchParams, sort: "rating" } }}
               className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition ${
-                sortBy === "rating" ? "bg-[#FF5E00] text-white" : "bg-white text-[#333333] border border-[#DDE2E6] hover:border-[#FF5E00]"
+                sortBy === "rating"
+                  ? "bg-[#0B0F14] text-white border border-[#0B0F14]"
+                  : "bg-white text-[#0B0F14] border border-[#E8E5DC] hover:border-[#C8A96B]"
               }`}
             >
               Top Rated
@@ -110,12 +118,12 @@ export default async function ProductsPage({
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Filters Sidebar */}
         <aside className="space-y-6 lg:block">
-          <div className="bg-white p-5 rounded-2xl border border-[#DDE2E6] shadow-xs space-y-6">
-            <div className="flex items-center justify-between pb-3 border-b border-[#DDE2E6]">
-              <h3 className="text-sm font-bold text-[#1C2A39] flex items-center gap-1.5">
-                <Filter className="w-4 h-4 text-[#FF5E00]" /> Filters
+          <div className="bg-white p-5 rounded-2xl border border-[#E8E5DC] shadow-subtle space-y-6">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E8E5DC]">
+              <h3 className="text-sm font-bold text-[#0B0F14] flex items-center gap-1.5">
+                <Filter className="w-4 h-4 text-[#C8A96B]" /> Filters
               </h3>
-              <Link href="/products" className="text-[11px] text-[#FF5E00] font-semibold hover:text-[#FF8C00] hover:underline">
+              <Link href="/products" className="text-[11px] text-[#C8A96B] font-bold hover:underline">
                 Clear All
               </Link>
             </div>
@@ -123,7 +131,7 @@ export default async function ProductsPage({
             {/* Categories & Subcategories (3-Tier Hierarchical Drilldown) */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h4 className="text-xs font-bold uppercase text-[#1C2A39]">Department / Category</h4>
+                <h4 className="text-xs font-bold uppercase text-[#0B0F14]">Department / Category</h4>
                 {categorySlug && (
                   <Link
                     href={{
@@ -134,7 +142,7 @@ export default async function ProductsPage({
                         productType: undefined,
                       },
                     }}
-                    className="text-[10px] text-[#FF5E00] hover:text-[#FF8C00] hover:underline font-bold"
+                    className="text-[10px] text-[#C8A96B] hover:underline font-bold"
                   >
                     Reset
                   </Link>
@@ -157,8 +165,8 @@ export default async function ProductsPage({
                         }}
                         className={`flex items-center justify-between px-2 py-1.5 rounded-lg transition ${
                           isCatSelected
-                            ? "bg-orange-50 text-[#FF5E00] font-bold"
-                            : "text-[#333333] hover:bg-[#F7F9FA]"
+                            ? "bg-[#0B0F14] text-[#C8A96B] font-bold"
+                            : "text-[#0B0F14] hover:bg-[#F5F3EE]"
                         }`}
                       >
                         <span className="truncate">{cat.name}</span>
@@ -167,8 +175,8 @@ export default async function ProductsPage({
 
                       {/* Cascading Subcategories if this category is selected */}
                       {isCatSelected && availableSubcategories.length > 0 && (
-                        <div className="pl-3 ml-2 border-l-2 border-[#FF5E00] space-y-1 py-1">
-                          <div className="text-[10px] font-bold text-[#777777] uppercase tracking-wider mb-1">
+                        <div className="pl-3 ml-2 border-l-2 border-[#C8A96B] space-y-1 py-1">
+                          <div className="text-[10px] font-bold text-[#8A8F98] uppercase tracking-wider mb-1">
                             Subcategories
                           </div>
                           {availableSubcategories.map((sub: any) => {
@@ -187,8 +195,8 @@ export default async function ProductsPage({
                                   }}
                                   className={`flex items-center justify-between px-2 py-1 rounded-md text-[11px] transition ${
                                     isSubSelected
-                                      ? "bg-[#FF5E00] text-white font-bold shadow-xs"
-                                      : "text-[#333333] hover:bg-[#F7F9FA]"
+                                      ? "bg-[#0B0F14] text-white font-bold shadow-xs border border-[#0B0F14]"
+                                      : "text-[#0B0F14] hover:bg-[#F5F3EE]"
                                   }`}
                                 >
                                   <span className="truncate">{sub.name}</span>
@@ -197,7 +205,7 @@ export default async function ProductsPage({
 
                                 {/* Cascading Product Types if this subcategory is selected */}
                                 {isSubSelected && availableProductTypes.length > 0 && (
-                                  <div className="pl-2 ml-1 border-l-2 border-[#FF8C00] space-y-0.5 py-0.5">
+                                  <div className="pl-2 ml-1 border-l-2 border-[#C8A96B]/50 space-y-0.5 py-0.5">
                                     {availableProductTypes.map((pt: any) => {
                                       const isPtSelected = productTypeSlug === pt.slug;
                                       return (
@@ -214,8 +222,8 @@ export default async function ProductsPage({
                                           }}
                                           className={`flex items-center justify-between px-1.5 py-0.5 rounded text-[10px] transition ${
                                             isPtSelected
-                                              ? "bg-[#1C2A39] text-white font-bold"
-                                              : "text-[#777777] hover:text-[#FF5E00] hover:bg-[#F7F9FA]"
+                                              ? "bg-[#0B0F14] text-[#C8A96B] font-bold"
+                                              : "text-[#8A8F98] hover:text-[#0B0F14] hover:bg-[#F5F3EE]"
                                           }`}
                                         >
                                           <span className="truncate">{pt.name}</span>
@@ -240,7 +248,7 @@ export default async function ProductsPage({
 
             {/* Brands */}
             <div>
-              <h4 className="text-xs font-bold uppercase text-[#1C2A39] mb-2">Brand</h4>
+              <h4 className="text-xs font-bold uppercase text-[#0B0F14] mb-2">Brand</h4>
               <div className="space-y-1.5 text-xs max-h-40 overflow-y-auto">
                 {brands.map((b) => (
                   <Link
@@ -248,8 +256,8 @@ export default async function ProductsPage({
                     href={{ query: { ...searchParams, brand: b.slug } }}
                     className={`block px-2 py-1 rounded-md transition ${
                       brandSlug === b.slug
-                        ? "bg-orange-50 text-[#FF5E00] font-bold"
-                        : "text-[#333333] hover:bg-[#F7F9FA]"
+                        ? "bg-[#0B0F14] text-[#C8A96B] font-bold"
+                        : "text-[#0B0F14] hover:bg-[#F5F3EE]"
                     }`}
                   >
                     {b.name}
@@ -259,15 +267,15 @@ export default async function ProductsPage({
             </div>
 
             {/* Stock Availability */}
-            <div className="pt-2 border-t border-[#DDE2E6]">
+            <div className="pt-2 border-t border-[#E8E5DC]">
               <Link
                 href={{ query: { ...searchParams, inStock: inStock ? undefined : "true" } }}
                 className={`flex items-center justify-between p-2 rounded-lg text-xs font-medium transition ${
-                  inStock ? "bg-emerald-50 text-emerald-700 font-bold" : "text-[#333333] hover:bg-[#F7F9FA]"
+                  inStock ? "bg-emerald-50 text-emerald-800 font-bold" : "text-[#0B0F14] hover:bg-[#F5F3EE]"
                 }`}
               >
                 <span>In Stock Only</span>
-                <input type="checkbox" checked={inStock} readOnly className="rounded accent-[#FF5E00]" />
+                <input type="checkbox" checked={inStock} readOnly className="rounded accent-[#0B0F14]" />
               </Link>
             </div>
           </div>

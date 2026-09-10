@@ -2,11 +2,11 @@
 
 export function ProductSkeleton() {
   return (
-    <div className="bg-white rounded-2xl border border-[#DDE2E6] overflow-hidden flex flex-col animate-shimmer relative">
+    <div className="bg-white rounded-2xl border border-[#E8E5DC] overflow-hidden flex flex-col animate-shimmer relative">
       {/* Image Skeleton */}
-      <div className="aspect-square bg-[#EDF1F5] relative">
-        <div className="absolute top-3 left-3 w-12 h-5 bg-slate-200/60 rounded-md" />
-        <div className="absolute top-3 right-3 w-7 h-7 bg-slate-200/60 rounded-full" />
+      <div className="aspect-square bg-[#F5F3EE] relative">
+        <div className="absolute top-3 left-3 w-12 h-5 bg-stone-200/60 rounded-md" />
+        <div className="absolute top-3 right-3 w-7 h-7 bg-stone-200/60 rounded-full" />
       </div>
 
       {/* Details Skeleton */}

@@ -12,7 +12,7 @@ export function CartToast() {
 
   return (
     <div className="fixed top-20 sm:top-24 right-3 sm:right-6 z-50 max-w-sm w-[calc(100vw-24px)] sm:w-96 animate-toast-slide">
-      <div className="bg-[#1C2A39]/95 backdrop-blur-xl border border-white/20 text-white rounded-2xl p-3.5 shadow-2xl flex items-center gap-3">
+      <div className="bg-[#0B0F14]/95 backdrop-blur-xl border border-[#C8A96B]/30 text-white rounded-2xl p-3.5 shadow-2xl flex items-center gap-3">
         {/* Thumbnail */}
         <div className="w-12 h-12 rounded-xl bg-white/10 overflow-hidden shrink-0 border border-white/10 relative">
           {toastItem.image ? (
@@ -23,21 +23,21 @@ export function CartToast() {
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-slate-400">
-              <ShoppingBag className="w-5 h-5" />
+              <ShoppingBag className="w-5 h-5 text-[#C8A96B]" />
             </div>
           )}
         </div>
 
         {/* Info */}
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-black">
+          <div className="flex items-center gap-1.5 text-[#C8A96B] text-xs font-black">
             <CheckCircle2 className="w-3.5 h-3.5" />
             <span>Added to Cart!</span>
           </div>
           <p className="text-xs font-bold text-white truncate mt-0.5">
             {toastItem.title}
           </p>
-          <p className="text-xs font-extrabold text-[#FF5E00] mt-0.5">
+          <p className="text-xs font-extrabold text-[#C8A96B] mt-0.5">
             {formatPrice(toastItem.price)}
           </p>
         </div>
@@ -47,15 +47,15 @@ export function CartToast() {
           <Link
             href="/cart"
             onClick={dismissToast}
-            className="px-3 py-1.5 bg-[#FF5E00] hover:bg-[#FF8C00] active:scale-95 text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center gap-1 shrink-0"
+            className="px-3.5 py-1.5 bg-[#C8A96B] hover:bg-[#B89858] active:scale-95 text-[#0B0F14] text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1 shrink-0"
           >
             <span>Cart</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
           </Link>
           <button
             type="button"
             onClick={dismissToast}
-            className="p-1 text-slate-400 hover:text-white rounded-lg transition"
+            className="p-1 text-[#8A8F98] hover:text-white rounded-lg transition"
             aria-label="Close notification"
           >
             <X className="w-4 h-4" />

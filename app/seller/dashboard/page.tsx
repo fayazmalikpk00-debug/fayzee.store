@@ -628,10 +628,10 @@ ${paymentLine}${noteLine}
           You must be logged in with an authorized seller account to access this portal.
         </p>
         <div className="flex justify-center gap-3">
-          <Link href="/login?redirect=/seller/dashboard" className="px-4 py-2 bg-[#FF5E00] hover:bg-[#FF8C00] text-white rounded-xl text-xs font-bold transition">
+          <Link href="/login?redirect=/seller/dashboard" className="px-4 py-2 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] rounded-xl text-xs font-bold transition border border-[#C8A96B]/30 shadow-sm">
             Log In
           </Link>
-          <Link href="/seller/register" className="px-4 py-2 bg-[#1C2A39] hover:bg-[#2A3B4C] text-white rounded-xl text-xs font-bold transition">
+          <Link href="/seller/register" className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-[#0B0F14] rounded-xl text-xs font-bold transition">
             Become a Seller
           </Link>
         </div>
@@ -668,21 +668,21 @@ ${paymentLine}${noteLine}
       )}
 
       {/* Top Header & Store Status */}
-      <div className="bg-white rounded-3xl p-6 border border-[#DDE2E6] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white rounded-3xl p-6 border border-[#E8E5DC] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-[#1C2A39] text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-md border border-[#2A3B4C]">
+          <div className="w-14 h-14 bg-[#0B0F14] text-[#C8A96B] rounded-2xl flex items-center justify-center font-black text-xl shadow-md border border-[#C8A96B]/30">
             {user.sellerProfile?.storeName?.[0] || "S"}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-black text-[#1C2A39]">
+              <h1 className="text-xl sm:text-2xl font-black text-[#0B0F14]">
                 {user.sellerProfile?.storeName || "Seller Store"}
               </h1>
               <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold rounded-full">
                 {user.sellerProfile?.status || "APPROVED"}
               </span>
             </div>
-            <p className="text-xs text-[#777777] mt-0.5">
+            <p className="text-xs text-[#8A8F98] mt-0.5">
               Welcome back, {user.name} • Manage products, stock, and customer orders
             </p>
           </div>
@@ -692,22 +692,22 @@ ${paymentLine}${noteLine}
           <Link
             href={`/sellers/${user.sellerProfile.storeSlug}`}
             target="_blank"
-            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-white hover:bg-[#F7F9FA] border border-[#1C2A39] rounded-xl text-xs font-bold text-[#1C2A39] transition self-start md:self-auto"
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-white hover:bg-[#FAF9F6] border border-[#E8E5DC] hover:border-[#C8A96B] rounded-xl text-xs font-bold text-[#0B0F14] transition self-start md:self-auto shadow-2xs"
           >
             <span>View Public Store</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
+            <ArrowUpRight className="w-3.5 h-3.5 text-[#C8A96B]" />
           </Link>
         )}
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex border-b border-[#DDE2E6] gap-6 sm:gap-8 text-sm font-bold overflow-x-auto no-scrollbar">
+      <div className="flex border-b border-[#E8E5DC] gap-6 sm:gap-8 text-sm font-bold overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab("overview")}
           className={`pb-3 transition relative whitespace-nowrap ${
             activeTab === "overview"
-              ? "text-[#FF5E00] border-b-2 border-[#FF5E00]"
-              : "text-[#777777] hover:text-[#1C2A39]"
+              ? "text-[#0B0F14] border-b-2 border-[#C8A96B]"
+              : "text-[#8A8F98] hover:text-[#0B0F14]"
           }`}
         >
           Overview & Metrics
@@ -716,8 +716,8 @@ ${paymentLine}${noteLine}
           onClick={() => setActiveTab("products")}
           className={`pb-3 transition relative whitespace-nowrap ${
             activeTab === "products"
-              ? "text-[#FF5E00] border-b-2 border-[#FF5E00]"
-              : "text-[#777777] hover:text-[#1C2A39]"
+              ? "text-[#0B0F14] border-b-2 border-[#C8A96B]"
+              : "text-[#8A8F98] hover:text-[#0B0F14]"
           }`}
         >
           Product Catalog ({products.length})
@@ -726,8 +726,8 @@ ${paymentLine}${noteLine}
           onClick={() => setActiveTab("orders")}
           className={`pb-3 transition relative whitespace-nowrap ${
             activeTab === "orders"
-              ? "text-[#FF5E00] border-b-2 border-[#FF5E00]"
-              : "text-[#777777] hover:text-[#1C2A39]"
+              ? "text-[#0B0F14] border-b-2 border-[#C8A96B]"
+              : "text-[#8A8F98] hover:text-[#0B0F14]"
           }`}
         >
           Customer Orders ({orderItems.length})
@@ -736,13 +736,13 @@ ${paymentLine}${noteLine}
           onClick={() => setActiveTab("reviews")}
           className={`pb-3 transition relative whitespace-nowrap flex items-center gap-1.5 ${
             activeTab === "reviews"
-              ? "text-[#FF5E00] border-b-2 border-[#FF5E00]"
-              : "text-[#777777] hover:text-[#1C2A39]"
+              ? "text-[#0B0F14] border-b-2 border-[#C8A96B]"
+              : "text-[#8A8F98] hover:text-[#0B0F14]"
           }`}
         >
           <span>Customer Reviews</span>
-          <span className={`px-2 py-0.5 rounded-full text-xs ${
-            activeTab === "reviews" ? "bg-orange-100 text-[#FF5E00]" : "bg-slate-100 text-slate-600"
+          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+            activeTab === "reviews" ? "bg-[#C8A96B]/15 text-[#A07C38]" : "bg-stone-100 text-stone-600"
           }`}>
             {sellerReviews.length}
           </span>
@@ -751,8 +751,8 @@ ${paymentLine}${noteLine}
           onClick={() => setActiveTab("finance")}
           className={`pb-3 transition relative whitespace-nowrap flex items-center gap-1.5 ${
             activeTab === "finance"
-              ? "text-[#FF5E00] border-b-2 border-[#FF5E00]"
-              : "text-[#777777] hover:text-[#1C2A39]"
+              ? "text-[#0B0F14] border-b-2 border-[#C8A96B]"
+              : "text-[#8A8F98] hover:text-[#0B0F14]"
           }`}
         >
           <Wallet className="w-4 h-4" />
@@ -839,7 +839,7 @@ ${paymentLine}${noteLine}
                     </div>
                     <div className="text-right">
                       <span className="font-bold text-brand-700">{formatPrice(item.total)}</span>
-                      <p className="text-[10px] font-bold text-orange-600">
+                      <p className="text-[10px] font-bold text-amber-700">
                         {item.fulfillmentStatus}
                       </p>
                     </div>
@@ -855,25 +855,25 @@ ${paymentLine}${noteLine}
       {activeTab === "products" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-[#1C2A39]">Your Product Listings</h3>
+            <h3 className="text-base font-bold text-[#0B0F14]">Your Product Listings</h3>
             <button
               onClick={() => {
                 resetFormState();
                 setIsAddModalOpen(true);
               }}
-              className="px-4 py-2 bg-[#FF5E00] hover:bg-[#FF8C00] text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1.5 active:scale-98"
+              className="px-4 py-2 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] font-bold text-xs rounded-xl shadow-sm border border-[#C8A96B]/30 transition flex items-center gap-1.5 active:scale-98"
             >
               <Plus className="w-4 h-4" />
               <span>Add New Product</span>
             </button>
           </div>
 
-          <div className="bg-white rounded-3xl border border-[#DDE2E6] shadow-xs overflow-hidden">
+          <div className="bg-white rounded-3xl border border-[#E8E5DC] shadow-xs overflow-hidden">
             {products.length === 0 ? (
               <div className="py-12 px-4 text-center">
-                <Package className="w-12 h-12 text-[#777777] mx-auto mb-3" />
-                <p className="text-sm font-bold text-[#1C2A39]">No products listed yet</p>
-                <p className="text-xs text-[#777777] mt-1 mb-4">
+                <Package className="w-12 h-12 text-[#8A8F98] mx-auto mb-3" />
+                <p className="text-sm font-bold text-[#0B0F14]">No products listed yet</p>
+                <p className="text-xs text-[#8A8F98] mt-1 mb-4">
                   Start adding products to your store catalog to sell to customers nationwide.
                 </p>
                 <button
@@ -881,7 +881,7 @@ ${paymentLine}${noteLine}
                     resetFormState();
                     setIsAddModalOpen(true);
                   }}
-                  className="px-4 py-2 bg-[#FF5E00] hover:bg-[#FF8C00] text-white font-bold text-xs rounded-xl shadow-sm transition active:scale-98"
+                  className="px-4 py-2 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] font-bold text-xs rounded-xl shadow-sm border border-[#C8A96B]/30 transition active:scale-98"
                 >
                   List Your First Product
                 </button>
@@ -1002,7 +1002,7 @@ ${paymentLine}${noteLine}
                     onClick={() => setOrderStatusFilter(pill.key)}
                     className={`px-3 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
                       isActive
-                        ? "bg-[#1C2A39] text-white shadow-xs"
+                        ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/30 shadow-xs"
                         : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
                     }`}
                   >
@@ -1174,7 +1174,7 @@ ${paymentLine}${noteLine}
                               <button
                                 type="button"
                                 onClick={() => setAddressModalItem(item)}
-                                className="text-[10px] font-bold text-[#FF5E00] hover:text-[#e05200] flex items-center gap-1 transition pt-0.5"
+                                className="text-[10px] font-bold text-[#A07C38] hover:text-[#C8A96B] flex items-center gap-1 transition pt-0.5"
                               >
                                 <FileText className="w-3 h-3" />
                                 <span>View & Print Courier Slip</span>
@@ -1341,7 +1341,7 @@ ${paymentLine}${noteLine}
             <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
               <div className="flex items-center justify-between text-slate-500">
                 <span className="text-xs font-bold">5-Star Feedback</span>
-                <Star className="w-4 h-4 fill-[#FF5E00] text-[#FF5E00]" />
+                <Star className="w-4 h-4 fill-[#C8A96B] text-[#C8A96B]" />
               </div>
               <p className="text-2xl font-black text-slate-900 mt-2">
                 {sellerReviews.filter((r) => r.rating === 5).length}
@@ -1385,7 +1385,7 @@ ${paymentLine}${noteLine}
                     {/* Review Top: Customer info & Product link */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-[#1C2A39] text-white flex items-center justify-center text-xs font-bold uppercase shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/30 flex items-center justify-center text-xs font-bold uppercase shrink-0">
                           {r.user?.avatar ? (
                             <img src={r.user.avatar} alt={r.user.name} className="w-full h-full object-cover rounded-full" />
                           ) : (
@@ -1408,17 +1408,17 @@ ${paymentLine}${noteLine}
                       </div>
 
                       <div className="flex items-center gap-3 self-start sm:self-auto">
-                        <div className="flex text-[#FF8C00]">
+                        <div className="flex text-[#C8A96B]">
                           {[1, 2, 3, 4, 5].map((s) => (
                             <Star
                               key={s}
                               className={`w-3.5 h-3.5 ${
-                                s <= r.rating ? "fill-[#FF8C00]" : "text-slate-300 fill-slate-200"
+                                s <= r.rating ? "fill-[#C8A96B]" : "text-slate-300 fill-slate-200"
                               }`}
                             />
                           ))}
                         </div>
-                        <span className="text-xs font-black text-[#1C2A39]">{r.rating}.0 / 5.0</span>
+                        <span className="text-xs font-black text-[#0B0F14]">{r.rating}.0 / 5.0</span>
                       </div>
                     </div>
 
@@ -1436,7 +1436,7 @@ ${paymentLine}${noteLine}
                         <Link
                           href={`/products/${r.product.slug}`}
                           target="_blank"
-                          className="font-bold text-[#1C2A39] hover:text-[#FF5E00] underline truncate"
+                          className="font-bold text-[#0B0F14] hover:text-[#C8A96B] underline truncate"
                         >
                           {r.product.title}
                         </Link>
@@ -1451,10 +1451,10 @@ ${paymentLine}${noteLine}
 
                     {/* Seller Reply Box / Action */}
                     {r.sellerResponse && replyingReviewId !== r.id && (
-                      <div className="bg-orange-50/70 p-3 rounded-xl border border-orange-200/80 space-y-1">
+                      <div className="bg-[#C8A96B]/10 p-3 rounded-xl border border-[#C8A96B]/30 space-y-1">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="font-bold text-[#FF5E00] flex items-center gap-1">
-                            <Store className="w-3.5 h-3.5" /> Your Official Response:
+                          <span className="font-bold text-[#A07C38] flex items-center gap-1">
+                            <Store className="w-3.5 h-3.5 text-[#C8A96B]" /> Your Official Response:
                           </span>
                           <button
                             onClick={() => {
@@ -1481,7 +1481,7 @@ ${paymentLine}${noteLine}
                           value={replyText}
                           onChange={(e) => setReplyText(e.target.value)}
                           placeholder="Thank the customer for their feedback or address their concern professionally..."
-                          className="w-full px-3 py-2 text-xs bg-white rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#FF5E00]"
+                          className="w-full px-3 py-2 text-xs bg-white rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#C8A96B] focus:border-[#C8A96B]"
                         />
                         <div className="flex items-center justify-end gap-2 pt-1">
                           <button
@@ -1498,7 +1498,7 @@ ${paymentLine}${noteLine}
                             type="button"
                             onClick={() => handleReplySubmit(r.id)}
                             disabled={submittingReply || !replyText.trim()}
-                            className="px-4 py-1.5 bg-[#FF5E00] hover:bg-[#FF8C00] disabled:opacity-50 text-white text-xs font-bold rounded-lg transition shadow-xs flex items-center gap-1.5"
+                            className="px-4 py-1.5 bg-[#0B0F14] hover:bg-[#1A222C] disabled:opacity-50 text-[#C8A96B] text-xs font-bold rounded-lg transition shadow-xs flex items-center gap-1.5 border border-[#C8A96B]/30"
                           >
                             {submittingReply ? (
                               <>
@@ -1520,7 +1520,7 @@ ${paymentLine}${noteLine}
                           }}
                           className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition flex items-center gap-1.5"
                         >
-                          <MessageSquare className="w-3.5 h-3.5 text-[#FF5E00]" />
+                          <MessageSquare className="w-3.5 h-3.5 text-[#C8A96B]" />
                           <span>Reply to Customer</span>
                         </button>
                       </div>
@@ -1656,7 +1656,7 @@ ${paymentLine}${noteLine}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-2">
               <div>
                 <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <Landmark className="w-5 h-5 text-[#FF5E00]" />
+                  <Landmark className="w-5 h-5 text-[#C8A96B]" />
                   <span>Payout Receiving Account</span>
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -1684,12 +1684,12 @@ ${paymentLine}${noteLine}
                     onClick={() => setBankForm((prev) => ({ ...prev, payoutMethod: "BANK_TRANSFER" }))}
                     className={`p-3 rounded-2xl border text-left flex items-center gap-3 transition ${
                       bankForm.payoutMethod === "BANK_TRANSFER"
-                        ? "border-[#FF5E00] bg-orange-50/40 text-slate-900 ring-2 ring-[#FF5E00]/20"
+                        ? "border-[#C8A96B] bg-[#C8A96B]/10 text-slate-900 ring-2 ring-[#C8A96B]/30"
                         : "border-slate-200 hover:border-slate-300 text-slate-600"
                     }`}
                   >
                     <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
-                      <Landmark className="w-4 h-4 text-[#FF5E00]" />
+                      <Landmark className="w-4 h-4 text-[#C8A96B]" />
                     </div>
                     <div>
                       <span className="text-xs font-bold block">Bank Account (IBAN)</span>
@@ -1702,7 +1702,7 @@ ${paymentLine}${noteLine}
                     onClick={() => setBankForm((prev) => ({ ...prev, payoutMethod: "JAZZ_CASH" }))}
                     className={`p-3 rounded-2xl border text-left flex items-center gap-3 transition ${
                       bankForm.payoutMethod === "JAZZ_CASH"
-                        ? "border-[#FF5E00] bg-orange-50/40 text-slate-900 ring-2 ring-[#FF5E00]/20"
+                        ? "border-[#C8A96B] bg-[#C8A96B]/10 text-slate-900 ring-2 ring-[#C8A96B]/30"
                         : "border-slate-200 hover:border-slate-300 text-slate-600"
                     }`}
                   >
@@ -1720,7 +1720,7 @@ ${paymentLine}${noteLine}
                     onClick={() => setBankForm((prev) => ({ ...prev, payoutMethod: "EASYPAISA" }))}
                     className={`p-3 rounded-2xl border text-left flex items-center gap-3 transition ${
                       bankForm.payoutMethod === "EASYPAISA"
-                        ? "border-[#FF5E00] bg-orange-50/40 text-slate-900 ring-2 ring-[#FF5E00]/20"
+                        ? "border-[#C8A96B] bg-[#C8A96B]/10 text-slate-900 ring-2 ring-[#C8A96B]/30"
                         : "border-slate-200 hover:border-slate-300 text-slate-600"
                     }`}
                   >
@@ -1748,7 +1748,7 @@ ${paymentLine}${noteLine}
                       value={bankForm.bankName}
                       onChange={(e) => setBankForm({ ...bankForm, bankName: e.target.value })}
                       placeholder="e.g. Meezan Bank / HBL / Bank Alfalah"
-                      className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#FF5E00]/20"
+                      className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30 focus:border-[#C8A96B]"
                     />
                   </div>
 
@@ -1762,7 +1762,7 @@ ${paymentLine}${noteLine}
                       value={bankForm.accountTitle}
                       onChange={(e) => setBankForm({ ...bankForm, accountTitle: e.target.value })}
                       placeholder="e.g. Malak Fayaz (Must match bank records)"
-                      className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#FF5E00]/20"
+                      className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30 focus:border-[#C8A96B]"
                     />
                   </div>
 
@@ -1776,7 +1776,7 @@ ${paymentLine}${noteLine}
                       value={bankForm.iban}
                       onChange={(e) => setBankForm({ ...bankForm, iban: e.target.value.toUpperCase() })}
                       placeholder="PK36MEZN0001234567890123"
-                      className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF5E00]/20"
+                      className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30 focus:border-[#C8A96B]"
                     />
                   </div>
 
@@ -1789,7 +1789,7 @@ ${paymentLine}${noteLine}
                       value={bankForm.branchCode}
                       onChange={(e) => setBankForm({ ...bankForm, branchCode: e.target.value })}
                       placeholder="e.g. 0142"
-                      className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#FF5E00]/20"
+                      className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30 focus:border-[#C8A96B]"
                     />
                   </div>
                 </div>
@@ -1808,7 +1808,7 @@ ${paymentLine}${noteLine}
                       value={bankForm.accountTitle}
                       onChange={(e) => setBankForm({ ...bankForm, accountTitle: e.target.value })}
                       placeholder="e.g. Malak Fayaz"
-                      className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#FF5E00]/20"
+                      className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30 focus:border-[#C8A96B]"
                     />
                   </div>
 
@@ -1823,7 +1823,7 @@ ${paymentLine}${noteLine}
                       value={bankForm.payoutPhone}
                       onChange={(e) => setBankForm({ ...bankForm, payoutPhone: e.target.value.replace(/\D/g, "") })}
                       placeholder="03001234567"
-                      className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF5E00]/20"
+                      className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30 focus:border-[#C8A96B]"
                     />
                   </div>
                 </div>
@@ -1833,7 +1833,7 @@ ${paymentLine}${noteLine}
                 <button
                   type="submit"
                   disabled={savingBank}
-                  className="px-5 py-2.5 bg-[#FF5E00] hover:bg-[#FF8C00] disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-98"
+                  className="px-5 py-2.5 bg-[#0B0F14] hover:bg-[#1A222C] disabled:opacity-50 text-[#C8A96B] text-xs font-bold rounded-xl shadow-xs border border-[#C8A96B]/30 transition flex items-center gap-1.5 active:scale-98"
                 >
                   {savingBank ? (
                     <>
@@ -2029,7 +2029,7 @@ ${paymentLine}${noteLine}
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(e.target.value)}
                   placeholder="e.g. 5000"
-                  className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF5E00]/20"
+                  className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30 focus:border-[#C8A96B]"
                 />
 
                 {/* Quick Selection Pills */}
@@ -2071,7 +2071,7 @@ ${paymentLine}${noteLine}
                   value={withdrawNotes}
                   onChange={(e) => setWithdrawNotes(e.target.value)}
                   placeholder="e.g. Weekly settlement request"
-                  className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#FF5E00]/20"
+                  className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30 focus:border-[#C8A96B]"
                 />
               </div>
 
@@ -2472,7 +2472,7 @@ ${paymentLine}${noteLine}
                                       const next = current ? (current.includes(sz) ? current : `${current}, ${sz}`) : sz;
                                       handleUpdateVariant(v.id, "size", next);
                                     }}
-                                    className="px-1 py-0.5 bg-slate-100 hover:bg-orange-100 text-slate-700 hover:text-[#FF5E00] text-[9px] font-bold rounded border border-slate-200 transition"
+                                    className="px-1 py-0.5 bg-slate-100 hover:bg-[#C8A96B]/20 text-slate-700 hover:text-[#0B0F14] text-[9px] font-bold rounded border border-slate-200 transition"
                                   >
                                     +{sz}
                                   </button>
@@ -2480,7 +2480,7 @@ ${paymentLine}${noteLine}
                                 <button
                                   type="button"
                                   onClick={() => handleUpdateVariant(v.id, "size", "40, 41, 42, 43, 44")}
-                                  className="px-1.5 py-0.5 bg-orange-50 hover:bg-orange-100 text-[#FF5E00] text-[9px] font-black rounded border border-orange-200 transition"
+                                  className="px-1.5 py-0.5 bg-[#C8A96B]/15 hover:bg-[#C8A96B]/25 text-[#A07C38] text-[9px] font-black rounded border border-[#C8A96B]/30 transition"
                                 >
                                   40-44 Set
                                 </button>
@@ -2719,7 +2719,7 @@ ${paymentLine}${noteLine}
                 <button
                   type="submit"
                   disabled={addingProduct || isUploading}
-                  className="px-5 py-2.5 bg-[#FF5E00] hover:bg-[#FF8C00] text-white font-bold rounded-xl disabled:opacity-50 transition text-xs shadow-sm flex items-center gap-1.5 active:scale-98"
+                  className="px-5 py-2.5 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] font-bold rounded-xl disabled:opacity-50 transition text-xs shadow-sm border border-[#C8A96B]/30 flex items-center gap-1.5 active:scale-98"
                 >
                   {addingProduct ? (
                     <>
@@ -2806,7 +2806,7 @@ ${paymentLine}${noteLine}
                   <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1.5 mt-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5 text-[#FF5E00]" />
+                        <MapPin className="w-3.5 h-3.5 text-[#C8A96B]" />
                         <span>Courier Delivery Address</span>
                       </span>
                       <button
@@ -2855,7 +2855,7 @@ ${paymentLine}${noteLine}
                 <select
                   value={courierName}
                   onChange={(e) => setCourierName(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#FF5E00]/20"
+                  className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30 focus:border-[#C8A96B]"
                 >
                   <option value="TCS Express">TCS Express</option>
                   <option value="Leopards Courier">Leopards Courier</option>
@@ -2875,7 +2875,7 @@ ${paymentLine}${noteLine}
                   value={trackingCode}
                   onChange={(e) => setTrackingCode(e.target.value)}
                   placeholder="e.g. 774892019"
-                  className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#FF5E00]/20"
+                  className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30 focus:border-[#C8A96B]"
                 />
                 <span className="text-[10px] text-slate-400 mt-1 block">
                   This code will be visible to the customer on their order tracking page.
@@ -2923,7 +2923,7 @@ ${paymentLine}${noteLine}
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 border border-slate-200 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-orange-100 text-[#FF5E00] flex items-center justify-center font-black">
+                <div className="w-9 h-9 rounded-xl bg-[#C8A96B]/15 text-[#A07C38] flex items-center justify-center font-black">
                   <FileText className="w-5 h-5" />
                 </div>
                 <div>
@@ -3071,7 +3071,7 @@ ${paymentLine}${noteLine}
                       <button
                         type="button"
                         onClick={() => handleCopyFullAddress(addressModalItem)}
-                        className="px-4 py-2 bg-[#FF5E00] hover:bg-[#e05200] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+                        className="px-4 py-2 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs border border-[#C8A96B]/30"
                       >
                         <Copy className="w-3.5 h-3.5" />
                         <span>Copy Complete Slip</span>

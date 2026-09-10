@@ -133,15 +133,15 @@ export default async function OrderDetailPage({
       )}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#DDE2E6] gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#E8E5DC] gap-3">
         <div>
-          <span className="text-xs font-bold text-[#FF5E00] uppercase tracking-wider">
+          <span className="text-xs font-bold text-[#C8A96B] uppercase tracking-wider">
             Order Lifecycle
           </span>
-          <h1 className="text-2xl font-black text-[#1C2A39]">
+          <h1 className="text-2xl font-black text-[#0B0F14]">
             Order #{order.orderNumber}
           </h1>
-          <p className="text-xs text-[#777777] mt-0.5">
+          <p className="text-xs text-[#8A8F98] mt-0.5">
             Placed on {formatDateTime(order.createdAt)}
           </p>
         </div>
@@ -166,8 +166,8 @@ export default async function OrderDetailPage({
             </span>
           )}
           {order.status === "SHIPPED" && (
-            <span className="px-3 py-1.5 bg-indigo-50 text-indigo-800 text-xs font-bold rounded-full border border-indigo-200 flex items-center gap-1.5 shadow-xs">
-              <Truck className="w-3.5 h-3.5 text-indigo-600" />
+            <span className="px-3 py-1.5 bg-[#0B0F14] text-[#C8A96B] text-xs font-bold rounded-full border border-[#C8A96B]/30 flex items-center gap-1.5 shadow-xs">
+              <Truck className="w-3.5 h-3.5 text-[#C8A96B]" />
               <span>Shipped / On Route</span>
             </span>
           )}
@@ -207,10 +207,10 @@ export default async function OrderDetailPage({
         </div>
       ) : (
         /* Delivery Tracking Timeline */
-        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#DDE2E6] shadow-sm space-y-6">
+        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#E8E5DC] shadow-card space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-[#1C2A39] flex items-center gap-2">
-              <Truck className="w-4 h-4 text-[#FF5E00]" />
+            <h3 className="text-sm font-bold text-[#0B0F14] flex items-center gap-2">
+              <Truck className="w-4 h-4 text-[#C8A96B]" />
               <span>Fulfillment & Delivery Progress</span>
             </h3>
 
@@ -225,7 +225,7 @@ export default async function OrderDetailPage({
               </span>
             )}
             {order.status === "SHIPPED" && (
-              <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-200">
+              <span className="text-[11px] font-bold text-[#C8A96B] bg-[#0B0F14] px-2.5 py-1 rounded-full border border-[#C8A96B]/30">
                 Dispatched with courier
               </span>
             )}
@@ -243,14 +243,14 @@ export default async function OrderDetailPage({
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs transition relative ${
                       step.isCompleted
-                        ? "bg-[#FF5E00] text-white shadow-sm"
+                        ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
                         : step.isCurrent
-                        ? "bg-amber-100 text-amber-800 border-2 border-amber-500 shadow-sm"
-                        : "bg-[#F7F9FA] text-[#777777] border border-[#DDE2E6]"
+                        ? "bg-amber-100 text-amber-800 border-2 border-amber-500 shadow-xs"
+                        : "bg-[#F5F3EE] text-[#8A8F98] border border-[#E8E5DC]"
                     }`}
                   >
                     {step.isCompleted ? (
-                      <Check className="w-4 h-4 text-white" />
+                      <Check className="w-4 h-4 text-[#C8A96B]" />
                     ) : step.isCurrent ? (
                       <Clock className="w-4 h-4 text-amber-700 animate-spin" />
                     ) : (
@@ -261,21 +261,21 @@ export default async function OrderDetailPage({
                     <h4
                       className={`text-xs font-bold leading-tight ${
                         step.isCompleted
-                          ? "text-[#1C2A39]"
+                          ? "text-[#0B0F14]"
                           : step.isCurrent
-                          ? "text-[#FF5E00]"
-                          : "text-slate-400"
+                          ? "text-[#C8A96B]"
+                          : "text-[#8A8F98]"
                       }`}
                     >
                       {step.title}
                     </h4>
 
                     {step.isCompleted && step.date ? (
-                      <span className="text-[10px] text-[#777777] block mt-0.5">
+                      <span className="text-[10px] text-[#8A8F98] block mt-0.5">
                         {formatDate(step.date)}
                       </span>
                     ) : (
-                      <span className="text-[10px] text-slate-400 block mt-0.5 leading-tight">
+                      <span className="text-[10px] text-[#8A8F98] block mt-0.5 leading-tight">
                         {step.subtitle}
                       </span>
                     )}
@@ -311,23 +311,23 @@ export default async function OrderDetailPage({
 
       {/* Grid: Delivery Info + Payment Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-3xl border border-[#DDE2E6] text-xs space-y-2">
-          <h3 className="text-sm font-bold text-[#1C2A39] flex items-center gap-1.5 pb-2 border-b border-[#DDE2E6]">
-            <MapPin className="w-4 h-4 text-[#FF5E00]" /> Delivery Address
+        <div className="bg-white p-6 rounded-3xl border border-[#E8E5DC] text-xs space-y-2 shadow-card">
+          <h3 className="text-sm font-bold text-[#0B0F14] flex items-center gap-1.5 pb-2 border-b border-[#E8E5DC]">
+            <MapPin className="w-4 h-4 text-[#C8A96B]" /> Delivery Address
           </h3>
-          <p className="font-bold text-[#1C2A39]">{shippingAddress.fullName || order.user?.name}</p>
-          <p className="text-[#333333]">{shippingAddress.street}</p>
-          <p className="text-[#333333]">
+          <p className="font-bold text-[#0B0F14]">{shippingAddress.fullName || order.user?.name}</p>
+          <p className="text-[#0B0F14]">{shippingAddress.street}</p>
+          <p className="text-[#0B0F14]">
             {shippingAddress.city}
             {shippingAddress.state ? `, ${shippingAddress.state}` : ""}
             {shippingAddress.postalCode ? ` ${shippingAddress.postalCode}` : ""}
           </p>
-          <p className="text-[#333333] font-medium">Phone: {shippingAddress.phone || order.user?.phone || "N/A"}</p>
+          <p className="text-[#0B0F14] font-medium">Phone: {shippingAddress.phone || order.user?.phone || "N/A"}</p>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl border border-[#DDE2E6] text-xs space-y-3 shadow-xs">
-          <div className="flex items-center justify-between pb-2 border-b border-[#DDE2E6]">
-            <h3 className="text-sm font-bold text-[#1C2A39] flex items-center gap-1.5">
+        <div className="bg-white p-6 rounded-3xl border border-[#E8E5DC] text-xs space-y-3 shadow-card">
+          <div className="flex items-center justify-between pb-2 border-b border-[#E8E5DC]">
+            <h3 className="text-sm font-bold text-[#0B0F14] flex items-center gap-1.5">
               <ShieldCheck className="w-4 h-4 text-emerald-600" /> Payment Information
             </h3>
             <span
@@ -350,8 +350,8 @@ export default async function OrderDetailPage({
           {/* Payment Method Details */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-[#777777]">Payment Channel:</span>
-              <span className="font-bold text-[#1C2A39] flex items-center gap-1.5">
+              <span className="text-[#8A8F98]">Payment Channel:</span>
+              <span className="font-bold text-[#0B0F14] flex items-center gap-1.5">
                 {order.paymentMethod === "ONLINE_CARD" && (
                   <>
                     <CreditCard className="w-3.5 h-3.5 text-sky-600" />
@@ -372,7 +372,7 @@ export default async function OrderDetailPage({
                 )}
                 {order.paymentMethod === "COD" && (
                   <>
-                    <Package className="w-3.5 h-3.5 text-[#FF5E00]" />
+                    <Package className="w-3.5 h-3.5 text-[#C8A96B]" />
                     <span>Cash on Delivery (COD)</span>
                   </>
                 )}
@@ -469,20 +469,20 @@ export default async function OrderDetailPage({
             )}
 
             {order.paymentMethod === "COD" && (
-              <div className="bg-orange-50/50 p-3 rounded-2xl border border-orange-200 space-y-1 text-[11px] text-orange-950">
+              <div className="bg-[#F5F3EE] p-3 rounded-2xl border border-[#E8E5DC] space-y-1 text-[11px] text-[#0B0F14]">
                 <p className="font-bold flex items-center gap-1">
                   <span>Payable at Doorstep:</span>
-                  <span className="text-[#FF5E00] font-black">{formatPrice(order.grandTotal)}</span>
+                  <span className="text-[#0B0F14] font-black">{formatPrice(order.grandTotal)}</span>
                 </p>
-                <p className="text-[10px] text-orange-800">
+                <p className="text-[10px] text-[#8A8F98]">
                   Please keep exact cash ready upon delivery handover. The rider will provide a physical receipt.
                 </p>
               </div>
             )}
 
-            <div className="flex justify-between pt-1 border-t border-slate-100">
-              <span className="text-[#777777]">Grand Total:</span>
-              <span className="font-black text-[#FF5E00] text-sm">
+            <div className="flex justify-between pt-1 border-t border-[#E8E5DC]">
+              <span className="text-[#8A8F98]">Grand Total:</span>
+              <span className="font-black text-[#0B0F14] text-sm">
                 {formatPrice(order.grandTotal)}
               </span>
             </div>
@@ -491,8 +491,8 @@ export default async function OrderDetailPage({
       </div>
 
       {/* Itemized Receipt Table with Item-level fulfillment badges */}
-      <div className="bg-white rounded-3xl border border-[#DDE2E6] p-6 space-y-4">
-        <h3 className="text-sm font-bold text-[#1C2A39] pb-2 border-b border-[#DDE2E6]">
+      <div className="bg-white rounded-3xl border border-[#E8E5DC] p-6 space-y-4 shadow-card">
+        <h3 className="text-sm font-bold text-[#0B0F14] pb-2 border-b border-[#E8E5DC]">
           Order Items ({order.items.length})
         </h3>
 
@@ -500,7 +500,7 @@ export default async function OrderDetailPage({
           {order.items.map((item: any) => (
             <div
               key={item.id}
-              className="flex flex-col sm:flex-row sm:items-center gap-4 text-xs py-3 border-b border-[#DDE2E6] last:border-0"
+              className="flex flex-col sm:flex-row sm:items-center gap-4 text-xs py-3 border-b border-[#E8E5DC] last:border-0"
             >
               <img
                 src={
@@ -508,33 +508,33 @@ export default async function OrderDetailPage({
                   "/images/product-placeholder.svg"
                 }
                 alt=""
-                className="w-14 h-14 object-cover rounded-xl bg-[#F7F9FA] border border-slate-200 shrink-0"
+                className="w-14 h-14 object-cover rounded-xl bg-[#F5F3EE] border border-[#E8E5DC] shrink-0"
               />
               <div className="flex-1 min-w-0">
                 <Link
                   href={`/products/${item.product.slug}`}
-                  className="font-bold text-[#1C2A39] hover:text-[#FF5E00] truncate block"
+                  className="font-bold text-[#0B0F14] hover:text-[#C8A96B] truncate block"
                 >
                   {item.title}
                 </Link>
 
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[11px] text-[#777777] flex items-center gap-1">
-                    <Store className="w-3 h-3 text-slate-400" />
+                  <span className="text-[11px] text-[#8A8F98] flex items-center gap-1">
+                    <Store className="w-3 h-3 text-[#8A8F98]" />
                     <span>Store:</span>
                     <Link
                       href={`/sellers/${item.seller.storeSlug}`}
-                      className="font-medium text-[#1C2A39] hover:underline"
+                      className="font-medium text-[#0B0F14] hover:underline"
                     >
                       {item.seller.storeName}
                     </Link>
                   </span>
-                  <span className="text-slate-300">•</span>
-                  <span className="text-[11px] text-[#777777]">
-                    Qty: <strong className="text-slate-900">{item.quantity}</strong>
+                  <span className="text-[#8A8F98]/40">•</span>
+                  <span className="text-[11px] text-[#8A8F98]">
+                    Qty: <strong className="text-[#0B0F14]">{item.quantity}</strong>
                   </span>
-                  <span className="text-slate-300">•</span>
-                  <span className="text-[11px] text-[#777777] font-mono">
+                  <span className="text-[#8A8F98]/40">•</span>
+                  <span className="text-[11px] text-[#8A8F98] font-mono">
                     SKU: {item.sku}
                   </span>
                 </div>
@@ -552,7 +552,7 @@ export default async function OrderDetailPage({
                     </span>
                   )}
                   {item.fulfillmentStatus === "SHIPPED" && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/30">
                       🚚 Shipped & In Transit
                     </span>
                   )}
@@ -570,18 +570,18 @@ export default async function OrderDetailPage({
               </div>
 
               <div className="sm:text-right">
-                <p className="font-bold text-[#1C2A39] text-sm">{formatPrice(item.total)}</p>
-                <p className="text-[10px] text-[#777777]">{formatPrice(item.price)} each</p>
+                <p className="font-bold text-[#0B0F14] text-sm">{formatPrice(item.total)}</p>
+                <p className="text-[10px] text-[#8A8F98]">{formatPrice(item.price)} each</p>
               </div>
             </div>
           ))}
         </div>
 
         {/* Totals */}
-        <div className="space-y-1.5 text-xs pt-4 border-t border-[#DDE2E6] max-w-xs ml-auto">
-          <div className="flex justify-between text-[#777777]">
+        <div className="space-y-1.5 text-xs pt-4 border-t border-[#E8E5DC] max-w-xs ml-auto">
+          <div className="flex justify-between text-[#8A8F98]">
             <span>Subtotal:</span>
-            <span className="font-bold text-[#1C2A39]">{formatPrice(order.subtotal)}</span>
+            <span className="font-bold text-[#0B0F14]">{formatPrice(order.subtotal)}</span>
           </div>
           {order.discountTotal > 0 && (
             <div className="flex justify-between text-emerald-600">
@@ -589,15 +589,15 @@ export default async function OrderDetailPage({
               <span className="font-bold">-{formatPrice(order.discountTotal)}</span>
             </div>
           )}
-          <div className="flex justify-between text-[#777777]">
+          <div className="flex justify-between text-[#8A8F98]">
             <span>Shipping:</span>
-            <span className="font-bold text-[#1C2A39]">
+            <span className="font-bold text-[#0B0F14]">
               {order.shippingTotal === 0 ? "FREE" : formatPrice(order.shippingTotal)}
             </span>
           </div>
-          <div className="flex justify-between text-sm font-black text-[#1C2A39] pt-2 border-t border-[#DDE2E6]">
+          <div className="flex justify-between text-sm font-black text-[#0B0F14] pt-2 border-t border-[#E8E5DC]">
             <span>Grand Total:</span>
-            <span className="text-[#FF5E00]">{formatPrice(order.grandTotal)}</span>
+            <span className="text-[#0B0F14] font-black">{formatPrice(order.grandTotal)}</span>
           </div>
         </div>
       </div>

@@ -66,13 +66,13 @@ export default function SellerRegisterPage() {
         <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
           <CheckCircle2 className="w-10 h-10" />
         </div>
-        <h1 className="text-2xl font-black text-[#1C2A39]">Application Submitted!</h1>
-        <p className="text-xs text-[#777777] max-w-md mx-auto">
+        <h1 className="text-2xl font-black text-[#0B0F14]">Application Submitted!</h1>
+        <p className="text-xs text-[#8A8F98] max-w-md mx-auto">
           Thank you for applying to sell on Fayzee. Your business credentials and store profile are currently under review by our admin team.
         </p>
         <Link
           href="/seller/dashboard"
-          className="inline-block px-5 py-2.5 bg-[#FF5E00] hover:bg-[#FF8C00] text-white text-xs font-bold rounded-xl shadow-md transition"
+          className="inline-block px-5 py-2.5 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] text-xs font-bold rounded-xl shadow-sm border border-[#C8A96B]/30 transition"
         >
           Go to Seller Dashboard
         </Link>
@@ -83,13 +83,13 @@ export default function SellerRegisterPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-12 space-y-8">
       <div className="text-center space-y-2">
-        <div className="w-12 h-12 rounded-2xl bg-[#FF5E00] flex items-center justify-center text-white mx-auto shadow-md">
+        <div className="w-12 h-12 rounded-2xl bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/30 flex items-center justify-center mx-auto shadow-card">
           <Store className="w-6 h-6" />
         </div>
-        <h1 className="text-2xl sm:text-3xl font-black text-[#1C2A39]">
+        <h1 className="text-2xl sm:text-3xl font-black text-[#0B0F14]">
           Sell on Fayzee Marketplace
         </h1>
-        <p className="text-xs text-[#777777]">
+        <p className="text-xs text-[#8A8F98]">
           Reach millions of high-intent buyers across Pakistan with low commission rates
         </p>
       </div>
@@ -110,92 +110,92 @@ export default function SellerRegisterPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white p-6 sm:p-8 rounded-3xl border border-[#DDE2E6] shadow-sm space-y-4 text-xs">
-        <h3 className="text-sm font-bold text-[#1C2A39] pb-2 border-b border-[#DDE2E6]">
+      <form onSubmit={handleSubmit} className="bg-white p-6 sm:p-8 rounded-3xl border border-[#E8E5DC] shadow-card space-y-4 text-xs">
+        <h3 className="text-sm font-bold text-[#0B0F14] pb-2 border-b border-[#E8E5DC]">
           Store & Business Information
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block font-bold text-[#1C2A39] mb-1">Public Store Name</label>
+            <label className="block font-bold text-[#0B0F14] mb-1">Public Store Name</label>
             <input
               type="text"
               required
               value={storeName}
               onChange={(e) => setStoreName(e.target.value)}
               placeholder="e.g. Apex Electronics"
-              className="w-full px-3.5 py-2.5 bg-[#F7F9FA] rounded-xl border border-[#DDE2E6] text-[#333333] focus:outline-none focus:border-[#FF5E00] focus:ring-1 focus:ring-[#FF5E00]"
+              className="w-full px-3.5 py-2.5 bg-[#F5F3EE] rounded-xl border border-[#E8E5DC] text-[#0B0F14] placeholder:text-[#8A8F98] focus:outline-none focus:border-[#C8A96B] focus:bg-white transition"
             />
           </div>
 
           <div>
-            <label className="block font-bold text-[#1C2A39] mb-1">Registered Business Entity</label>
+            <label className="block font-bold text-[#0B0F14] mb-1">Registered Business Entity</label>
             <input
               type="text"
               required
               value={businessName}
               onChange={(e) => setBusinessName(e.target.value)}
               placeholder="e.g. Apex Tech Solutions Pvt Ltd"
-              className="w-full px-3.5 py-2.5 bg-[#F7F9FA] rounded-xl border border-[#DDE2E6] text-[#333333] focus:outline-none focus:border-[#FF5E00] focus:ring-1 focus:ring-[#FF5E00]"
+              className="w-full px-3.5 py-2.5 bg-[#F5F3EE] rounded-xl border border-[#E8E5DC] text-[#0B0F14] placeholder:text-[#8A8F98] focus:outline-none focus:border-[#C8A96B] focus:bg-white transition"
             />
           </div>
 
           <div>
-            <label className="block font-bold text-[#1C2A39] mb-1">Owner CNIC (Government ID)</label>
+            <label className="block font-bold text-[#0B0F14] mb-1">Owner CNIC (Government ID)</label>
             <input
               type="text"
               required
               value={cnic}
               onChange={(e) => setCnic(e.target.value)}
               placeholder="35201-XXXXXXX-X"
-              className="w-full px-3.5 py-2.5 bg-[#F7F9FA] rounded-xl border border-[#DDE2E6] text-[#333333] focus:outline-none focus:border-[#FF5E00] focus:ring-1 focus:ring-[#FF5E00]"
+              className="w-full px-3.5 py-2.5 bg-[#F5F3EE] rounded-xl border border-[#E8E5DC] text-[#0B0F14] placeholder:text-[#8A8F98] focus:outline-none focus:border-[#C8A96B] focus:bg-white transition"
             />
           </div>
 
           <div>
-            <label className="block font-bold text-[#1C2A39] mb-1">NTN / Tax Registration Number</label>
+            <label className="block font-bold text-[#0B0F14] mb-1">NTN / Tax Registration Number</label>
             <input
               type="text"
               value={taxNumber}
               onChange={(e) => setTaxNumber(e.target.value)}
               placeholder="NTN-XXXXXXX (Optional)"
-              className="w-full px-3.5 py-2.5 bg-[#F7F9FA] rounded-xl border border-[#DDE2E6] text-[#333333] focus:outline-none focus:border-[#FF5E00] focus:ring-1 focus:ring-[#FF5E00]"
+              className="w-full px-3.5 py-2.5 bg-[#F5F3EE] rounded-xl border border-[#E8E5DC] text-[#0B0F14] placeholder:text-[#8A8F98] focus:outline-none focus:border-[#C8A96B] focus:bg-white transition"
             />
           </div>
 
           <div>
-            <label className="block font-bold text-[#1C2A39] mb-1">Business Contact Phone</label>
+            <label className="block font-bold text-[#0B0F14] mb-1">Business Contact Phone</label>
             <input
               type="text"
               required
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+92 300 XXXXXXX"
-              className="w-full px-3.5 py-2.5 bg-[#F7F9FA] rounded-xl border border-[#DDE2E6] text-[#333333] focus:outline-none focus:border-[#FF5E00] focus:ring-1 focus:ring-[#FF5E00]"
+              className="w-full px-3.5 py-2.5 bg-[#F5F3EE] rounded-xl border border-[#E8E5DC] text-[#0B0F14] placeholder:text-[#8A8F98] focus:outline-none focus:border-[#C8A96B] focus:bg-white transition"
             />
           </div>
 
           <div>
-            <label className="block font-bold text-[#1C2A39] mb-1">Store Dispatch Address</label>
+            <label className="block font-bold text-[#0B0F14] mb-1">Store Dispatch Address</label>
             <input
               type="text"
               required
               value={businessAddress}
               onChange={(e) => setBusinessAddress(e.target.value)}
               placeholder="Shop # / Plaza / City"
-              className="w-full px-3.5 py-2.5 bg-[#F7F9FA] rounded-xl border border-[#DDE2E6] text-[#333333] focus:outline-none focus:border-[#FF5E00] focus:ring-1 focus:ring-[#FF5E00]"
+              className="w-full px-3.5 py-2.5 bg-[#F5F3EE] rounded-xl border border-[#E8E5DC] text-[#0B0F14] placeholder:text-[#8A8F98] focus:outline-none focus:border-[#C8A96B] focus:bg-white transition"
             />
           </div>
 
           <div className="sm:col-span-2">
-            <label className="block font-bold text-[#1C2A39] mb-1">Store Description & Products</label>
+            <label className="block font-bold text-[#0B0F14] mb-1">Store Description & Products</label>
             <textarea
               rows={3}
               required
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Tell us what types of products you sell, your experience, and distribution rights..."
-              className="w-full px-3.5 py-2.5 bg-[#F7F9FA] rounded-xl border border-[#DDE2E6] text-[#333333] focus:outline-none focus:border-[#FF5E00] focus:ring-1 focus:ring-[#FF5E00]"
+              className="w-full px-3.5 py-2.5 bg-[#F5F3EE] rounded-xl border border-[#E8E5DC] text-[#0B0F14] placeholder:text-[#8A8F98] focus:outline-none focus:border-[#C8A96B] focus:bg-white transition"
             />
           </div>
         </div>
@@ -203,13 +203,13 @@ export default function SellerRegisterPage() {
         <button
           type="submit"
           disabled={loading || !user}
-          className="w-full py-3.5 bg-[#FF5E00] hover:bg-[#FF8C00] disabled:opacity-50 text-white font-bold rounded-2xl shadow-md transition flex items-center justify-center gap-2"
+          className="w-full py-3.5 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] border border-[#C8A96B]/40 disabled:opacity-50 font-bold rounded-2xl shadow-card transition flex items-center justify-center gap-2"
         >
           {loading ? <span>Submitting Application...</span> : <span>Submit Seller Application</span>}
           <ArrowRight className="w-4 h-4" />
         </button>
 
-        <div className="flex items-center gap-2 text-[11px] text-[#777777] pt-2 border-t border-[#DDE2E6]">
+        <div className="flex items-center gap-2 text-[11px] text-[#8A8F98] pt-2 border-t border-[#E8E5DC]">
           <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
           <span>Fayzee protects seller confidentiality under our Merchant Agreement.</span>
         </div>

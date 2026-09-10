@@ -38,13 +38,13 @@ export function BackToTop() {
       onClick={scrollToTop}
       aria-label="Scroll back to top"
       title="Back to top"
-      className={`fixed bottom-20 md:bottom-22 right-3.5 sm:right-6 z-40 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#1C2A39]/90 hover:bg-[#FF5E00] text-white backdrop-blur-md shadow-lg border border-white/20 flex items-center justify-center transition-all duration-300 group hover:scale-110 active:scale-90 ${
+      className={`fixed bottom-20 md:bottom-22 right-3.5 sm:right-6 z-40 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#0B0F14]/90 hover:bg-[#C8A96B] text-[#C8A96B] hover:text-[#0B0F14] backdrop-blur-md shadow-floating border border-[#C8A96B]/30 flex items-center justify-center transition-all duration-300 group hover:scale-110 active:scale-90 ${
         isVisible
           ? "opacity-100 translate-y-0 pointer-events-auto"
           : "opacity-0 translate-y-4 pointer-events-none"
       }`}
     >
-      <ArrowUp className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform duration-200" />
+      <ArrowUp className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform duration-200 stroke-[2.5]" />
       <span className="sr-only">Back to top</span>
     </button>
   );
