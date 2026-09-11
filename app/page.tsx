@@ -25,24 +25,34 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function HomePage() {
-  const [allProductsData, categories, flashSale, trendingProducts, topSellers] =
+  const [allProductsData, categories, flashSale, trendingProducts, topSellers, explicitFeaturedProduct] =
     await Promise.all([
       getProducts({ limit: 16, sortBy: "newest" }),
       getCategories(),
       getFlashSaleProducts(),
-      getTrendingProducts(8),
+      getTrendingProducts(12),
       prisma.sellerProfile.findMany({
         where: { status: "APPROVED" },
         take: 4,
         orderBy: { rating: "desc" },
         include: { _count: { select: { products: true } } },
       }),
+      prisma.product.findFirst({
+        where: { status: "ACTIVE", isFeatured: true },
+        include: {
+          images: { orderBy: { sortOrder: "asc" } },
+          category: true,
+          seller: { select: { storeName: true, storeSlug: true } },
+        },
+        orderBy: [{ updatedAt: "desc" }],
+      }),
     ]);
 
-  // AI Top Pick: 1st priority trending, 2nd priority featured, 3rd priority top active product
+  // Hero Fayzee AI Top Pick:
+  // #1 TOP PRIORITY: Product explicitly designated by Admin as Fayzee AI Top Pick (isFeatured = true)
   const aiTopPick =
+    explicitFeaturedProduct ||
     trendingProducts[0] ||
-    allProductsData.products.find((p: any) => p.isFeatured) ||
     allProductsData.products[0] ||
     null;
 

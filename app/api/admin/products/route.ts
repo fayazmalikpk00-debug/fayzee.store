@@ -82,6 +82,13 @@ export async function PATCH(req: Request) {
 
     if (typeof isFeatured === "boolean") {
       dataToUpdate.isFeatured = isFeatured;
+      // When promoting this product as the official Hero "Fayzee AI Top Pick", unset previous featured items
+      if (isFeatured) {
+        await prisma.product.updateMany({
+          where: { isFeatured: true, id: { not: productId } },
+          data: { isFeatured: false },
+        });
+      }
     }
 
     if (status) {

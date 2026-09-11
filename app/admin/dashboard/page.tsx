@@ -429,9 +429,13 @@ export default function AdminDashboardPage() {
   const handleToggleAd = async (productId: string, currentVal: boolean) => {
     setUpdatingProdId(productId);
     const newVal = !currentVal;
-    // 1. Instant optimistic state update
+    // 1. Instant optimistic state update: if setting as true, unset previous featured
     setProductsList((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, isFeatured: newVal } : p))
+      prev.map((p) => {
+        if (p.id === productId) return { ...p, isFeatured: newVal };
+        if (newVal) return { ...p, isFeatured: false };
+        return p;
+      })
     );
     try {
       const res = await fetch("/api/admin/products", {
@@ -445,14 +449,14 @@ export default function AdminDashboardPage() {
         setProductsList((prev) =>
           prev.map((p) => (p.id === productId ? { ...p, isFeatured: currentVal } : p))
         );
-        alert(d.error || "Failed to update Ad status");
+        alert(d.error || "Failed to update Fayzee AI Top Pick status");
       }
     } catch (e) {
       console.error(e);
       setProductsList((prev) =>
         prev.map((p) => (p.id === productId ? { ...p, isFeatured: currentVal } : p))
       );
-      alert("Network error updating product");
+      alert("Network error updating Fayzee AI Top Pick");
     } finally {
       setUpdatingProdId(null);
     }
@@ -1352,16 +1356,20 @@ export default function AdminDashboardPage() {
             <div className="p-5 bg-white rounded-2xl border border-[#E8E5DC] shadow-card space-y-1">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-[#C8A96B] uppercase flex items-center gap-1">
-                  <Megaphone className="w-3.5 h-3.5" /> Sponsored Website Ads
+                  <Sparkles className="w-3.5 h-3.5" /> Fayzee AI Top Pick
                 </span>
                 <span className="px-2 py-0.5 bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/30 rounded-full font-black text-xs">
-                  {productsList.filter((p) => p.isFeatured).length} Active
+                  {productsList.filter((p) => p.isFeatured).length > 0 ? "1 Active" : "Auto"}
                 </span>
               </div>
-              <p className="text-2xl font-black text-slate-900">
-                {productsList.filter((p) => p.isFeatured).length} Products
+              <p className="text-base font-black text-slate-900 truncate">
+                {productsList.find((p) => p.isFeatured)?.title || "Auto-Selected"}
               </p>
-              <span className="text-xs text-[#8A8F98] font-medium">Promoted on homepage & catalog</span>
+              <span className="text-xs text-[#8A8F98] font-medium">
+                {productsList.find((p) => p.isFeatured)
+                  ? "✓ Active in Homepage Hero Right Card"
+                  : "Click 'Set as AI Top Pick' below to spotlight"}
+              </span>
             </div>
           </div>
 
@@ -1410,7 +1418,7 @@ export default function AdminDashboardPage() {
                     : "bg-[#F5F3EE] text-[#0B0F14] hover:bg-slate-200"
                 }`}
               >
-                <Megaphone className="w-3.5 h-3.5" /> Sponsored Ads ({productsList.filter((p) => p.isFeatured).length})
+                <Sparkles className="w-3.5 h-3.5 text-[#C8A96B]" /> AI Top Pick ({productsList.filter((p) => p.isFeatured).length})
               </button>
             </div>
           </div>
@@ -1478,7 +1486,7 @@ export default function AdminDashboardPage() {
                             )}
                             {product.isFeatured && (
                               <span className="px-2 py-0.5 bg-[#0B0F14] text-[#C8A96B] text-[10px] font-black rounded-md border border-[#C8A96B]/30 flex items-center gap-1 shrink-0">
-                                <Megaphone className="w-3 h-3" /> Sponsored Ad
+                                <Sparkles className="w-3 h-3 text-[#C8A96B]" /> Hero AI Top Pick
                               </span>
                             )}
                           </div>
@@ -1504,7 +1512,7 @@ export default function AdminDashboardPage() {
                         </div>
                       </div>
 
-                      {/* Action Buttons: Trending Collection & Website Ad */}
+                      {/* Action Buttons: Trending Collection & Hero Fayzee AI Top Pick */}
                       <div className="flex items-center gap-2.5 shrink-0 flex-wrap self-end md:self-auto">
                         {/* 1. Trending Marketplace Picks / Featured Collection Toggle Button */}
                         <button
@@ -1528,25 +1536,25 @@ export default function AdminDashboardPage() {
                           </span>
                         </button>
 
-                        {/* 2. Website Sponsored Ad Toggle Button */}
+                        {/* 2. Hero Fayzee AI Top Pick Toggle Button */}
                         <button
                           type="button"
                           disabled={isUpdating}
                           onClick={() => handleToggleAd(product.id, Boolean(product.isFeatured))}
                           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs ${
                             product.isFeatured
-                              ? "bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
+                              ? "bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] border border-[#C8A96B]/60 shadow-md"
                               : "bg-white border border-[#E8E5DC] hover:border-[#0B0F14] hover:text-[#0B0F14] text-[#0B0F14]"
                           } disabled:opacity-50`}
-                          title="Show this product as a Sponsored Ad on website with special Ad badge"
+                          title="Spotlight this product on Homepage Hero right card as Fayzee AI Top Pick"
                         >
                           {isUpdating ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
                           ) : (
-                            <Megaphone className="w-3.5 h-3.5 text-[#C8A96B]" />
+                            <Sparkles className="w-3.5 h-3.5 text-[#C8A96B]" />
                           )}
                           <span>
-                            {product.isFeatured ? "Sponsored Ad Active" : "Promote as Ad"}
+                            {product.isFeatured ? "✓ Active AI Top Pick" : "Set as AI Top Pick"}
                           </span>
                         </button>
                       </div>
