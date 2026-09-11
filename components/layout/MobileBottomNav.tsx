@@ -23,9 +23,9 @@ export function MobileBottomNav() {
     },
     {
       name: "Categories",
-      href: "/products",
+      href: "/categories",
       icon: Layers,
-      isActive: pathname.startsWith("/products") || pathname.startsWith("/categories"),
+      isActive: pathname.startsWith("/categories"),
     },
     {
       name: "Fayzee AI",

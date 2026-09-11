@@ -18,11 +18,33 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+
+const CATEGORY_EMOJIS: Record<string, string> = {
+  electronics: "📱",
+  "mens-fashion": "👔",
+  "womens-fashion": "👗",
+  "kids-babies": "👶",
+  "beauty-personal-care": "💄",
+  "home-living": "🛋️",
+  "home-appliances": "🍳",
+  "grocery-food": "🍎",
+  "sports-fitness": "⚽",
+  automotive: "🚗",
+  "books-stationery": "📚",
+  "tools-hardware": "🔧",
+  "pet-supplies": "🐾",
+  "travel-luggage": "🧳",
+  "office-business": "💼",
+  "garden-outdoor": "🌿",
+  "fashion-accessories": "⌚",
+  other: "📦",
+};
 
 export function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, logout } = useAuth();
   const { cartCount } = useCart();
   const [searchQuery, setSearchQuery] = useState("");
@@ -80,10 +102,14 @@ export function Navbar() {
 
   const handleMouseEnterMega = () => {
     if (megaMenuTimeoutRef.current) clearTimeout(megaMenuTimeoutRef.current);
+    setMegaMenuOpen(true);
   };
 
   const handleMouseLeaveMega = () => {
-    // Keep open on click, only brief delay if needed
+    if (megaMenuTimeoutRef.current) clearTimeout(megaMenuTimeoutRef.current);
+    megaMenuTimeoutRef.current = setTimeout(() => {
+      setMegaMenuOpen(false);
+    }, 250);
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -385,23 +411,23 @@ export function Navbar() {
       {/* 4. Subcategory Quick Bar & All Categories Mega Menu */}
       <div className="relative border-t border-[#1A222C] bg-[#0B0F14] w-full">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 flex items-center justify-between text-sm font-medium text-white/90">
-          <div className="flex items-center space-x-2 sm:space-x-3 overflow-x-auto no-scrollbar py-0.5 w-full md:w-auto -mx-1 px-1">
-            {/* Mega Menu Toggle Button */}
+          <div className="flex items-center space-x-2 sm:space-x-3 overflow-x-auto md:overflow-visible no-scrollbar py-0.5 w-full md:w-auto -mx-1 px-1">
+            {/* Mega Menu & Categories Page Link */}
             <div
               ref={megaMenuContainerRef}
-              className="relative shrink-0"
+              className="relative shrink-0 flex items-center"
               onMouseEnter={handleMouseEnterMega}
               onMouseLeave={handleMouseLeaveMega}
             >
-              <button
-                type="button"
-                onClick={() => setMegaMenuOpen(!megaMenuOpen)}
+              <Link
+                href="/categories"
+                onClick={() => setMegaMenuOpen(false)}
                 className={`flex items-center gap-2 px-4 py-1.5 rounded-full font-bold text-sm transition cursor-pointer ${
-                  megaMenuOpen
+                  pathname === "/categories" || megaMenuOpen
                     ? "bg-[#C8A96B] text-[#0B0F14] shadow-md ring-2 ring-[#C8A96B]/50"
                     : "bg-white/10 text-white hover:bg-white/20 hover:text-[#C8A96B]"
                 }`}
-                title="Browse All Categories"
+                title="Browse All 18 Categories & Departments"
               >
                 <Layers className="w-4 h-4 text-[#C8A96B]" />
                 <span>Categories</span>
@@ -410,7 +436,7 @@ export function Navbar() {
                     megaMenuOpen ? "rotate-180" : ""
                   }`}
                 />
-              </button>
+              </Link>
 
               {/* Desktop Mega Menu Dropdown */}
               {megaMenuOpen && (
@@ -441,7 +467,7 @@ export function Navbar() {
                           }`}
                         >
                           <span className="flex items-center gap-2 truncate">
-                            <span className="text-base shrink-0">{cat.icon}</span>
+                            <span className="text-base shrink-0">{CATEGORY_EMOJIS[cat.slug] || "📦"}</span>
                             <span className="truncate">{cat.name}</span>
                           </span>
                           <ChevronRight
@@ -459,7 +485,7 @@ export function Navbar() {
                     <div>
                       <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
                         <div className="flex items-center gap-2.5">
-                          <span className="text-2xl">{activeCategory.icon}</span>
+                          <span className="text-2xl">{CATEGORY_EMOJIS[activeCategory.slug] || "📦"}</span>
                           <div>
                             <h4 className="text-base font-black text-[#0B0F14]">
                               {activeCategory.name}
@@ -718,7 +744,7 @@ export function Navbar() {
                   className="flex items-center justify-between p-3 rounded-2xl bg-white border border-[#E8E5DC] hover:border-[#C8A96B] text-xs font-bold text-[#0B0F14] shadow-xs active:scale-98 transition"
                 >
                   <span className="flex items-center gap-3">
-                    <span className="text-2xl">{cat.icon}</span>
+                    <span className="text-2xl">{CATEGORY_EMOJIS[cat.slug] || "📦"}</span>
                     <div>
                       <span className="block text-slate-900">{cat.name}</span>
                       <span className="text-[10px] text-slate-400 font-normal">

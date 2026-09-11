@@ -90,6 +90,7 @@ export function Footer() {
             <li><Link href="/category/audio-headphones" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Audio & Headphones</Link></li>
             <li><Link href="/category/mens-footwear" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Footwear & Sneakers</Link></li>
             <li><Link href="/category/home-appliances" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Home & Kitchen</Link></li>
+            <li><Link href="/categories" className="text-[#C8A96B] font-bold hover:underline transition">View All 18 Categories &rarr;</Link></li>
           </ul>
         </div>
 
@@ -116,7 +117,7 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-[#1C2530] py-6 text-sm text-[#8A8F98] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+      <div className="border-t border-[#1C2530] py-6 text-sm text-[#8A8F98] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left md:pr-48 lg:pr-56">
         <p>© {new Date().getFullYear()} Fayzee Store (Pvt) Ltd. All rights reserved. Registered in Pakistan.</p>
         <div className="flex flex-wrap items-center justify-center md:justify-end gap-x-3 gap-y-1 text-xs text-[#8A8F98]">
           <Link href="/privacy-policy" className="hover:text-[#C8A96B] transition">Privacy Policy</Link>
