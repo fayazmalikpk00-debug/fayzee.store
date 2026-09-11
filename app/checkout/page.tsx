@@ -56,6 +56,27 @@ export default function CheckoutPage() {
   const [walletCnic, setWalletCnic] = useState("");
   const [walletTid, setWalletTid] = useState("");
 
+  // Dynamic Platform Site Settings (Controlled via Super Admin)
+  const [siteSettings, setSiteSettings] = useState<any>({
+    jazzcashTitle: "Fayaz Ullah",
+    jazzcashNumber: "03306767357",
+    easypaisaTitle: "Fayaz Ullah",
+    easypaisaNumber: "03306767357",
+    standardShippingFee: 200,
+    freeShippingThreshold: 3000,
+  });
+
+  useEffect(() => {
+    fetch("/api/site-settings")
+      .then((res) => res.json())
+      .then((d) => {
+        if (d?.settings) {
+          setSiteSettings(d.settings);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (user?.name) {
       setAddress((prev) => ({
@@ -68,8 +89,14 @@ export default function CheckoutPage() {
     }
   }, [user]);
 
-  const shippingTotal =
+  // Shipping calculation with platform free delivery threshold
+  const calculatedItemsShipping =
     cart?.items?.reduce((acc, item) => acc + (item.product?.shippingFee || 0), 0) || 0;
+  const isFreeDeliveryQualified =
+    cartSubtotal >= (siteSettings?.freeShippingThreshold || 3000) && cartSubtotal > 0;
+  const shippingTotal = isFreeDeliveryQualified
+    ? 0
+    : (calculatedItemsShipping > 0 ? calculatedItemsShipping : (siteSettings?.standardShippingFee ?? 200));
   const discountAmount = couponApplied ? couponApplied.discount : 0;
   const grandTotal = Math.max(0, cartSubtotal - discountAmount + shippingTotal);
 
@@ -688,15 +715,15 @@ export default function CheckoutPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                     <div>
                       <span className="text-[10px] text-red-700 block">Account Title:</span>
-                      <span className="font-bold text-[#0B0F14] text-xs">Fayaz Ullah</span>
+                      <span className="font-bold text-[#0B0F14] text-xs">{siteSettings.jazzcashTitle || "Fayaz Ullah"}</span>
                     </div>
                     <div>
                       <span className="text-[10px] text-red-700 block">Account / Mobile Number:</span>
-                      <span className="font-mono font-black text-red-600 text-sm select-all">03306767357</span>
+                      <span className="font-mono font-black text-red-600 text-sm select-all">{siteSettings.jazzcashNumber || "03306767357"}</span>
                     </div>
                   </div>
                   <p className="text-[10px] text-red-900/90 pt-1.5 border-t border-red-200 leading-relaxed font-medium">
-                    💡 JazzCash App ya *786# se <span className="font-mono font-bold">03306767357</span> par <span className="font-bold">{formatPrice(grandTotal)}</span> send karein. Uske baad 8558 se aane wala Transaction ID (TID) neeche likhein:
+                    💡 JazzCash App ya *786# se <span className="font-mono font-bold">{siteSettings.jazzcashNumber || "03306767357"}</span> par <span className="font-bold">{formatPrice(grandTotal)}</span> send karein. Uske baad 8558 se aane wala Transaction ID (TID) neeche likhein:
                   </p>
                 </div>
 
@@ -767,15 +794,15 @@ export default function CheckoutPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                     <div>
                       <span className="text-[10px] text-emerald-700 block">Account Title:</span>
-                      <span className="font-bold text-[#0B0F14] text-xs">Fayaz Ullah</span>
+                      <span className="font-bold text-[#0B0F14] text-xs">{siteSettings.easypaisaTitle || "Fayaz Ullah"}</span>
                     </div>
                     <div>
                       <span className="text-[10px] text-emerald-700 block">Account / Mobile Number:</span>
-                      <span className="font-mono font-black text-emerald-700 text-sm select-all">03306767357</span>
+                      <span className="font-mono font-black text-emerald-700 text-sm select-all">{siteSettings.easypaisaNumber || "03306767357"}</span>
                     </div>
                   </div>
                   <p className="text-[10px] text-emerald-900/90 pt-1.5 border-t border-emerald-200 leading-relaxed font-medium">
-                    💡 EasyPaisa App ya *786# se <span className="font-mono font-bold">03306767357</span> par <span className="font-bold">{formatPrice(grandTotal)}</span> send karein. Uske baad 3737 se aane wala Transaction ID (TID) neeche likhein:
+                    💡 EasyPaisa App ya *786# se <span className="font-mono font-bold">{siteSettings.easypaisaNumber || "03306767357"}</span> par <span className="font-bold">{formatPrice(grandTotal)}</span> send karein. Uske baad 3737 se aane wala Transaction ID (TID) neeche likhein:
                   </p>
                 </div>
 

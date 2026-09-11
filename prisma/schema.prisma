@@ -756,3 +756,68 @@ model SupportTicket {
   @@index([email])
 }
 
+model SiteSetting {
+  id                      String   @id @default("default")
+  // Branding
+  siteName                String   @default("FAYZEE")
+  siteTagline             String?  @default("Pakistan's Premier Multi-Vendor Marketplace")
+  logoUrl                 String?
+  faviconUrl              String?
+  
+  // Contact & Support
+  supportPhone            String?  @default("03306767357")
+  supportEmail            String?  @default("support@fayzee.store")
+  whatsappNumber          String?  @default("03306767357")
+  officeAddress           String?  @default("Lahore / Peshawar, Pakistan")
+  
+  // Social Links
+  facebookUrl             String?
+  instagramUrl            String?
+  tiktokUrl               String?
+  youtubeUrl              String?
+  
+  // Announcement Bar
+  announcementEnabled     Boolean  @default(true)
+  announcementText        String?  @default("🎉 Special Offer: Enjoy Free Delivery on Orders Over Rs. 3,000! Cash on Delivery Available Nationwide.")
+  announcementLink        String?  @default("/products")
+  
+  // Official Payment Accounts (For direct checkout & verification)
+  jazzcashTitle           String?  @default("Fayaz Ullah")
+  jazzcashNumber          String?  @default("03306767357")
+  easypaisaTitle          String?  @default("Fayaz Ullah")
+  easypaisaNumber         String?  @default("03306767357")
+  bankName                String?  @default("Meezan Bank Limited")
+  bankTitle               String?  @default("FAYZEE STORE")
+  bankAccountNumber       String?  @default("01020304050607")
+  bankIban                String?  @default("PK36MEZN0001020304050607")
+  
+  // Store Policies & Logistics
+  standardShippingFee     Float    @default(200.0)
+  freeShippingThreshold   Float    @default(3000.0)
+  defaultCommissionRate   Float    @default(10.0)
+  allowNewSellers         Boolean  @default(true)
+  maintenanceMode         Boolean  @default(false)
+  maintenanceMessage      String?  @default("Site is undergoing scheduled maintenance. We will be back online shortly!")
+
+  updatedAt               DateTime @updatedAt
+}
+
+model SiteBanner {
+  id          String   @id @default(cuid())
+  title       String
+  subtitle    String?
+  badge       String?
+  imageUrl    String
+  linkUrl     String?  @default("/products")
+  position    String   @default("HERO") // HERO, PROMO_TOP, PROMO_SIDE, FOOTER_BANNER
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([position])
+  @@index([isActive])
+  @@index([order])
+}
+
+

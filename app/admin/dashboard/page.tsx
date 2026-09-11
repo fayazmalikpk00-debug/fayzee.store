@@ -45,6 +45,14 @@ import {
   Mail,
   MessageSquare,
   Phone,
+  Sliders,
+  Globe,
+  Percent,
+  Ticket,
+  Image as ImageIcon,
+  ToggleLeft,
+  ToggleRight,
+  Power,
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -55,7 +63,7 @@ export default function AdminDashboardPage() {
   const [sellers, setSellers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    "analytics" | "sellers" | "categories" | "products" | "finance" | "courier" | "payment" | "audit" | "support"
+    "analytics" | "sellers" | "categories" | "products" | "finance" | "courier" | "payment" | "audit" | "support" | "settings"
   >("analytics");
 
   // Customer Support Tickets State
@@ -147,6 +155,75 @@ export default function AdminDashboardPage() {
   const [prodFilter, setProdFilter] = useState<"all" | "topPick" | "ads">("all");
   const [updatingProdId, setUpdatingProdId] = useState<string | null>(null);
 
+  // Master Website Control & Settings State
+  const [siteSettingsForm, setSiteSettingsForm] = useState({
+    siteName: "FAYZEE",
+    siteTagline: "Pakistan's Premier Multi-Vendor Marketplace",
+    logoUrl: "",
+    faviconUrl: "",
+    supportPhone: "03306767357",
+    supportEmail: "support@fayzee.store",
+    whatsappNumber: "03306767357",
+    officeAddress: "Lahore / Peshawar, Pakistan",
+    facebookUrl: "",
+    instagramUrl: "",
+    tiktokUrl: "",
+    youtubeUrl: "",
+    announcementEnabled: true,
+    announcementText: "🎉 Special Offer: Enjoy Free Delivery on Orders Over Rs. 3,000! Cash on Delivery Available Nationwide.",
+    announcementLink: "/products",
+    jazzcashTitle: "Fayaz Ullah",
+    jazzcashNumber: "03306767357",
+    easypaisaTitle: "Fayaz Ullah",
+    easypaisaNumber: "03306767357",
+    bankName: "Meezan Bank Limited",
+    bankTitle: "FAYZEE STORE",
+    bankAccountNumber: "01020304050607",
+    bankIban: "PK36MEZN0001020304050607",
+    standardShippingFee: 200.0,
+    freeShippingThreshold: 3000.0,
+    defaultCommissionRate: 10.0,
+    allowNewSellers: true,
+    maintenanceMode: false,
+    maintenanceMessage: "Site is undergoing scheduled maintenance. We will be back online shortly!",
+  });
+  const [savingSiteSettings, setSavingSiteSettings] = useState(false);
+  const [siteSettingsSavedMsg, setSiteSettingsSavedMsg] = useState("");
+  const [settingsSubTab, setSettingsSubTab] = useState<
+    "general" | "announcement" | "payments" | "shipping" | "banners" | "coupons"
+  >("general");
+
+  // Banners State
+  const [bannersList, setBannersList] = useState<any[]>([]);
+  const [newBannerForm, setNewBannerForm] = useState({
+    title: "",
+    subtitle: "",
+    badge: "FEATURED",
+    imageUrl: "",
+    linkUrl: "/products",
+    position: "HERO",
+    order: 0,
+    isActive: true,
+  });
+  const [isCreatingBanner, setIsCreatingBanner] = useState(false);
+  const [savingBanner, setSavingBanner] = useState(false);
+
+  // Coupons State
+  const [couponsList, setCouponsList] = useState<any[]>([]);
+  const [newCouponForm, setNewCouponForm] = useState({
+    code: "",
+    description: "",
+    discountType: "PERCENTAGE",
+    discountValue: 10,
+    minOrderAmount: 1000,
+    maxDiscountAmount: 500,
+    usageLimit: 100,
+    endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    isActive: true,
+  });
+  const [isCreatingCoupon, setIsCreatingCoupon] = useState(false);
+  const [savingCoupon, setSavingCoupon] = useState(false);
+
   // Horizontal Slider state for Navigation Tabs
   const adminTabsRef = useRef<HTMLDivElement>(null);
   const [canScrollAdminLeft, setCanScrollAdminLeft] = useState(false);
@@ -177,7 +254,19 @@ export default function AdminDashboardPage() {
 
   const fetchData = async () => {
     try {
-      const [analyticsRes, sellersRes, catRes, prodRes, finRes, payRes, courierRes, paymentRes] = await Promise.all([
+      const [
+        analyticsRes,
+        sellersRes,
+        catRes,
+        prodRes,
+        finRes,
+        payRes,
+        courierRes,
+        paymentRes,
+        siteRes,
+        bannersRes,
+        couponsRes,
+      ] = await Promise.all([
         fetch("/api/admin/analytics"),
         fetch("/api/admin/sellers"),
         fetch("/api/admin/categories"),
@@ -186,6 +275,9 @@ export default function AdminDashboardPage() {
         fetch("/api/admin/payouts"),
         fetch("/api/admin/courier-settings"),
         fetch("/api/admin/payment-settings"),
+        fetch("/api/admin/site-settings").catch(() => null),
+        fetch("/api/admin/banners").catch(() => null),
+        fetch("/api/admin/coupons").catch(() => null),
       ]);
 
       const analyticsData = await analyticsRes.json();
@@ -256,6 +348,56 @@ export default function AdminDashboardPage() {
       if (supportRes && supportRes.ok) {
         const supportData = await supportRes.json();
         if (supportData.tickets) setSupportTickets(supportData.tickets);
+      }
+
+      // Populate Master Site Settings
+      if (siteRes && siteRes.ok) {
+        const siteData = await siteRes.json();
+        if (siteData?.settings) {
+          setSiteSettingsForm({
+            siteName: siteData.settings.siteName || "FAYZEE",
+            siteTagline: siteData.settings.siteTagline || "",
+            logoUrl: siteData.settings.logoUrl || "",
+            faviconUrl: siteData.settings.faviconUrl || "",
+            supportPhone: siteData.settings.supportPhone || "",
+            supportEmail: siteData.settings.supportEmail || "",
+            whatsappNumber: siteData.settings.whatsappNumber || "",
+            officeAddress: siteData.settings.officeAddress || "",
+            facebookUrl: siteData.settings.facebookUrl || "",
+            instagramUrl: siteData.settings.instagramUrl || "",
+            tiktokUrl: siteData.settings.tiktokUrl || "",
+            youtubeUrl: siteData.settings.youtubeUrl || "",
+            announcementEnabled: siteData.settings.announcementEnabled ?? true,
+            announcementText: siteData.settings.announcementText || "",
+            announcementLink: siteData.settings.announcementLink || "/products",
+            jazzcashTitle: siteData.settings.jazzcashTitle || "",
+            jazzcashNumber: siteData.settings.jazzcashNumber || "",
+            easypaisaTitle: siteData.settings.easypaisaTitle || "",
+            easypaisaNumber: siteData.settings.easypaisaNumber || "",
+            bankName: siteData.settings.bankName || "",
+            bankTitle: siteData.settings.bankTitle || "",
+            bankAccountNumber: siteData.settings.bankAccountNumber || "",
+            bankIban: siteData.settings.bankIban || "",
+            standardShippingFee: siteData.settings.standardShippingFee ?? 200,
+            freeShippingThreshold: siteData.settings.freeShippingThreshold ?? 3000,
+            defaultCommissionRate: siteData.settings.defaultCommissionRate ?? 10,
+            allowNewSellers: siteData.settings.allowNewSellers ?? true,
+            maintenanceMode: siteData.settings.maintenanceMode ?? false,
+            maintenanceMessage: siteData.settings.maintenanceMessage || "",
+          });
+        }
+      }
+
+      // Populate Banners
+      if (bannersRes && bannersRes.ok) {
+        const bData = await bannersRes.json();
+        if (bData?.banners) setBannersList(bData.banners);
+      }
+
+      // Populate Coupons
+      if (couponsRes && couponsRes.ok) {
+        const cData = await couponsRes.json();
+        if (cData?.coupons) setCouponsList(cData.coupons);
       }
     } catch (e) {
       console.error(e);
@@ -353,6 +495,172 @@ export default function AdminDashboardPage() {
       alert(err.message || "Failed to save payment settings");
     } finally {
       setSavingPaymentSettings(false);
+    }
+  };
+
+  const handleSaveSiteSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingSiteSettings(true);
+    setSiteSettingsSavedMsg("");
+    try {
+      const res = await fetch("/api/admin/site-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(siteSettingsForm),
+      });
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || "Failed to update site settings");
+
+      setSiteSettingsSavedMsg("Platform Master Control Settings updated successfully!");
+      setTimeout(() => setSiteSettingsSavedMsg(""), 4000);
+      fetchData();
+    } catch (err: any) {
+      alert(err.message || "Failed to save site settings");
+    } finally {
+      setSavingSiteSettings(false);
+    }
+  };
+
+  const handleCreateBanner = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingBanner(true);
+    try {
+      const res = await fetch("/api/admin/banners", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newBannerForm),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || "Failed to create banner");
+
+      alert("Banner created successfully!");
+      setIsCreatingBanner(false);
+      setNewBannerForm({
+        title: "",
+        subtitle: "",
+        badge: "FEATURED",
+        imageUrl: "",
+        linkUrl: "/products",
+        position: "HERO",
+        order: 0,
+        isActive: true,
+      });
+      fetchData();
+    } catch (err: any) {
+      alert(err.message || "Error creating banner");
+    } finally {
+      setSavingBanner(false);
+    }
+  };
+
+  const handleToggleBanner = async (bannerId: string, currentStatus: boolean) => {
+    try {
+      const res = await fetch("/api/admin/banners", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: bannerId, isActive: !currentStatus }),
+      });
+      if (res.ok) {
+        setBannersList((prev) =>
+          prev.map((b) => (b.id === bannerId ? { ...b, isActive: !currentStatus } : b))
+        );
+      } else {
+        const d = await res.json();
+        alert(d.error || "Failed to toggle banner status");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error toggling banner status");
+    }
+  };
+
+  const handleDeleteBanner = async (bannerId: string) => {
+    if (!confirm("Are you sure you want to delete this promotional banner?")) return;
+    try {
+      const res = await fetch(`/api/admin/banners?id=${bannerId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setBannersList((prev) => prev.filter((b) => b.id !== bannerId));
+      } else {
+        const d = await res.json();
+        alert(d.error || "Failed to delete banner");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting banner");
+    }
+  };
+
+  const handleCreateCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingCoupon(true);
+    try {
+      const res = await fetch("/api/admin/coupons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newCouponForm),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || "Failed to create coupon");
+
+      alert("Coupon voucher created successfully!");
+      setIsCreatingCoupon(false);
+      setNewCouponForm({
+        code: "",
+        description: "",
+        discountType: "PERCENTAGE",
+        discountValue: 10,
+        minOrderAmount: 1000,
+        maxDiscountAmount: 500,
+        usageLimit: 100,
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+        isActive: true,
+      });
+      fetchData();
+    } catch (err: any) {
+      alert(err.message || "Error creating coupon");
+    } finally {
+      setSavingCoupon(false);
+    }
+  };
+
+  const handleToggleCoupon = async (couponId: string, currentStatus: boolean) => {
+    try {
+      const res = await fetch("/api/admin/coupons", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: couponId, isActive: !currentStatus }),
+      });
+      if (res.ok) {
+        setCouponsList((prev) =>
+          prev.map((c) => (c.id === couponId ? { ...c, isActive: !currentStatus } : c))
+        );
+      } else {
+        const d = await res.json();
+        alert(d.error || "Failed to toggle coupon");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error toggling coupon");
+    }
+  };
+
+  const handleDeleteCoupon = async (couponId: string) => {
+    if (!confirm("Are you sure you want to permanently delete this discount coupon?")) return;
+    try {
+      const res = await fetch(`/api/admin/coupons?id=${couponId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setCouponsList((prev) => prev.filter((c) => c.id !== couponId));
+      } else {
+        const d = await res.json();
+        alert(d.error || "Failed to delete coupon");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting coupon");
     }
   };
 
@@ -682,6 +990,17 @@ export default function AdminDashboardPage() {
                 {supportTickets.filter((t) => t.status === "OPEN").length}
               </span>
             )}
+          </button>
+          <button
+            onClick={() => setActiveTab("settings")}
+            className={`px-4 py-2 rounded-xl transition whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
+              activeTab === "settings"
+                ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs ring-1 ring-[#C8A96B]/30"
+                : "text-[#0B0F14] hover:bg-[#F5F3EE]"
+            }`}
+          >
+            <Sliders className="w-3.5 h-3.5 text-[#C8A96B]" />
+            <span>⚙️ Master Site Control</span>
           </button>
           <button
             onClick={() => setActiveTab("audit")}
@@ -3284,6 +3603,993 @@ export default function AdminDashboardPage() {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* TAB: Master Website Control Panel & CMS */}
+      {activeTab === "settings" && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          {/* Main Control Header Card */}
+          <div className="bg-[#0B0F14] border border-[#1A222C] text-white p-6 sm:p-7 rounded-3xl shadow-card">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-2xl bg-[#C8A96B]/15 border border-[#C8A96B]/30 flex items-center justify-center text-[#C8A96B]">
+                    <Sliders className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg sm:text-xl font-black tracking-tight text-white flex items-center gap-2">
+                      <span>Master Website Control Panel</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#C8A96B]/20 text-[#C8A96B] border border-[#C8A96B]/30">
+                        LIVE CMS
+                      </span>
+                    </h2>
+                    <p className="text-xs text-[#8A8F98]">
+                      Control all website parameters, payment numbers, announcements, banners, and rules dynamically without code changes.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sub-Navigation Pills */}
+              <div className="flex items-center gap-1.5 bg-[#161F2B] p-1.5 rounded-2xl border border-white/10 overflow-x-auto no-scrollbar">
+                {[
+                  { id: "general", label: "Store Identity", icon: Building2 },
+                  { id: "announcement", label: "Announcement", icon: Megaphone },
+                  { id: "payments", label: "Payment Accounts", icon: CreditCard },
+                  { id: "shipping", label: "Shipping & Rules", icon: Truck },
+                  { id: "banners", label: "Hero Banners", icon: ImageIcon },
+                  { id: "coupons", label: "Promo Coupons", icon: Ticket },
+                ].map((st) => {
+                  const Icon = st.icon;
+                  const isCurrent = settingsSubTab === st.id;
+                  return (
+                    <button
+                      key={st.id}
+                      onClick={() => setSettingsSubTab(st.id as any)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                        isCurrent
+                          ? "bg-[#C8A96B] text-[#0B0F14] shadow-sm"
+                          : "text-slate-300 hover:text-white hover:bg-white/5"
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      <span>{st.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Notification alert on save */}
+            {siteSettingsSavedMsg && (
+              <div className="mt-4 p-3 bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold rounded-2xl flex items-center gap-2 animate-in fade-in">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>{siteSettingsSavedMsg}</span>
+              </div>
+            )}
+          </div>
+
+          {/* SUB-TAB 1: Store Identity & Support */}
+          {settingsSubTab === "general" && (
+            <form onSubmit={handleSaveSiteSettings} className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-6 shadow-xs">
+              <div className="border-b border-slate-100 pb-4">
+                <h3 className="text-sm font-black uppercase text-slate-900 flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-[#C8A96B]" />
+                  <span>Store Branding & Official Customer Support</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Update your official store title, tagline, WhatsApp contact, support helpline, and social profiles.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div>
+                  <label className="block font-bold text-slate-900 mb-1">Store Name</label>
+                  <input
+                    type="text"
+                    value={siteSettingsForm.siteName}
+                    onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, siteName: e.target.value })}
+                    placeholder="FAYZEE"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 font-medium text-slate-900 focus:bg-white focus:border-[#C8A96B] outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-900 mb-1">Store Slogan / Tagline</label>
+                  <input
+                    type="text"
+                    value={siteSettingsForm.siteTagline}
+                    onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, siteTagline: e.target.value })}
+                    placeholder="Pakistan's Premier Multi-Vendor Marketplace"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 font-medium text-slate-900 focus:bg-white focus:border-[#C8A96B] outline-none"
+                  />
+                </div>
+
+                <div className="sm:col-span-2 p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-2">
+                  <label className="block font-bold text-emerald-950 flex items-center gap-1.5">
+                    <MessageSquare className="w-4 h-4 text-emerald-600" />
+                    <span>Official WhatsApp Support Number</span>
+                    <span className="text-[10px] bg-emerald-600 text-white px-2 py-0.2 rounded-full font-black">
+                      ACTIVE CHAT
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    value={siteSettingsForm.whatsappNumber}
+                    onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, whatsappNumber: e.target.value })}
+                    placeholder="03306767357"
+                    className="w-full px-3.5 py-2.5 bg-white rounded-xl border border-emerald-300 font-mono font-bold text-emerald-900 focus:border-emerald-600 outline-none"
+                  />
+                  <p className="text-[11px] text-emerald-800 leading-normal">
+                    This WhatsApp number is wired to quick chat links across the entire store, help desk, and customer notifications.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-900 mb-1">Support Helpline Phone</label>
+                  <input
+                    type="text"
+                    value={siteSettingsForm.supportPhone}
+                    onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, supportPhone: e.target.value })}
+                    placeholder="03306767357"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 font-mono text-slate-900 focus:bg-white focus:border-[#C8A96B] outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-900 mb-1">Official Support Email</label>
+                  <input
+                    type="email"
+                    value={siteSettingsForm.supportEmail}
+                    onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, supportEmail: e.target.value })}
+                    placeholder="support@fayzee.store"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 font-medium text-slate-900 focus:bg-white focus:border-[#C8A96B] outline-none"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block font-bold text-slate-900 mb-1">Headquarters / Office Address</label>
+                  <input
+                    type="text"
+                    value={siteSettingsForm.officeAddress}
+                    onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, officeAddress: e.target.value })}
+                    placeholder="Lahore / Peshawar, Pakistan"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 font-medium text-slate-900 focus:bg-white focus:border-[#C8A96B] outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-900 mb-1">Facebook Page URL</label>
+                  <input
+                    type="url"
+                    value={siteSettingsForm.facebookUrl}
+                    onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, facebookUrl: e.target.value })}
+                    placeholder="https://facebook.com/fayzeestore"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-slate-900 focus:bg-white focus:border-[#C8A96B] outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-900 mb-1">Instagram Profile URL</label>
+                  <input
+                    type="url"
+                    value={siteSettingsForm.instagramUrl}
+                    onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, instagramUrl: e.target.value })}
+                    placeholder="https://instagram.com/fayzeestore"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-slate-900 focus:bg-white focus:border-[#C8A96B] outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4 border-t border-slate-100">
+                <button
+                  type="submit"
+                  disabled={savingSiteSettings}
+                  className="px-6 py-2.5 rounded-xl bg-[#0B0F14] text-[#C8A96B] hover:bg-[#161F2B] font-bold text-xs transition flex items-center gap-2 shadow-sm cursor-pointer disabled:opacity-50"
+                >
+                  {savingSiteSettings ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  <span>Save Store Identity Settings</span>
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* SUB-TAB 2: Top Announcement Bar */}
+          {settingsSubTab === "announcement" && (
+            <form onSubmit={handleSaveSiteSettings} className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-6 shadow-xs">
+              <div className="border-b border-slate-100 pb-4">
+                <h3 className="text-sm font-black uppercase text-slate-900 flex items-center gap-2">
+                  <Megaphone className="w-4 h-4 text-[#C8A96B]" />
+                  <span>Top Announcement Bar & Header Marquee</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Broadcast flash sales, festive promotions, free delivery announcements, or system alerts on top of all pages.
+                </p>
+              </div>
+
+              {/* Live Preview Box */}
+              <div className="space-y-2">
+                <span className="text-[11px] font-black uppercase text-slate-400 block tracking-wider">
+                  Live Preview on Storefront:
+                </span>
+                {siteSettingsForm.announcementEnabled ? (
+                  <div className="bg-[#060A0E] text-[#C8A96B] text-xs py-2 px-4 rounded-xl border border-[#141B22] flex items-center justify-between shadow-xs">
+                    <span className="font-semibold truncate">
+                      {siteSettingsForm.announcementText || "Special Offer Announcement Text"}
+                    </span>
+                    <span className="text-[10px] text-white font-bold underline shrink-0 ml-2">
+                      Explore &rarr;
+                    </span>
+                  </div>
+                ) : (
+                  <div className="bg-slate-100 text-slate-400 text-xs py-2 px-4 rounded-xl border border-dashed border-slate-300 text-center font-bold">
+                    Announcement Bar is currently DISABLED / HIDDEN
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-4 text-xs">
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                  <div>
+                    <span className="font-bold text-slate-900 block text-xs">Display Announcement Bar</span>
+                    <span className="text-[11px] text-slate-500">Toggle ON to display across Header, or OFF to hide</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSiteSettingsForm({
+                        ...siteSettingsForm,
+                        announcementEnabled: !siteSettingsForm.announcementEnabled,
+                      })
+                    }
+                    className={`px-4 py-1.5 rounded-full text-xs font-black transition cursor-pointer ${
+                      siteSettingsForm.announcementEnabled
+                        ? "bg-emerald-600 text-white shadow-xs"
+                        : "bg-slate-200 text-slate-600"
+                    }`}
+                  >
+                    {siteSettingsForm.announcementEnabled ? "ACTIVE (LIVE)" : "DISABLED"}
+                  </button>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-900 mb-1">Announcement Message</label>
+                  <textarea
+                    rows={3}
+                    value={siteSettingsForm.announcementText}
+                    onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, announcementText: e.target.value })}
+                    placeholder="🎉 Special Offer: Enjoy Free Delivery on Orders Over Rs. 3,000! Cash on Delivery Available Nationwide."
+                    className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 font-medium text-slate-900 focus:bg-white focus:border-[#C8A96B] outline-none leading-relaxed"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-900 mb-1">Optional Click URL / Redirection Link</label>
+                  <input
+                    type="text"
+                    value={siteSettingsForm.announcementLink}
+                    onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, announcementLink: e.target.value })}
+                    placeholder="/products or /flash-sale"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 font-mono text-slate-900 focus:bg-white focus:border-[#C8A96B] outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4 border-t border-slate-100">
+                <button
+                  type="submit"
+                  disabled={savingSiteSettings}
+                  className="px-6 py-2.5 rounded-xl bg-[#0B0F14] text-[#C8A96B] hover:bg-[#161F2B] font-bold text-xs transition flex items-center gap-2 shadow-sm cursor-pointer disabled:opacity-50"
+                >
+                  {savingSiteSettings ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  <span>Save Announcement Settings</span>
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* SUB-TAB 3: Official Payment Receiving Accounts */}
+          {settingsSubTab === "payments" && (
+            <form onSubmit={handleSaveSiteSettings} className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-6 shadow-xs">
+              <div className="border-b border-slate-100 pb-4">
+                <h3 className="text-sm font-black uppercase text-slate-900 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-[#C8A96B]" />
+                  <span>Official Receiving Accounts (JazzCash • EasyPaisa • Bank Transfer)</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Update the official payment accounts displayed to customers on the Checkout page (/checkout). Changes take effect immediately without touching source code.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Official JazzCash Account Card */}
+                <div className="p-5 rounded-3xl bg-red-50/70 border border-red-200 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-1 bg-red-600 text-white font-black text-xs rounded-lg">
+                        JazzCash
+                      </span>
+                      <span className="font-bold text-red-950 text-xs">Official Receiving Account</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded-full">
+                      Checkout Visible
+                    </span>
+                  </div>
+
+                  <div className="space-y-3 text-xs">
+                    <div>
+                      <label className="block font-bold text-red-900 mb-1">JazzCash Account Title</label>
+                      <input
+                        type="text"
+                        value={siteSettingsForm.jazzcashTitle}
+                        onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, jazzcashTitle: e.target.value })}
+                        placeholder="Fayaz Ullah"
+                        className="w-full px-3.5 py-2.5 bg-white rounded-xl border border-red-200 font-bold text-slate-900 focus:border-red-500 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-red-900 mb-1">JazzCash Account / Mobile Number</label>
+                      <input
+                        type="text"
+                        value={siteSettingsForm.jazzcashNumber}
+                        onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, jazzcashNumber: e.target.value })}
+                        placeholder="03306767357"
+                        className="w-full px-3.5 py-2.5 bg-white rounded-xl border border-red-200 font-mono font-black text-red-600 focus:border-red-500 outline-none text-sm"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-red-800 leading-normal">
+                    💡 Customers selecting JazzCash at checkout will be instructed to transfer to this number and submit their 8558 TID.
+                  </p>
+                </div>
+
+                {/* Official EasyPaisa Account Card */}
+                <div className="p-5 rounded-3xl bg-emerald-50/70 border border-emerald-200 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-1 bg-emerald-600 text-white font-black text-xs rounded-lg">
+                        EasyPaisa
+                      </span>
+                      <span className="font-bold text-emerald-950 text-xs">Official Receiving Account</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                      Checkout Visible
+                    </span>
+                  </div>
+
+                  <div className="space-y-3 text-xs">
+                    <div>
+                      <label className="block font-bold text-emerald-900 mb-1">EasyPaisa Account Title</label>
+                      <input
+                        type="text"
+                        value={siteSettingsForm.easypaisaTitle}
+                        onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, easypaisaTitle: e.target.value })}
+                        placeholder="Fayaz Ullah"
+                        className="w-full px-3.5 py-2.5 bg-white rounded-xl border border-emerald-200 font-bold text-slate-900 focus:border-emerald-500 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-emerald-900 mb-1">EasyPaisa Account / Mobile Number</label>
+                      <input
+                        type="text"
+                        value={siteSettingsForm.easypaisaNumber}
+                        onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, easypaisaNumber: e.target.value })}
+                        placeholder="03306767357"
+                        className="w-full px-3.5 py-2.5 bg-white rounded-xl border border-emerald-200 font-mono font-black text-emerald-700 focus:border-emerald-500 outline-none text-sm"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-emerald-800 leading-normal">
+                    💡 Customers selecting EasyPaisa at checkout will be instructed to transfer to this number and submit their 3737 TID.
+                  </p>
+                </div>
+              </div>
+
+              {/* Official Corporate Bank Account Section */}
+              <div className="p-5 rounded-3xl bg-[#F5F3EE] border border-[#E8E5DC] space-y-4">
+                <div className="flex items-center gap-2">
+                  <Landmark className="w-4 h-4 text-[#C8A96B]" />
+                  <span className="font-bold text-slate-900 text-xs">Official Corporate Bank Account</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">Bank Name</label>
+                    <input
+                      type="text"
+                      value={siteSettingsForm.bankName}
+                      onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, bankName: e.target.value })}
+                      placeholder="Meezan Bank Limited"
+                      className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-slate-900 outline-none focus:border-[#C8A96B]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">Account Title</label>
+                    <input
+                      type="text"
+                      value={siteSettingsForm.bankTitle}
+                      onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, bankTitle: e.target.value })}
+                      placeholder="FAYZEE STORE"
+                      className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-slate-900 outline-none focus:border-[#C8A96B]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">Account Number</label>
+                    <input
+                      type="text"
+                      value={siteSettingsForm.bankAccountNumber}
+                      onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, bankAccountNumber: e.target.value })}
+                      placeholder="01020304050607"
+                      className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 font-mono text-slate-900 outline-none focus:border-[#C8A96B]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">IBAN</label>
+                    <input
+                      type="text"
+                      value={siteSettingsForm.bankIban}
+                      onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, bankIban: e.target.value })}
+                      placeholder="PK36MEZN0001020304050607"
+                      className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 font-mono text-slate-900 outline-none focus:border-[#C8A96B]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4 border-t border-slate-100">
+                <button
+                  type="submit"
+                  disabled={savingSiteSettings}
+                  className="px-6 py-2.5 rounded-xl bg-[#0B0F14] text-[#C8A96B] hover:bg-[#161F2B] font-bold text-xs transition flex items-center gap-2 shadow-sm cursor-pointer disabled:opacity-50"
+                >
+                  {savingSiteSettings ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  <span>Save Receiving Payment Accounts</span>
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* SUB-TAB 4: Shipping Rates & Business Rules */}
+          {settingsSubTab === "shipping" && (
+            <form onSubmit={handleSaveSiteSettings} className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-6 shadow-xs">
+              <div className="border-b border-slate-100 pb-4">
+                <h3 className="text-sm font-black uppercase text-slate-900 flex items-center gap-2">
+                  <Truck className="w-4 h-4 text-[#C8A96B]" />
+                  <span>Shipping Rates, Thresholds & Platform Policies</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Configure standard courier delivery fees, free shipping order qualification, commission rates, and vendor registration gates.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                  <label className="block font-bold text-slate-900">Standard Shipping Delivery Fee</label>
+                  <div className="flex items-center gap-2 pt-1">
+                    <span className="font-bold text-slate-400">Rs.</span>
+                    <input
+                      type="number"
+                      value={siteSettingsForm.standardShippingFee}
+                      onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, standardShippingFee: Number(e.target.value) })}
+                      className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 font-black text-slate-900 outline-none focus:border-[#C8A96B]"
+                    />
+                  </div>
+                  <span className="text-[10px] text-slate-500">Charged per order under threshold</span>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-1">
+                  <label className="block font-bold text-emerald-950">Free Delivery Order Threshold</label>
+                  <div className="flex items-center gap-2 pt-1">
+                    <span className="font-bold text-emerald-600">Rs.</span>
+                    <input
+                      type="number"
+                      value={siteSettingsForm.freeShippingThreshold}
+                      onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, freeShippingThreshold: Number(e.target.value) })}
+                      className="w-full px-3 py-2 bg-white rounded-xl border border-emerald-300 font-black text-emerald-900 outline-none focus:border-emerald-600"
+                    />
+                  </div>
+                  <span className="text-[10px] text-emerald-700">Orders equal or above this get free delivery</span>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-purple-50/60 border border-purple-200 space-y-1">
+                  <label className="block font-bold text-purple-950">Marketplace Commission Rate</label>
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      type="number"
+                      step="0.5"
+                      value={siteSettingsForm.defaultCommissionRate}
+                      onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, defaultCommissionRate: Number(e.target.value) })}
+                      className="w-full px-3 py-2 bg-white rounded-xl border border-purple-300 font-black text-purple-900 outline-none focus:border-purple-600"
+                    />
+                    <span className="font-bold text-purple-600">%</span>
+                  </div>
+                  <span className="text-[10px] text-purple-700">Default seller commission deducted on sales</span>
+                </div>
+              </div>
+
+              {/* Toggles */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-2">
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                  <div>
+                    <span className="font-bold text-slate-900 block">Allow New Seller Registrations</span>
+                    <span className="text-[11px] text-slate-500">Allow new vendor storefront signups on /seller/register</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSiteSettingsForm({ ...siteSettingsForm, allowNewSellers: !siteSettingsForm.allowNewSellers })}
+                    className={`px-4 py-1.5 rounded-full text-xs font-black transition cursor-pointer ${
+                      siteSettingsForm.allowNewSellers ? "bg-emerald-600 text-white shadow-xs" : "bg-slate-200 text-slate-600"
+                    }`}
+                  >
+                    {siteSettingsForm.allowNewSellers ? "OPEN" : "CLOSED"}
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                  <div>
+                    <span className="font-bold text-slate-900 block">Store Maintenance Mode</span>
+                    <span className="text-[11px] text-slate-500">Temporarily restrict public storefront during maintenance</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSiteSettingsForm({ ...siteSettingsForm, maintenanceMode: !siteSettingsForm.maintenanceMode })}
+                    className={`px-4 py-1.5 rounded-full text-xs font-black transition cursor-pointer ${
+                      siteSettingsForm.maintenanceMode ? "bg-rose-600 text-white shadow-xs" : "bg-slate-200 text-slate-600"
+                    }`}
+                  >
+                    {siteSettingsForm.maintenanceMode ? "ENABLED (OFFLINE)" : "NORMAL (LIVE)"}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4 border-t border-slate-100">
+                <button
+                  type="submit"
+                  disabled={savingSiteSettings}
+                  className="px-6 py-2.5 rounded-xl bg-[#0B0F14] text-[#C8A96B] hover:bg-[#161F2B] font-bold text-xs transition flex items-center gap-2 shadow-sm cursor-pointer disabled:opacity-50"
+                >
+                  {savingSiteSettings ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  <span>Save Shipping & Policy Rules</span>
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* SUB-TAB 5: Homepage Hero Banners & Slider Manager */}
+          {settingsSubTab === "banners" && (
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-6 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="text-sm font-black uppercase text-slate-900 flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-[#C8A96B]" />
+                    <span>Homepage Hero Banners & Promotions Manager</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Add, activate, reorder, or delete custom promotional slides and hero banners.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setIsCreatingBanner(!isCreatingBanner)}
+                  className="px-4 py-2 rounded-xl bg-[#0B0F14] text-[#C8A96B] hover:bg-[#161F2B] font-bold text-xs transition flex items-center gap-1.5 self-start cursor-pointer shadow-xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>{isCreatingBanner ? "Cancel" : "Add New Banner"}</span>
+                </button>
+              </div>
+
+              {/* Create Banner Form */}
+              {isCreatingBanner && (
+                <form onSubmit={handleCreateBanner} className="p-5 rounded-3xl bg-[#F5F3EE] border border-[#E8E5DC] space-y-4 animate-in fade-in">
+                  <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider">New Promotional Banner</h4>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">Banner Title *</label>
+                      <input
+                        type="text"
+                        required
+                        value={newBannerForm.title}
+                        onChange={(e) => setNewBannerForm({ ...newBannerForm, title: e.target.value })}
+                        placeholder="e.g. Mega Electronics Gala"
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-slate-900 outline-none focus:border-[#C8A96B]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">Subtitle / Slogan</label>
+                      <input
+                        type="text"
+                        value={newBannerForm.subtitle}
+                        onChange={(e) => setNewBannerForm({ ...newBannerForm, subtitle: e.target.value })}
+                        placeholder="Up to 50% Off on Verified Brands"
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-slate-900 outline-none focus:border-[#C8A96B]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">Badge Pill</label>
+                      <input
+                        type="text"
+                        value={newBannerForm.badge}
+                        onChange={(e) => setNewBannerForm({ ...newBannerForm, badge: e.target.value })}
+                        placeholder="HOT DEAL / NEW"
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-slate-900 outline-none focus:border-[#C8A96B]"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="block font-bold text-slate-800 mb-1">Banner Image URL *</label>
+                      <input
+                        type="url"
+                        required
+                        value={newBannerForm.imageUrl}
+                        onChange={(e) => setNewBannerForm({ ...newBannerForm, imageUrl: e.target.value })}
+                        placeholder="https://images.unsplash.com/... or /images/hero-banner.jpg"
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 font-mono text-slate-900 outline-none focus:border-[#C8A96B]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">Target Link URL</label>
+                      <input
+                        type="text"
+                        value={newBannerForm.linkUrl}
+                        onChange={(e) => setNewBannerForm({ ...newBannerForm, linkUrl: e.target.value })}
+                        placeholder="/products or /category/electronics"
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 font-mono text-slate-900 outline-none focus:border-[#C8A96B]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">Display Position</label>
+                      <select
+                        value={newBannerForm.position}
+                        onChange={(e) => setNewBannerForm({ ...newBannerForm, position: e.target.value })}
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-slate-900 outline-none"
+                      >
+                        <option value="HERO">Homepage Hero Slider</option>
+                        <option value="PROMO_TOP">Promo Top Bar</option>
+                        <option value="PROMO_SIDE">Sidebar Feature</option>
+                        <option value="FOOTER_BANNER">Footer Banner</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">Sort Order</label>
+                      <input
+                        type="number"
+                        value={newBannerForm.order}
+                        onChange={(e) => setNewBannerForm({ ...newBannerForm, order: Number(e.target.value) })}
+                        placeholder="0"
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 font-mono text-slate-900 outline-none"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={newBannerForm.isActive}
+                          onChange={(e) => setNewBannerForm({ ...newBannerForm, isActive: e.target.checked })}
+                          className="w-4 h-4 rounded text-[#C8A96B]"
+                        />
+                        <span className="font-bold text-slate-800">Immediately Active (Live)</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsCreatingBanner(false)}
+                      className="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 font-bold text-xs"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={savingBanner}
+                      className="px-5 py-2 rounded-xl bg-[#0B0F14] text-[#C8A96B] font-bold text-xs hover:bg-[#161F2B] transition flex items-center gap-1.5"
+                    >
+                      {savingBanner ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                      <span>Save & Publish Banner</span>
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Existing Banners Grid */}
+              {bannersList.length === 0 ? (
+                <div className="text-center py-12 text-slate-400 space-y-2 border border-dashed border-slate-200 rounded-3xl">
+                  <ImageIcon className="w-8 h-8 mx-auto text-slate-300" />
+                  <p className="text-xs font-semibold">No custom promotional banners created yet.</p>
+                  <span className="text-[11px] text-slate-400 block">The default high-definition hero banner is currently active on the homepage.</span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {bannersList.map((banner) => (
+                    <div key={banner.id} className="rounded-2xl border border-slate-200 overflow-hidden bg-slate-50 flex flex-col justify-between shadow-xs">
+                      <div>
+                        <div className="relative h-36 bg-slate-900 overflow-hidden">
+                          <img
+                            src={banner.imageUrl}
+                            alt={banner.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute top-2 left-2 flex items-center gap-1.5">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-black/80 text-white backdrop-blur-xs">
+                              {banner.position}
+                            </span>
+                            {banner.badge && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#C8A96B] text-[#0B0F14]">
+                                {banner.badge}
+                              </span>
+                            )}
+                          </div>
+                          <div className="absolute top-2 right-2">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                              banner.isActive ? "bg-emerald-500 text-white" : "bg-slate-600 text-white"
+                            }`}>
+                              {banner.isActive ? "LIVE" : "PAUSED"}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="p-3.5 space-y-1">
+                          <h4 className="font-bold text-slate-900 text-xs truncate">{banner.title}</h4>
+                          {banner.subtitle && <p className="text-[11px] text-slate-500 line-clamp-1">{banner.subtitle}</p>}
+                          <span className="text-[10px] text-[#C8A96B] font-mono block truncate">{banner.linkUrl}</span>
+                        </div>
+                      </div>
+
+                      <div className="p-3 bg-white border-t border-slate-100 flex items-center justify-between">
+                        <button
+                          onClick={() => handleToggleBanner(banner.id, banner.isActive)}
+                          className={`px-3 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
+                            banner.isActive ? "bg-amber-100 text-amber-800 hover:bg-amber-200" : "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                          }`}
+                        >
+                          {banner.isActive ? "Pause" : "Activate"}
+                        </button>
+
+                        <button
+                          onClick={() => handleDeleteBanner(banner.id)}
+                          className="p-1 text-slate-400 hover:text-rose-600 transition cursor-pointer"
+                          title="Delete Banner"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* SUB-TAB 6: Discount Coupons & Vouchers */}
+          {settingsSubTab === "coupons" && (
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-6 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="text-sm font-black uppercase text-slate-900 flex items-center gap-2">
+                    <Ticket className="w-4 h-4 text-[#C8A96B]" />
+                    <span>Store Discount Coupons & Promo Voucher Engine</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Generate promotional vouchers, percentage discounts, or flat PKR discounts applied at checkout.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setIsCreatingCoupon(!isCreatingCoupon)}
+                  className="px-4 py-2 rounded-xl bg-[#0B0F14] text-[#C8A96B] hover:bg-[#161F2B] font-bold text-xs transition flex items-center gap-1.5 self-start cursor-pointer shadow-xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>{isCreatingCoupon ? "Cancel" : "Create Coupon"}</span>
+                </button>
+              </div>
+
+              {/* Create Coupon Form */}
+              {isCreatingCoupon && (
+                <form onSubmit={handleCreateCoupon} className="p-5 rounded-3xl bg-[#F5F3EE] border border-[#E8E5DC] space-y-4 animate-in fade-in">
+                  <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider">New Promo Coupon</h4>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">Coupon Code *</label>
+                      <input
+                        type="text"
+                        required
+                        value={newCouponForm.code}
+                        onChange={(e) => setNewCouponForm({ ...newCouponForm, code: e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, "") })}
+                        placeholder="e.g. FAYZEE20"
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 font-mono font-black text-slate-900 uppercase tracking-widest outline-none focus:border-[#C8A96B]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">Discount Type</label>
+                      <select
+                        value={newCouponForm.discountType}
+                        onChange={(e) => setNewCouponForm({ ...newCouponForm, discountType: e.target.value })}
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-slate-900 outline-none font-medium"
+                      >
+                        <option value="PERCENTAGE">Percentage (% Off)</option>
+                        <option value="FIXED">Fixed Amount (PKR Flat Off)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">
+                        Discount Value ({newCouponForm.discountType === "PERCENTAGE" ? "%" : "PKR"}) *
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min={1}
+                        value={newCouponForm.discountValue}
+                        onChange={(e) => setNewCouponForm({ ...newCouponForm, discountValue: Number(e.target.value) })}
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 font-bold text-slate-900 outline-none focus:border-[#C8A96B]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">Minimum Order Amount (Rs.)</label>
+                      <input
+                        type="number"
+                        value={newCouponForm.minOrderAmount}
+                        onChange={(e) => setNewCouponForm({ ...newCouponForm, minOrderAmount: Number(e.target.value) })}
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 font-bold text-slate-900 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">Max Discount Cap (Rs.)</label>
+                      <input
+                        type="number"
+                        value={newCouponForm.maxDiscountAmount}
+                        onChange={(e) => setNewCouponForm({ ...newCouponForm, maxDiscountAmount: Number(e.target.value) })}
+                        placeholder="Optional cap"
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 font-bold text-slate-900 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">Max Redemptions (Usage Limit)</label>
+                      <input
+                        type="number"
+                        value={newCouponForm.usageLimit}
+                        onChange={(e) => setNewCouponForm({ ...newCouponForm, usageLimit: Number(e.target.value) })}
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 font-mono text-slate-900 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">Expiry Date *</label>
+                      <input
+                        type="date"
+                        required
+                        value={newCouponForm.endDate}
+                        onChange={(e) => setNewCouponForm({ ...newCouponForm, endDate: e.target.value })}
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-slate-900 outline-none font-medium"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="block font-bold text-slate-800 mb-1">Campaign Description</label>
+                      <input
+                        type="text"
+                        value={newCouponForm.description}
+                        onChange={(e) => setNewCouponForm({ ...newCouponForm, description: e.target.value })}
+                        placeholder="e.g. 20% Off for New Year shoppers"
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-slate-900 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsCreatingCoupon(false)}
+                      className="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={savingCoupon}
+                      className="px-5 py-2 rounded-xl bg-[#0B0F14] text-[#C8A96B] font-bold text-xs hover:bg-[#161F2B] transition flex items-center gap-1.5 cursor-pointer"
+                    >
+                      {savingCoupon ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                      <span>Create Coupon</span>
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Coupons List Table */}
+              {couponsList.length === 0 ? (
+                <div className="text-center py-12 text-slate-400 space-y-2 border border-dashed border-slate-200 rounded-3xl">
+                  <Ticket className="w-8 h-8 mx-auto text-slate-300" />
+                  <p className="text-xs font-semibold">No active discount coupons found.</p>
+                  <span className="text-[11px] text-slate-400 block">Click "+ Create Coupon" to launch your first promotional code.</span>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-100 text-[11px] font-black uppercase text-slate-400">
+                        <th className="py-2.5 px-3">Promo Code</th>
+                        <th className="py-2.5 px-3">Discount</th>
+                        <th className="py-2.5 px-3">Eligibility</th>
+                        <th className="py-2.5 px-3">Redemptions</th>
+                        <th className="py-2.5 px-3">Expiry</th>
+                        <th className="py-2.5 px-3">Status</th>
+                        <th className="py-2.5 px-3 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {couponsList.map((c) => (
+                        <tr key={c.id} className="hover:bg-slate-50/80 transition">
+                          <td className="py-3 px-3">
+                            <span className="px-2.5 py-1 rounded-lg bg-[#0B0F14] text-[#C8A96B] font-mono font-black text-xs tracking-wider">
+                              {c.code}
+                            </span>
+                            {c.description && <span className="text-[11px] text-slate-500 block mt-1">{c.description}</span>}
+                          </td>
+                          <td className="py-3 px-3 font-bold text-slate-900">
+                            {c.discountType === "PERCENTAGE" ? `${c.discountValue}% OFF` : `Rs. ${c.discountValue} FLAT`}
+                            {c.maxDiscountAmount && (
+                              <span className="text-[10px] text-slate-400 block font-normal">
+                                Cap: Rs. {c.maxDiscountAmount}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-3 text-slate-600">
+                            Min: Rs. {c.minOrderAmount || 0}
+                          </td>
+                          <td className="py-3 px-3 font-mono">
+                            <span className="font-bold text-slate-900">{c.usedCount || c._count?.usages || 0}</span>
+                            <span className="text-slate-400"> / {c.usageLimit}</span>
+                          </td>
+                          <td className="py-3 px-3 text-slate-500 whitespace-nowrap">
+                            {formatDate(c.endDate)}
+                          </td>
+                          <td className="py-3 px-3">
+                            <button
+                              onClick={() => handleToggleCoupon(c.id, c.isActive)}
+                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-black cursor-pointer transition ${
+                                c.isActive ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200" : "bg-slate-200 text-slate-600 hover:bg-slate-300"
+                              }`}
+                            >
+                              {c.isActive ? "ACTIVE" : "PAUSED"}
+                            </button>
+                          </td>
+                          <td className="py-3 px-3 text-right">
+                            <button
+                              onClick={() => handleDeleteCoupon(c.id)}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 transition cursor-pointer"
+                              title="Delete Coupon"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

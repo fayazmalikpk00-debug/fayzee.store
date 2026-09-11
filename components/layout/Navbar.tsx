@@ -67,6 +67,17 @@ export function Navbar() {
   }, [cartCount]);
 
   // Mega Menu State
+  const [siteSettings, setSiteSettings] = useState<any>(null);
+
+  useEffect(() => {
+    fetch("/api/site-settings")
+      .then((res) => res.json())
+      .then((d) => {
+        if (d?.settings) setSiteSettings(d.settings);
+      })
+      .catch(() => {});
+  }, []);
+
   const [megaMenuOpen, setMegaMenuOpen] = useState(false);
   const [activeCategorySlug, setActiveCategorySlug] = useState<string>(
     COMPLETE_MARKETPLACE_HIERARCHY[0]?.slug || "electronics"
@@ -122,9 +133,45 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 bg-[#0B0F14] border-b border-[#1A222C] shadow-subtle w-full max-w-full">
+      {/* 0. Live Top Announcement Bar (Controlled via Super Admin) */}
+      {siteSettings?.announcementEnabled && siteSettings?.announcementText && (
+        <div className="bg-[#0B0F14] text-[#C8A96B] text-[11px] sm:text-xs py-1.5 px-3 sm:px-6 lg:px-8 border-b border-[#1E293B]">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+            <Link
+              href={siteSettings.announcementLink || "/products"}
+              className="flex items-center gap-1.5 hover:underline truncate font-medium flex-1 text-center sm:text-left"
+            >
+              <span className="truncate">{siteSettings.announcementText}</span>
+              <span className="hidden sm:inline font-bold text-white text-[10px]">&rarr;</span>
+            </Link>
+            {siteSettings.whatsappNumber && (
+              <a
+                href={`https://wa.me/${siteSettings.whatsappNumber.replace(/[^0-9]/g, "")}?text=Hello%20Fayzee%20Store%2C%20I%20have%20an%20inquiry.`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden md:flex items-center gap-1 text-[#25D366] hover:text-emerald-400 font-bold text-[11px] shrink-0"
+                title="Direct WhatsApp Helpline"
+              >
+                <span>WhatsApp: {siteSettings.whatsappNumber}</span>
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* 1. Top Utility Row - Become a Seller & Help */}
       <div className="bg-[#060A0E] text-[#8A8F98] text-xs sm:text-sm py-1.5 px-3 sm:px-6 lg:px-8 border-b border-[#141B22]">
         <div className="max-w-7xl mx-auto flex items-center justify-end gap-3 text-xs sm:text-sm">
+          {siteSettings?.whatsappNumber && (
+            <a
+              href={`https://wa.me/${siteSettings.whatsappNumber.replace(/[^0-9]/g, "")}?text=Hello%20Fayzee%20Store`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="md:hidden text-[#25D366] font-medium flex items-center gap-1 mr-auto text-xs"
+            >
+              <span>WA: {siteSettings.whatsappNumber}</span>
+            </a>
+          )}
           <Link
             href="/seller/register"
             className="hover:text-white transition flex items-center gap-1.5 text-[#8A8F98] hover:text-[#C8A96B] font-medium"

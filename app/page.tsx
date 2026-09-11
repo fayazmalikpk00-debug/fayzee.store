@@ -25,33 +25,49 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function HomePage() {
-  const [allProductsData, categories, flashSale, trendingProducts, topSellers, explicitFeaturedProduct] =
-    await Promise.all([
-      getProducts({ limit: 16, sortBy: "newest" }),
-      getCategories(),
-      getFlashSaleProducts(),
-      getTrendingProducts(12),
-      prisma.sellerProfile.findMany({
-        where: { status: "APPROVED" },
-        take: 4,
-        orderBy: { rating: "desc" },
-        include: { _count: { select: { products: true } } },
-      }),
-      prisma.product.findFirst({
-        where: { status: "ACTIVE", isFeatured: true },
-        include: {
-          images: { orderBy: { sortOrder: "asc" } },
-          category: true,
-          seller: { select: { storeName: true, storeSlug: true } },
-        },
-        orderBy: [{ updatedAt: "desc" }],
-      }),
-    ]);
+  const [
+    allProductsData,
+    categories,
+    flashSale,
+    trendingProducts,
+    topSellers,
+    explicitFeaturedProduct,
+    customHeroBanner,
+    siteSettings,
+  ] = await Promise.all([
+    getProducts({ limit: 16, sortBy: "newest" }),
+    getCategories(),
+    getFlashSaleProducts(),
+    getTrendingProducts(12),
+    prisma.sellerProfile.findMany({
+      where: { status: "APPROVED" },
+      take: 4,
+      orderBy: { rating: "desc" },
+      include: { _count: { select: { products: true } } },
+    }),
+    prisma.product.findFirst({
+      where: { status: "ACTIVE", isFeatured: true },
+      include: {
+        images: { orderBy: { sortOrder: "asc" } },
+        category: true,
+        seller: { select: { storeName: true, storeSlug: true } },
+      },
+      orderBy: [{ updatedAt: "desc" }],
+    }),
+    prisma.siteBanner.findFirst({
+      where: { isActive: true, position: "HERO" },
+      orderBy: [{ order: "asc" }, { createdAt: "desc" }],
+    }),
+    prisma.siteSetting.findUnique({
+      where: { id: "default" },
+    }),
+  ]);
 
   // Hero Fayzee AI Top Pick:
   // Strictly 100% Admin Controlled: ONLY product explicitly designated by Admin (isFeatured = true)
   // ZERO automatic fallback.
   const aiTopPick = explicitFeaturedProduct || null;
+  const heroImage = customHeroBanner?.imageUrl || "/images/hero-banner.jpg";
 
   return (
     <div className="space-y-12 pb-16">
@@ -59,14 +75,22 @@ export default async function HomePage() {
       <section className="relative overflow-hidden bg-[#0B0F14] text-white py-12 sm:py-16 md:py-20 border-b border-[#1A222C] min-h-[580px] sm:min-h-[640px] flex items-center">
         {/* Full-Width Animated Background Banner (Bright, Vivid & Full Resolution) */}
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-          <Image
-            src="/images/hero-banner.jpg"
-            alt="Fayzee Store - Luxury Shopping Experience"
-            fill
-            priority
-            className="object-cover object-center animate-ken-burns will-change-transform opacity-95 sm:opacity-100"
-            sizes="100vw"
-          />
+          {heroImage.startsWith("/") ? (
+            <Image
+              src={heroImage}
+              alt={customHeroBanner?.title || "Fayzee Store - Luxury Shopping Experience"}
+              fill
+              priority
+              className="object-cover object-center animate-ken-burns will-change-transform opacity-95 sm:opacity-100"
+              sizes="100vw"
+            />
+          ) : (
+            <img
+              src={heroImage}
+              alt={customHeroBanner?.title || "Fayzee Store - Luxury Shopping Experience"}
+              className="w-full h-full object-cover object-center animate-ken-burns will-change-transform opacity-95 sm:opacity-100"
+            />
+          )}
 
           {/* Soft directional gradient: preserves full image brightness while keeping text legible */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#0B0F14]/75 via-[#0B0F14]/30 to-transparent"></div>
@@ -77,20 +101,34 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             {/* Primary Hero Content - Clean floating text directly over background */}
             <div className={`${aiTopPick ? "lg:col-span-7" : "lg:col-span-9 max-w-3xl"} space-y-6 sm:space-y-7`}>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[64px] font-black tracking-tight leading-[1.1] text-white break-words drop-shadow-[0_4px_20px_rgba(0,0,0,0.95)]">
-                Shop Smart. <br />
-                <span className="bg-gradient-to-r from-[#C8A96B] via-[#FFF2D1] to-[#C8A96B] bg-clip-text text-transparent drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
-                  Shop Luxury.
+              {customHeroBanner?.badge && (
+                <span className="inline-block px-3 py-1 rounded-full text-xs font-black bg-[#C8A96B] text-[#0B0F14] shadow-md uppercase tracking-wider">
+                  {customHeroBanner.badge}
                 </span>
+              )}
+
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[64px] font-black tracking-tight leading-[1.1] text-white break-words drop-shadow-[0_4px_20px_rgba(0,0,0,0.95)]">
+                {customHeroBanner?.title ? (
+                  customHeroBanner.title
+                ) : (
+                  <>
+                    Shop Smart. <br />
+                    <span className="bg-gradient-to-r from-[#C8A96B] via-[#FFF2D1] to-[#C8A96B] bg-clip-text text-transparent drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
+                      Shop Luxury.
+                    </span>
+                  </>
+                )}
               </h1>
 
               <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white font-medium max-w-2xl leading-relaxed drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)]">
-                Explore thousands of verified authentic electronics, footwear, designer apparel, and home appliances directly from certified sellers with 100% genuine guarantees.
+                {customHeroBanner?.subtitle ||
+                  siteSettings?.siteTagline ||
+                  "Explore thousands of verified authentic electronics, footwear, designer apparel, and home appliances directly from certified sellers with 100% genuine guarantees."}
               </p>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-2">
                 <Link
-                  href="/products"
+                  href={customHeroBanner?.linkUrl || "/products"}
                   className="px-7 py-3.5 bg-[#C8A96B] hover:bg-[#B89858] text-[#0B0F14] font-black text-base sm:text-lg rounded-full shadow-[0_6px_25px_rgba(200,169,107,0.5)] transition flex items-center justify-center gap-2 active:scale-98 text-center"
                 >
                   <span>Explore Catalog</span>
