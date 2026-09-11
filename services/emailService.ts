@@ -358,3 +358,98 @@ export async function sendSellerEmailOtp({
     };
   }
 }
+
+export interface SendSupportInquiryParams {
+  name: string;
+  email: string;
+  phone?: string;
+  orderNumber?: string;
+  category: string;
+  subject: string;
+  message: string;
+  ticketId: string;
+}
+
+/**
+ * Dispatches a customer support inquiry email to the store administration.
+ */
+export async function sendSupportInquiryEmail({
+  name,
+  email,
+  phone,
+  orderNumber,
+  category,
+  subject,
+  message,
+  ticketId,
+}: SendSupportInquiryParams): Promise<EmailResult> {
+  const resendApiKey = process.env.RESEND_API_KEY?.trim().replace(/^["']|["']$/g, "");
+  const fromEmail =
+    process.env.EMAIL_FROM?.trim().replace(/^["']|["']$/g, "") ||
+    "FAYZEE Support <onboarding@resend.dev>";
+  const adminEmail = process.env.ADMIN_SUPPORT_EMAIL?.trim() || "itsfayzeepk00@gmail.com";
+
+  console.log(`📨 [FAYZEE SUPPORT INQUIRY] Ticket [${ticketId}] from ${name} (${email}): "${subject}"`);
+
+  if (!resendApiKey) {
+    console.warn(`⚠️ [FAYZEE SUPPORT SIMULATION] RESEND_API_KEY not configured. Simulated ticket receipt [${ticketId}]`);
+    return {
+      success: true,
+      isSimulated: true,
+      messageId: `sim_${ticketId}`,
+    };
+  }
+
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: fromEmail,
+        to: [adminEmail],
+        reply_to: email,
+        subject: `[${ticketId}] ${category}: ${subject} (from ${name})`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #E8E5DC; border-radius: 12px;">
+            <div style="background-color: #0B0F14; padding: 16px 20px; border-radius: 8px; margin-bottom: 20px;">
+              <h2 style="color: #C8A96B; margin: 0; font-size: 18px;">FAYZEE Customer Support Inquiry</h2>
+              <p style="color: #ffffff; margin: 4px 0 0 0; font-size: 12px;">Ticket ID: <strong>${ticketId}</strong></p>
+            </div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px;">
+              <tr><td style="padding: 6px 0; color: #666; width: 140px;">Customer Name:</td><td style="font-weight: bold; color: #111;">${name}</td></tr>
+              <tr><td style="padding: 6px 0; color: #666;">Customer Email:</td><td><a href="mailto:${email}">${email}</a></td></tr>
+              ${phone ? `<tr><td style="padding: 6px 0; color: #666;">Phone / WhatsApp:</td><td style="font-weight: bold;">${phone}</td></tr>` : ""}
+              ${orderNumber ? `<tr><td style="padding: 6px 0; color: #666;">Order Reference:</td><td style="color: #C8A96B; font-weight: bold;">${orderNumber}</td></tr>` : ""}
+              <tr><td style="padding: 6px 0; color: #666;">Department:</td><td><strong>${category}</strong></td></tr>
+              <tr><td style="padding: 6px 0; color: #666;">Subject:</td><td style="font-weight: bold;">${subject}</td></tr>
+            </table>
+            <div style="background-color: #F5F3EE; padding: 16px; border-radius: 8px; border-left: 4px solid #C8A96B;">
+              <p style="margin: 0 0 8px 0; font-size: 12px; color: #888; font-weight: bold; text-transform: uppercase;">Customer Message:</p>
+              <p style="margin: 0; font-size: 14px; color: #222; white-space: pre-line; line-height: 1.6;">${message}</p>
+            </div>
+            <p style="margin-top: 24px; font-size: 11px; color: #999; text-align: center;">
+              You can hit Reply in your email client to directly reply to the customer at ${email}.
+            </p>
+          </div>
+        `,
+        text: `FAYZEE Support Inquiry [${ticketId}]\n\nCustomer: ${name} (${email})\nPhone: ${phone || "N/A"}\nOrder: ${orderNumber || "N/A"}\nDepartment: ${category}\nSubject: ${subject}\n\nMessage:\n${message}`,
+      }),
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      console.error("❌ [RESEND SUPPORT EMAIL ERROR]:", errData);
+      return { success: false, error: errData.message || "Failed to dispatch email via Resend." };
+    }
+
+    const data = await response.json();
+    return { success: true, messageId: data.id };
+  } catch (err: any) {
+    console.error("❌ [SUPPORT INQUIRY EXCEPTION]:", err);
+    return { success: false, error: err.message || "Error dispatching support email." };
+  }
+}
+
