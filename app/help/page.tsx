@@ -15,7 +15,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Customer Help & Support Center | Fayzee Store Pakistan",
   description:
-    "Contact Fayzee customer care, find answers to common questions about orders, payments, returns, seller registration, or reach us via email at support@fayzee.store.",
+    "Contact Fayzee customer care, find answers to common questions about orders, payments, returns, seller registration, or reach us via email at itsfayzeepk00@gmail.com.",
 };
 
 export default function HelpPage() {

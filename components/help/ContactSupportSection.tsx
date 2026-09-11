@@ -138,13 +138,13 @@ export function ContactSupportSection() {
               Direct inbox monitored 24/7 by our dedicated support department.
             </p>
             <p className="font-mono text-xs font-black text-slate-900 bg-[#F5F3EE] px-3 py-1.5 rounded-xl border border-slate-200 select-all">
-              support@fayzee.store
+              itsfayzeepk00@gmail.com
             </p>
           </div>
 
           <div className="space-y-2 pt-2">
             <button
-              onClick={() => handleCopy("support@fayzee.store", "email")}
+              onClick={() => handleCopy("itsfayzeepk00@gmail.com", "email")}
               className="w-full py-2 px-3 rounded-xl bg-[#0B0F14] hover:bg-[#161F2B] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
             >
               {copiedEmail ? (
@@ -161,7 +161,7 @@ export function ContactSupportSection() {
             </button>
 
             <a
-              href="https://mail.google.com/mail/?view=cm&fs=1&to=support@fayzee.store&su=Customer+Support+Inquiry"
+              href="https://mail.google.com/mail/?view=cm&fs=1&to=itsfayzeepk00@gmail.com&su=Customer+Support+Inquiry"
               target="_blank"
               rel="noopener noreferrer"
               className="w-full py-2 px-3 rounded-xl bg-white hover:bg-slate-50 text-slate-700 hover:text-[#0B0F14] border border-slate-200 text-xs font-bold transition flex items-center justify-center gap-1.5"
@@ -267,7 +267,7 @@ export function ContactSupportSection() {
             </div>
 
             <p className="text-xs text-slate-500 leading-relaxed">
-              Our customer operations team at <strong>support@fayzee.store</strong> will review your request and reply to your provided email address within <strong>2 to 4 business hours</strong>.
+              Our customer operations team at <strong>itsfayzeepk00@gmail.com</strong> will review your request and reply to your provided email address within <strong>2 to 4 business hours</strong>.
             </p>
 
             <button

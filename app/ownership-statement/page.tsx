@@ -78,9 +78,9 @@ export default function OwnershipStatementPage() {
             </h2>
             <p>For official inquiries, supplier registrations, or regulatory communications:</p>
             <ul className="list-disc pl-5 space-y-1.5 font-mono text-xs">
-              <li>General Customer Inquiries: <strong>support@fayzee.store</strong></li>
-              <li>Direct Owner Communications: <strong>fayazmalikpk00@gmail.com</strong></li>
-              <li>Merchant Settlement / Billing Desk: <strong>support@fayzee.store</strong></li>
+              <li>General Customer Inquiries: <strong>itsfayzeepk00@gmail.com</strong></li>
+              <li>Direct Owner Communications: <strong>itsfayzeepk00@gmail.com</strong></li>
+              <li>Merchant Settlement / Billing Desk: <strong>itsfayzeepk00@gmail.com</strong></li>
             </ul>
           </section>
 

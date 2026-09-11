@@ -182,7 +182,7 @@ export default async function OrderInvoicePage({
             <div className="text-[10px] text-slate-500 pt-0.5 leading-snug">
               <p>Fayzee Store (Pvt) Ltd. • Registered E-Commerce Enterprise</p>
               <p>Karachi / Lahore, Islamic Republic of Pakistan</p>
-              <p>Email: support@fayzee.store • Web: https://fayzee.store</p>
+              <p>Email: itsfayzeepk00@gmail.com • Web: https://fayzee.store</p>
               <p className="font-mono text-[9px] text-slate-400">
                 NTN: 8941203-7 • Sales Tax Reg: STRN-3277876123456
               </p>
@@ -467,7 +467,7 @@ export default async function OrderInvoicePage({
           {/* Right: Terms & Authorized Signatory */}
           <div className="text-right space-y-1">
             <div className="space-y-0.5 text-[9px] text-slate-500">
-              <p className="font-bold text-slate-800">Customer Care: support@fayzee.store</p>
+              <p className="font-bold text-slate-800">Customer Care: itsfayzeepk00@gmail.com</p>
               <p>7-Day Easy Return Policy for genuine defects</p>
             </div>
             <div className="pt-2 border-t border-slate-300 inline-block text-center min-w-[130px]">

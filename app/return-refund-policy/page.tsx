@@ -69,7 +69,7 @@ export default function ReturnRefundPolicyPage() {
             </h2>
             <ol className="list-decimal pl-5 space-y-1.5">
               <li>Log in to your account and navigate to <strong>My Orders</strong> (<Link href="/orders" className="text-[#C8A96B] underline font-semibold">https://fayzee.store/orders</Link>).</li>
-              <li>Select the delivered order and click <strong>"Request Return / Refund"</strong> or email us at <strong>support@fayzee.store</strong> with photos of the damaged/incorrect item.</li>
+              <li>Select the delivered order and click <strong>"Request Return / Refund"</strong> or email us at <strong>itsfayzeepk00@gmail.com</strong> with photos of the damaged/incorrect item.</li>
               <li>Our logistics courier partner will arrange doorstep return parcel pickup within 2 to 3 working days.</li>
             </ol>
           </section>
@@ -92,8 +92,8 @@ export default function ReturnRefundPolicyPage() {
             <h2 className="text-base font-bold text-[#0B0F14]">5. Contact Customer Support</h2>
             <p>For immediate help with any return or refund inquiry, contact us:</p>
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1 font-mono">
-              <p><strong>Support Email:</strong> support@fayzee.store</p>
-              <p><strong>Direct Helpline:</strong> fayazmalikpk00@gmail.com</p>
+              <p><strong>Support Email:</strong> itsfayzeepk00@gmail.com</p>
+              <p><strong>Direct Helpline:</strong> itsfayzeepk00@gmail.com</p>
               <p><strong>Physical Address:</strong> Near Umar Pharmacy, Dalazak Road, Peshawar, KP, Pakistan</p>
             </div>
           </section>

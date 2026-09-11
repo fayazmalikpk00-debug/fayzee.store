@@ -96,8 +96,8 @@ export default function PrivacyPolicyPage() {
             </p>
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1 font-mono">
               <p><strong>Entity:</strong> Fayzee Store (Pvt) Ltd.</p>
-              <p><strong>Support Email:</strong> support@fayzee.store</p>
-              <p><strong>Primary Inquiries:</strong> fayazmalikpk00@gmail.com</p>
+              <p><strong>Support Email:</strong> itsfayzeepk00@gmail.com</p>
+              <p><strong>Primary Inquiries:</strong> itsfayzeepk00@gmail.com</p>
               <p><strong>Location:</strong> Dalazak Road, Peshawar, Khyber Pakhtunkhwa, Pakistan</p>
             </div>
           </section>

@@ -85,7 +85,7 @@ export default function TermsAndConditionsPage() {
             <h2 className="text-base font-bold text-[#0B0F14]">6. Contact Information</h2>
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1 font-mono">
               <p><strong>Platform:</strong> Fayzee Store</p>
-              <p><strong>Customer Care:</strong> support@fayzee.store</p>
+              <p><strong>Customer Care:</strong> itsfayzeepk00@gmail.com</p>
               <p><strong>Founder / Principal:</strong> Fayaz Ullah</p>
               <p><strong>Address:</strong> Dalazak Road, Peshawar, KP, Pakistan</p>
             </div>
