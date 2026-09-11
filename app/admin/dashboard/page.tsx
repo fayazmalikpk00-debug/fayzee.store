@@ -53,8 +53,15 @@ export default function AdminDashboardPage() {
   const [sellers, setSellers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    "analytics" | "sellers" | "categories" | "products" | "finance" | "courier" | "payment" | "audit"
+    "analytics" | "sellers" | "categories" | "products" | "finance" | "courier" | "payment" | "audit" | "support"
   >("analytics");
+
+  // Customer Support Tickets State
+  const [supportTickets, setSupportTickets] = useState<any[]>([]);
+  const [supportFilter, setSupportFilter] = useState<string>("ALL");
+  const [supportSearch, setSupportSearch] = useState<string>("");
+  const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
+  const [updatingTicketStatus, setUpdatingTicketStatus] = useState<string | null>(null);
 
   // Logistics & Courier API State
   const [courierSettings, setCourierSettings] = useState({
@@ -213,10 +220,40 @@ export default function AdminDashboardPage() {
           setRecentTransactions(paymentData.recentTransactions);
         }
       }
+
+      // Fetch customer support tickets
+      const supportRes = await fetch("/api/admin/support").catch(() => null);
+      if (supportRes && supportRes.ok) {
+        const supportData = await supportRes.json();
+        if (supportData.tickets) setSupportTickets(supportData.tickets);
+      }
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateTicketStatus = async (ticketId: string, newStatus: string) => {
+    setUpdatingTicketStatus(ticketId);
+    try {
+      const res = await fetch("/api/admin/support", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticketId, status: newStatus }),
+      });
+      if (res.ok) {
+        setSupportTickets((prev) =>
+          prev.map((t) => (t.ticketId === ticketId ? { ...t, status: newStatus } : t))
+        );
+        if (selectedTicket && selectedTicket.ticketId === ticketId) {
+          setSelectedTicket((prev: any) => ({ ...prev, status: newStatus }));
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUpdatingTicketStatus(null);
     }
   };
 
@@ -549,6 +586,22 @@ export default function AdminDashboardPage() {
           ) : (
             <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
               LIVE
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab("support")}
+          className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
+            activeTab === "support"
+              ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
+              : "text-[#0B0F14] hover:bg-[#F5F3EE]"
+          }`}
+        >
+          <Mail className="w-3.5 h-3.5 text-[#C8A96B]" />
+          <span>Support Tickets</span>
+          {supportTickets.filter((t) => t.status === "OPEN").length > 0 && (
+            <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-500 text-black">
+              {supportTickets.filter((t) => t.status === "OPEN").length}
             </span>
           )}
         </button>
@@ -2938,6 +2991,260 @@ export default function AdminDashboardPage() {
                 </div>
               ))
             )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB: Customer Support Tickets */}
+      {activeTab === "support" && (
+        <div className="space-y-6">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-[#C8A96B]" />
+                  <span>Customer Support Desk & Inquiries</span>
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Manage inquiries submitted from the official Help page (/help).
+                </p>
+              </div>
+
+              {/* Filters & Search */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+                  <input
+                    type="text"
+                    value={supportSearch}
+                    onChange={(e) => setSupportSearch(e.target.value)}
+                    placeholder="Search name, email, ticket..."
+                    className="pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs outline-none focus:border-[#C8A96B]"
+                  />
+                </div>
+
+                <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
+                  {["ALL", "OPEN", "RESOLVED"].map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setSupportFilter(f)}
+                      className={`px-3 py-1 rounded-lg transition cursor-pointer ${
+                        supportFilter === f
+                          ? "bg-white text-slate-900 shadow-xs"
+                          : "text-slate-500 hover:text-slate-900"
+                      }`}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Tickets Table */}
+            {supportTickets.length === 0 ? (
+              <div className="text-center py-12 text-slate-400 space-y-2">
+                <Mail className="w-8 h-8 mx-auto text-slate-300" />
+                <p className="text-xs font-medium">No customer support tickets received yet.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-100 text-[11px] font-black uppercase text-slate-400">
+                      <th className="py-2.5 px-3">Ticket Ref</th>
+                      <th className="py-2.5 px-3">Customer</th>
+                      <th className="py-2.5 px-3">Department & Subject</th>
+                      <th className="py-2.5 px-3">Order Ref</th>
+                      <th className="py-2.5 px-3">Status</th>
+                      <th className="py-2.5 px-3">Submitted</th>
+                      <th className="py-2.5 px-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {supportTickets
+                      .filter((t) => {
+                        if (supportFilter !== "ALL" && t.status !== supportFilter) return false;
+                        if (!supportSearch.trim()) return true;
+                        const q = supportSearch.toLowerCase();
+                        return (
+                          t.ticketId?.toLowerCase().includes(q) ||
+                          t.name?.toLowerCase().includes(q) ||
+                          t.email?.toLowerCase().includes(q) ||
+                          t.subject?.toLowerCase().includes(q) ||
+                          t.orderNumber?.toLowerCase().includes(q)
+                        );
+                      })
+                      .map((ticket) => (
+                        <tr key={ticket.id || ticket.ticketId} className="hover:bg-slate-50/80 transition">
+                          <td className="py-3 px-3 font-mono font-bold text-[#0B0F14]">
+                            {ticket.ticketId}
+                          </td>
+                          <td className="py-3 px-3">
+                            <span className="font-bold text-slate-900 block">{ticket.name}</span>
+                            <span className="text-[11px] text-slate-500 block">{ticket.email}</span>
+                            {ticket.phone && (
+                              <span className="text-[10px] text-emerald-600 font-mono block">
+                                📞 {ticket.phone}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-3 max-w-xs">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#F5F3EE] text-[#0B0F14] border border-slate-200 inline-block mb-1">
+                              {ticket.category}
+                            </span>
+                            <p className="font-semibold text-slate-900 truncate">{ticket.subject}</p>
+                            <p className="text-[11px] text-slate-500 line-clamp-1">{ticket.message}</p>
+                          </td>
+                          <td className="py-3 px-3">
+                            {ticket.orderNumber ? (
+                              <span className="font-mono text-[11px] font-bold text-[#C8A96B] bg-[#0B0F14] px-2 py-0.5 rounded">
+                                {ticket.orderNumber}
+                              </span>
+                            ) : (
+                              <span className="text-slate-300">-</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-3">
+                            <button
+                              onClick={() =>
+                                handleUpdateTicketStatus(
+                                  ticket.ticketId,
+                                  ticket.status === "OPEN" ? "RESOLVED" : "OPEN"
+                                )
+                              }
+                              disabled={updatingTicketStatus === ticket.ticketId}
+                              className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition cursor-pointer ${
+                                ticket.status === "RESOLVED"
+                                  ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                                  : "bg-amber-100 text-amber-800 hover:bg-amber-200"
+                              }`}
+                              title="Click to toggle status"
+                            >
+                              {updatingTicketStatus === ticket.ticketId ? "..." : ticket.status}
+                            </button>
+                          </td>
+                          <td className="py-3 px-3 text-[11px] text-slate-400 whitespace-nowrap">
+                            {formatDateTime(ticket.createdAt)}
+                          </td>
+                          <td className="py-3 px-3 text-right whitespace-nowrap">
+                            <div className="inline-flex items-center gap-1.5">
+                              <button
+                                onClick={() => setSelectedTicket(ticket)}
+                                className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer"
+                                title="Read Message & Details"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </button>
+                              <a
+                                href={`mailto:${ticket.email}?subject=Re: [${ticket.ticketId}] ${ticket.subject}&body=Dear ${ticket.name},%0D%0A%0D%0AThank you for reaching out to Fayzee Store Support.`}
+                                className="p-1.5 rounded-lg bg-[#0B0F14] hover:bg-[#161F2B] text-[#C8A96B] transition"
+                                title="Reply via Email"
+                              >
+                                <Mail className="w-3.5 h-3.5" />
+                              </a>
+                              {ticket.phone && (
+                                <a
+                                  href={`https://wa.me/${ticket.phone.replace(/[^0-9]/g, "")}?text=Assalam-o-Alaikum ${encodeURIComponent(ticket.name)}, regarding your Fayzee support ticket ${ticket.ticketId}:`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition"
+                                  title="Chat on WhatsApp"
+                                >
+                                  <MessageSquare className="w-3.5 h-3.5" />
+                                </a>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Ticket Details Inspection Modal */}
+      {selectedTicket && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-5 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <span className="text-[10px] font-black uppercase text-slate-400">
+                  Customer Support Ticket
+                </span>
+                <h3 className="font-mono font-black text-base text-[#0B0F14]">
+                  {selectedTicket.ticketId}
+                </h3>
+              </div>
+              <button
+                onClick={() => setSelectedTicket(null)}
+                className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-black transition cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-xs bg-[#F5F3EE] p-4 rounded-2xl">
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 block uppercase">Customer</span>
+                <span className="font-bold text-slate-900">{selectedTicket.name}</span>
+                <span className="text-slate-500 block">{selectedTicket.email}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 block uppercase">Phone / WA</span>
+                <span className="font-bold text-slate-900">{selectedTicket.phone || "Not Provided"}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 block uppercase">Department</span>
+                <span className="font-bold text-slate-900">{selectedTicket.category}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 block uppercase">Order Reference</span>
+                <span className="font-bold text-[#C8A96B] font-mono">{selectedTicket.orderNumber || "None"}</span>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-bold text-slate-400 uppercase">Subject</span>
+              <p className="font-bold text-sm text-slate-900">{selectedTicket.subject}</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-bold text-slate-400 uppercase">Full Message</span>
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-xs text-slate-800 leading-relaxed max-h-52 overflow-y-auto whitespace-pre-line font-sans">
+                {selectedTicket.message}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+              <button
+                onClick={() =>
+                  handleUpdateTicketStatus(
+                    selectedTicket.ticketId,
+                    selectedTicket.status === "OPEN" ? "RESOLVED" : "OPEN"
+                  )
+                }
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                  selectedTicket.status === "RESOLVED"
+                    ? "bg-amber-100 text-amber-800 hover:bg-amber-200"
+                    : "bg-emerald-600 text-white hover:bg-emerald-700"
+                }`}
+              >
+                {selectedTicket.status === "RESOLVED" ? "Re-open Ticket" : "Mark as Resolved"}
+              </button>
+
+              <div className="flex items-center gap-2">
+                <a
+                  href={`mailto:${selectedTicket.email}?subject=Re: [${selectedTicket.ticketId}] ${selectedTicket.subject}`}
+                  className="px-4 py-2 rounded-xl bg-[#0B0F14] text-[#C8A96B] text-xs font-bold hover:bg-[#161F2B] transition flex items-center gap-1.5"
+                >
+                  <Mail className="w-3.5 h-3.5" /> Reply Email
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       )}

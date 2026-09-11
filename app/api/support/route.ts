@@ -1,3 +1,4 @@
+import prisma from "@/lib/db";
 import { sendSupportInquiryEmail } from "@/services/emailService";
 import { NextResponse } from "next/server";
 
@@ -32,7 +33,26 @@ export async function POST(req: Request) {
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const ticketId = `TKT-FYZ-${Date.now().toString().slice(-4)}${randomSuffix}`;
 
-    // Dispatch support email
+    // 1. Save ticket directly into Neon Database
+    try {
+      await prisma.supportTicket.create({
+        data: {
+          ticketId,
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          phone: phone?.trim() || null,
+          orderNumber: orderNumber?.trim() || null,
+          category: category?.trim() || "General Inquiry",
+          subject: subject?.trim() || "Customer Support Inquiry",
+          message: message.trim(),
+          status: "OPEN",
+        },
+      });
+    } catch (dbErr) {
+      console.error("DB Ticket Save Error:", dbErr);
+    }
+
+    // 2. Dispatch support notification email to Admin (itsfayzeepk00@gmail.com)
     const dispatchResult = await sendSupportInquiryEmail({
       name: name.trim(),
       email: email.trim().toLowerCase(),
