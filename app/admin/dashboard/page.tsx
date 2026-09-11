@@ -40,6 +40,7 @@ import {
   Eye,
   FileCheck,
   FileText,
+  Flame,
   Mail,
   MessageSquare,
   Phone,
@@ -534,8 +535,8 @@ export default function AdminDashboardPage() {
               : "text-[#0B0F14] hover:bg-[#F5F3EE]"
           }`}
         >
-          <Sparkles className="w-3.5 h-3.5 text-[#C8A96B]" />
-          <span>Products & Ads ({productsList.length})</span>
+          <Flame className="w-3.5 h-3.5 text-amber-500" />
+          <span>Featured & Trending ({productsList.filter((p) => p.isTrending).length})</span>
         </button>
         <button
           onClick={() => setActiveTab("finance")}
@@ -1309,16 +1310,18 @@ export default function AdminDashboardPage() {
 
             <div className="p-5 bg-[#0B0F14] text-white rounded-2xl border border-[#C8A96B]/30 shadow-xs space-y-1">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#C8A96B] uppercase flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5" /> Hero AI Top Pick
+                <span className="text-xs font-bold text-[#C8A96B] uppercase flex items-center gap-1.5">
+                  <Flame className="w-3.5 h-3.5 text-amber-400" /> Featured Collection
                 </span>
-                <Star className="w-4 h-4 text-[#C8A96B] fill-[#C8A96B]" />
+                <span className="px-2 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-full font-black text-xs">
+                  {productsList.filter((p) => p.isTrending).length} Active
+                </span>
               </div>
-              <p className="text-base font-black truncate">
-                {productsList.find((p) => p.isTrending)?.title || "Auto-Selected Top Product"}
+              <p className="text-2xl font-black text-white">
+                {productsList.filter((p) => p.isTrending).length} Products Selected
               </p>
               <span className="text-xs text-slate-300">
-                {productsList.find((p) => p.isTrending) ? "Manually selected by Admin" : "Auto-picked by system"}
+                Live in &quot;Featured Collection: Trending Marketplace Picks&quot; on Homepage
               </span>
             </div>
 
@@ -1366,13 +1369,13 @@ export default function AdminDashboardPage() {
               <button
                 type="button"
                 onClick={() => setProdFilter("topPick")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
                   prodFilter === "topPick"
-                    ? "bg-amber-500 text-white"
-                    : "bg-amber-50 text-amber-700 hover:bg-amber-100"
+                    ? "bg-amber-500 text-white shadow-xs"
+                    : "bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200"
                 }`}
               >
-                <Star className="w-3 h-3 fill-current" /> Top Pick ({productsList.filter((p) => p.isTrending).length})
+                <Flame className="w-3.5 h-3.5 fill-current" /> Trending Collection ({productsList.filter((p) => p.isTrending).length})
               </button>
               <button
                 type="button"
@@ -1383,7 +1386,7 @@ export default function AdminDashboardPage() {
                     : "bg-[#F5F3EE] text-[#0B0F14] hover:bg-slate-200"
                 }`}
               >
-                <Megaphone className="w-3 h-3" /> Sponsored Ads ({productsList.filter((p) => p.isFeatured).length})
+                <Megaphone className="w-3.5 h-3.5" /> Sponsored Ads ({productsList.filter((p) => p.isFeatured).length})
               </button>
             </div>
           </div>
@@ -1392,11 +1395,12 @@ export default function AdminDashboardPage() {
           <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
             <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
               <div>
-                <h3 className="text-sm sm:text-base font-bold text-slate-900">
-                  Seller Products Promotion & Spotlight Controls
+                <h3 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+                  <Flame className="w-4 h-4 text-amber-500" />
+                  <span>Featured Collection & Trending Marketplace Picks Controls</span>
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  1-Click spotlight for Homepage Hero (&quot;AI Top Pick&quot;) and Website Ads (&quot;Sponsored&quot;) requested by sellers
+                  Direct Admin Control: Add or remove any product from the Homepage &quot;Featured Collection: Trending Marketplace Picks&quot; section, or promote as a Sponsored Website Ad.
                 </p>
               </div>
             </div>
@@ -1445,7 +1449,7 @@ export default function AdminDashboardPage() {
                             </h4>
                             {product.isTrending && (
                               <span className="px-2 py-0.5 bg-amber-500/15 text-amber-700 text-[10px] font-black rounded-md border border-amber-300 flex items-center gap-1 shrink-0">
-                                <Star className="w-3 h-3 fill-amber-500 text-amber-500" /> Active Hero Top Pick
+                                <Flame className="w-3 h-3 fill-amber-500 text-amber-500" /> In Trending Collection
                               </span>
                             )}
                             {product.isFeatured && (
@@ -1476,9 +1480,9 @@ export default function AdminDashboardPage() {
                         </div>
                       </div>
 
-                      {/* Action Buttons: AI Top Pick & Website Ad */}
+                      {/* Action Buttons: Trending Collection & Website Ad */}
                       <div className="flex items-center gap-2.5 shrink-0 flex-wrap self-end md:self-auto">
-                        {/* 1. AI Top Pick Toggle Button */}
+                        {/* 1. Trending Marketplace Picks / Featured Collection Toggle Button */}
                         <button
                           type="button"
                           disabled={isUpdating}
@@ -1488,15 +1492,15 @@ export default function AdminDashboardPage() {
                               ? "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20"
                               : "bg-white border border-[#E8E5DC] hover:border-amber-400 hover:text-amber-700 text-[#0B0F14]"
                           } disabled:opacity-50`}
-                          title="Spotlight this product on the homepage Hero section as Fayzee AI Top Pick"
+                          title="Click to add or remove this product from the 'Featured Collection: Trending Marketplace Picks' section on Homepage"
                         >
                           {isUpdating ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
                           ) : (
-                            <Star className={`w-3.5 h-3.5 ${product.isTrending ? "fill-white" : ""}`} />
+                            <Flame className={`w-3.5 h-3.5 ${product.isTrending ? "fill-white" : ""}`} />
                           )}
                           <span>
-                            {product.isTrending ? "Hero Top Pick Active" : "Set as AI Top Pick"}
+                            {product.isTrending ? "✓ In Trending Collection" : "Add to Trending Collection"}
                           </span>
                         </button>
 

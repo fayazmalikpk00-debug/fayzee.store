@@ -257,7 +257,7 @@ export async function getTrendingProducts(limit = 8) {
       category: true,
       seller: { select: { storeName: true, storeSlug: true } },
     },
-    orderBy: [{ rating: "desc" }, { createdAt: "desc" }],
+    orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
   });
 
   // 2. If fewer than limit, automatically fill remaining spots with top-rated active products

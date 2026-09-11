@@ -39,9 +39,10 @@ export async function GET(req: Request) {
       orderBy: [
         { isTrending: "desc" },
         { isFeatured: "desc" },
+        { updatedAt: "desc" },
         { createdAt: "desc" },
       ],
-      take: 100,
+      take: 200,
     });
 
     return NextResponse.json({ products });
@@ -69,13 +70,6 @@ export async function PATCH(req: Request) {
 
     if (typeof isTrending === "boolean") {
       dataToUpdate.isTrending = isTrending;
-      // If promoting this product as the primary Hero Top Pick, unset previous trending items
-      if (isTrending) {
-        await prisma.product.updateMany({
-          where: { isTrending: true, id: { not: productId } },
-          data: { isTrending: false },
-        });
-      }
     }
 
     if (typeof isFeatured === "boolean") {
