@@ -67,70 +67,68 @@ export default async function HomePage() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-            {/* Primary Hero Content (Left, 7 cols) with Glass Panel */}
+            {/* Primary Hero Content (Left, 7 cols) - Clean floating text directly over background */}
             <div className="lg:col-span-7 space-y-6 sm:space-y-7">
-              <div className="p-6 sm:p-8 rounded-3xl bg-[#0B0F14]/70 backdrop-blur-md border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.6)] space-y-6">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#161F2B]/90 backdrop-blur-md border border-[#C8A96B]/50 text-xs sm:text-sm font-semibold text-[#C8A96B] shadow-lg">
-                  <Sparkles className="w-4 h-4 text-[#C8A96B] shrink-0 animate-pulse" />
-                  <span className="text-[#F5F3EE]">Powered by Fayzee AI Shopping Intelligence</span>
-                </div>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0B0F14]/85 backdrop-blur-md border border-[#C8A96B]/50 text-xs sm:text-sm font-semibold text-[#C8A96B] shadow-lg">
+                <Sparkles className="w-4 h-4 text-[#C8A96B] shrink-0 animate-pulse" />
+                <span className="text-[#F5F3EE]">Powered by Fayzee AI Shopping Intelligence</span>
+              </div>
 
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[62px] font-black tracking-tight leading-[1.1] text-white break-words drop-shadow-lg">
-                  Shop Smart. <br />
-                  <span className="bg-gradient-to-r from-[#C8A96B] via-[#FFF2D1] to-[#C8A96B] bg-clip-text text-transparent">
-                    Shop Luxury.
-                  </span>
-                </h1>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[64px] font-black tracking-tight leading-[1.1] text-white break-words drop-shadow-[0_4px_20px_rgba(0,0,0,0.95)]">
+                Shop Smart. <br />
+                <span className="bg-gradient-to-r from-[#C8A96B] via-[#FFF2D1] to-[#C8A96B] bg-clip-text text-transparent drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
+                  Shop Luxury.
+                </span>
+              </h1>
 
-                <p className="text-sm sm:text-base md:text-lg text-slate-200 leading-relaxed font-normal drop-shadow-md">
-                  Explore thousands of verified authentic electronics, footwear, designer apparel, and home appliances directly from certified sellers with 100% genuine guarantees.
-                </p>
+              <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white font-medium max-w-2xl leading-relaxed drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)]">
+                Explore thousands of verified authentic electronics, footwear, designer apparel, and home appliances directly from certified sellers with 100% genuine guarantees.
+              </p>
 
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-1">
-                  <Link
-                    href="/products"
-                    className="px-7 py-3.5 bg-[#C8A96B] hover:bg-[#B89858] text-[#0B0F14] font-black text-base sm:text-lg rounded-full shadow-[0_4px_25px_rgba(200,169,107,0.5)] transition flex items-center justify-center gap-2 active:scale-98 text-center"
-                  >
-                    <span>Explore Catalog</span>
-                    <ArrowRight className="w-5 h-5 stroke-[2.5]" />
-                  </Link>
-                  <Link
-                    href="/flash-sale"
-                    className="px-7 py-3.5 bg-white/10 hover:bg-white/20 text-white font-bold text-base sm:text-lg rounded-full border border-white/25 backdrop-blur-md transition flex items-center justify-center gap-2 active:scale-98 text-center"
-                  >
-                    <Zap className="w-5 h-5 text-[#C8A96B]" />
-                    <span>View Flash Deals</span>
-                  </Link>
-                </div>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-2">
+                <Link
+                  href="/products"
+                  className="px-7 py-3.5 bg-[#C8A96B] hover:bg-[#B89858] text-[#0B0F14] font-black text-base sm:text-lg rounded-full shadow-[0_6px_25px_rgba(200,169,107,0.5)] transition flex items-center justify-center gap-2 active:scale-98 text-center"
+                >
+                  <span>Explore Catalog</span>
+                  <ArrowRight className="w-5 h-5 stroke-[2.5]" />
+                </Link>
+                <Link
+                  href="/flash-sale"
+                  className="px-7 py-3.5 bg-black/60 hover:bg-black/80 text-white font-bold text-base sm:text-lg rounded-full border border-white/30 backdrop-blur-md transition flex items-center justify-center gap-2 active:scale-98 text-center shadow-lg"
+                >
+                  <Zap className="w-5 h-5 text-[#C8A96B]" />
+                  <span>View Flash Deals</span>
+                </Link>
+              </div>
 
-                {/* Trust Indicators Strip */}
-                <div className="pt-4 border-t border-white/15 grid grid-cols-3 gap-2 sm:gap-4 text-left">
-                  <div className="flex items-center gap-2 sm:gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-[#C8A96B]/20 border border-[#C8A96B]/40 flex items-center justify-center text-[#C8A96B] shrink-0 shadow-xs backdrop-blur-md">
-                      <ShieldCheck className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-white leading-tight">100% Authentic</p>
-                      <p className="text-[10px] text-slate-300">Verified Sellers</p>
-                    </div>
+              {/* Trust Indicators Strip */}
+              <div className="pt-4 border-t border-white/20 grid grid-cols-3 gap-2 sm:gap-4 text-left">
+                <div className="flex items-center gap-2 sm:gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-[#0B0F14]/80 border border-[#C8A96B]/50 flex items-center justify-center text-[#C8A96B] shrink-0 shadow-md backdrop-blur-md">
+                    <ShieldCheck className="w-4 h-4" />
                   </div>
-                  <div className="flex items-center gap-2 sm:gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-[#C8A96B]/20 border border-[#C8A96B]/40 flex items-center justify-center text-[#C8A96B] shrink-0 shadow-xs backdrop-blur-md">
-                      <Zap className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-white leading-tight">Fast Delivery</p>
-                      <p className="text-[10px] text-slate-300">Nationwide COD</p>
-                    </div>
+                  <div>
+                    <p className="text-xs font-bold text-white leading-tight drop-shadow-sm">100% Authentic</p>
+                    <p className="text-[10px] text-slate-200 drop-shadow-sm">Verified Sellers</p>
                   </div>
-                  <div className="flex items-center gap-2 sm:gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-[#C8A96B]/20 border border-[#C8A96B]/40 flex items-center justify-center text-[#C8A96B] shrink-0 shadow-xs backdrop-blur-md">
-                      <Sparkles className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-white leading-tight">18+ Departments</p>
-                      <p className="text-[10px] text-slate-300">Curated Brands</p>
-                    </div>
+                </div>
+                <div className="flex items-center gap-2 sm:gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-[#0B0F14]/80 border border-[#C8A96B]/50 flex items-center justify-center text-[#C8A96B] shrink-0 shadow-md backdrop-blur-md">
+                    <Zap className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white leading-tight drop-shadow-sm">Fast Delivery</p>
+                    <p className="text-[10px] text-slate-200 drop-shadow-sm">Nationwide COD</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 sm:gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-[#0B0F14]/80 border border-[#C8A96B]/50 flex items-center justify-center text-[#C8A96B] shrink-0 shadow-md backdrop-blur-md">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white leading-tight drop-shadow-sm">18+ Departments</p>
+                    <p className="text-[10px] text-slate-200 drop-shadow-sm">Curated Brands</p>
                   </div>
                 </div>
               </div>
