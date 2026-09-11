@@ -13,6 +13,7 @@ import {
   Search,
   ShoppingBag,
   Sparkles,
+  Store,
   User as UserIcon,
   X,
 } from "lucide-react";
@@ -121,6 +122,25 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 bg-[#0B0F14] border-b border-[#1A222C] shadow-subtle w-full max-w-full">
+      {/* 1. Top Utility Row - Become a Seller & Help */}
+      <div className="bg-[#060A0E] text-[#8A8F98] text-xs sm:text-sm py-1.5 px-3 sm:px-6 lg:px-8 border-b border-[#141B22]">
+        <div className="max-w-7xl mx-auto flex items-center justify-end gap-3 text-xs sm:text-sm">
+          <Link
+            href="/seller/register"
+            className="hover:text-white transition flex items-center gap-1.5 text-[#8A8F98] hover:text-[#C8A96B] font-medium"
+          >
+            <Store className="w-3.5 h-3.5 text-[#C8A96B] shrink-0" />
+            <span>Become a Seller</span>
+          </Link>
+          <span className="text-slate-700">|</span>
+          <Link
+            href="/help"
+            className="hover:text-white transition text-[#8A8F98] hover:text-[#C8A96B] font-medium"
+          >
+            Help
+          </Link>
+        </div>
+      </div>
 
 
       {/* 2. Main Navbar Row - LEFT: Branding | CENTER: Search | RIGHT: Profile | Wishlist | Cart */}
