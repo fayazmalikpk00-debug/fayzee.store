@@ -94,13 +94,14 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="text-sm font-bold uppercase tracking-wider text-white mb-3.5">Customer Care</h4>
+          <h4 className="text-sm font-bold uppercase tracking-wider text-white mb-3.5">Customer Care & Policies</h4>
           <ul className="space-y-2.5 text-sm">
             <li><Link href="/help" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Help Center & FAQ</Link></li>
             <li><Link href="/orders" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Track Your Order</Link></li>
-            <li><Link href="/help" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Returns & Refunds</Link></li>
-            <li><Link href="/help" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Payment Methods</Link></li>
-            <li><Link href="/help" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Contact Support</Link></li>
+            <li><Link href="/return-refund-policy" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Returns & Refunds</Link></li>
+            <li><Link href="/privacy-policy" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Privacy Policy</Link></li>
+            <li><Link href="/terms-and-conditions" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Terms & Conditions</Link></li>
+            <li><Link href="/ownership-statement" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Ownership Statement</Link></li>
           </ul>
         </div>
 
@@ -115,9 +116,17 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-[#1C2530] py-6 text-sm text-[#8A8F98] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-        <p>© {new Date().getFullYear()} Fayzee Inc. All rights reserved. Shop Smart. Shop Easy.</p>
-        <div className="flex items-center gap-3 text-xs text-[#8A8F98]">
+      <div className="border-t border-[#1C2530] py-6 text-sm text-[#8A8F98] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+        <p>© {new Date().getFullYear()} Fayzee Store (Pvt) Ltd. All rights reserved. Registered in Pakistan.</p>
+        <div className="flex flex-wrap items-center justify-center md:justify-end gap-x-3 gap-y-1 text-xs text-[#8A8F98]">
+          <Link href="/privacy-policy" className="hover:text-[#C8A96B] transition">Privacy Policy</Link>
+          <span>•</span>
+          <Link href="/terms-and-conditions" className="hover:text-[#C8A96B] transition">Terms</Link>
+          <span>•</span>
+          <Link href="/return-refund-policy" className="hover:text-[#C8A96B] transition">Refund Policy</Link>
+          <span>•</span>
+          <Link href="/ownership-statement" className="hover:text-[#C8A96B] transition">Ownership</Link>
+          <span>•</span>
           <Link href="/seller/dashboard" className="hover:text-[#C8A96B] transition">Seller Center</Link>
           <span>•</span>
           <Link href="/admin/login" className="hover:text-[#C8A96B] transition">Admin Portal</Link>
