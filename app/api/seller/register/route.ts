@@ -90,6 +90,10 @@ export async function POST(req: Request) {
     const baseSlug = slugify(storeName);
     const storeSlug = `${baseSlug}-${Date.now().toString().slice(-4)}`;
 
+    // Read current platform default commission rate
+    const siteSetting = await prisma.siteSetting.findFirst();
+    const defaultCommissionRate = siteSetting?.defaultCommissionRate ?? 10.0;
+
     // Create Application and Profile in transaction
     const profile = await prisma.$transaction(async (tx) => {
       await tx.user.update({
@@ -152,6 +156,7 @@ export async function POST(req: Request) {
           address: businessAddress,
           cnic,
           taxNumber,
+          commissionRate: defaultCommissionRate,
           cnicFrontUrl: cnicFrontUrl || null,
           cnicBackUrl: cnicBackUrl || null,
           bankProofUrl: bankProofUrl || null,

@@ -142,9 +142,35 @@ export async function PUT(req: Request) {
       });
     }
 
+    // Optional: Bulk update ALL existing sellers to the new default commission rate
+    let bulkSellersUpdated = 0;
+    if (body.applyCommissionToAllSellers && body.defaultCommissionRate !== undefined) {
+      const rate = Math.max(0, Math.min(100, Number(body.defaultCommissionRate)));
+      const res = await prisma.sellerProfile.updateMany({
+        data: { commissionRate: rate },
+      });
+      bulkSellersUpdated = res.count;
+
+      await prisma.auditLog.create({
+        data: {
+          actorId: user.id,
+          action: "BULK_COMMISSION_RATE_UPDATED",
+          targetType: "SELLER",
+          details: JSON.stringify({
+            newRate: rate,
+            sellersUpdated: res.count,
+            source: "SITE_SETTINGS_PANEL",
+          }),
+        },
+      });
+    }
+
     return NextResponse.json({
-      message: "Site Settings updated successfully!",
+      message: bulkSellersUpdated > 0
+        ? `Settings saved & Sabhi ${bulkSellersUpdated} sellers ka commission rate ${Number(body.defaultCommissionRate)}% kar diya gaya!`
+        : "Site Settings updated successfully!",
       settings: updated,
+      bulkSellersUpdated,
     });
   } catch (err: any) {
     console.error("Failed to update site settings:", err);

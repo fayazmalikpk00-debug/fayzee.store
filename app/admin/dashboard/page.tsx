@@ -140,6 +140,16 @@ export default function AdminDashboardPage() {
   const [showRejectInput, setShowRejectInput] = useState(false);
   const [isUpdatingSellerStatus, setIsUpdatingSellerStatus] = useState(false);
 
+  // Seller Commission Rate Management State
+  const [globalCommissionRate, setGlobalCommissionRate] = useState<number>(10.0);
+  const [editingCommissionSeller, setEditingCommissionSeller] = useState<any | null>(null);
+  const [newCommissionInput, setNewCommissionInput] = useState<string>("10.0");
+  const [isSavingCommission, setIsSavingCommission] = useState(false);
+  const [showBulkCommissionModal, setShowBulkCommissionModal] = useState(false);
+  const [bulkCommissionInput, setBulkCommissionInput] = useState<string>("10.0");
+  const [isBulkUpdatingCommission, setIsBulkUpdatingCommission] = useState(false);
+  const [commissionSuccessMsg, setCommissionSuccessMsg] = useState("");
+
   // Category Management State
   const [categoriesList, setCategoriesList] = useState<any[]>([]);
   const [catSearch, setCatSearch] = useState("");
@@ -183,6 +193,7 @@ export default function AdminDashboardPage() {
     standardShippingFee: 200.0,
     freeShippingThreshold: 3000.0,
     defaultCommissionRate: 10.0,
+    applyCommissionToAllSellers: false,
     allowNewSellers: true,
     maintenanceMode: false,
     maintenanceMessage: "Site is undergoing scheduled maintenance. We will be back online shortly!",
@@ -291,6 +302,7 @@ export default function AdminDashboardPage() {
 
       if (analyticsData.metrics) setData(analyticsData);
       if (sellersData.sellers) setSellers(sellersData.sellers);
+      if (sellersData.defaultCommissionRate !== undefined) setGlobalCommissionRate(sellersData.defaultCommissionRate);
       if (catData.categories) setCategoriesList(catData.categories);
       if (prodData.products) setProductsList(prodData.products);
       if (finData.metrics) {
@@ -381,6 +393,7 @@ export default function AdminDashboardPage() {
             standardShippingFee: siteData.settings.standardShippingFee ?? 200,
             freeShippingThreshold: siteData.settings.freeShippingThreshold ?? 3000,
             defaultCommissionRate: siteData.settings.defaultCommissionRate ?? 10,
+            applyCommissionToAllSellers: false,
             allowNewSellers: siteData.settings.allowNewSellers ?? true,
             maintenanceMode: siteData.settings.maintenanceMode ?? false,
             maintenanceMessage: siteData.settings.maintenanceMessage || "",
@@ -728,6 +741,68 @@ export default function AdminDashboardPage() {
       alert("Error updating seller status");
     } finally {
       setIsUpdatingSellerStatus(false);
+    }
+  };
+
+  const handleUpdateSellerCommission = async (sellerId: string, commissionRate: number) => {
+    if (isNaN(commissionRate) || commissionRate < 0 || commissionRate > 100) {
+      alert("Please enter a valid percentage between 0 and 100.");
+      return;
+    }
+    setIsSavingCommission(true);
+    try {
+      const res = await fetch("/api/admin/sellers", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sellerId, commissionRate }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSellers((prev) =>
+          prev.map((s) => (s.id === sellerId ? { ...s, commissionRate } : s))
+        );
+        setCommissionSuccessMsg(data.message || `Seller commission rate set to ${commissionRate}%.`);
+        setTimeout(() => setCommissionSuccessMsg(""), 5000);
+        setEditingCommissionSeller(null);
+      } else {
+        alert(data.error || "Failed to update commission rate");
+      }
+    } catch (e: any) {
+      console.error(e);
+      alert("Error updating commission rate");
+    } finally {
+      setIsSavingCommission(false);
+    }
+  };
+
+  const handleBulkUpdateCommission = async (rate: number) => {
+    if (isNaN(rate) || rate < 0 || rate > 100) {
+      alert("Please enter a valid percentage between 0 and 100.");
+      return;
+    }
+    setIsBulkUpdatingCommission(true);
+    try {
+      const res = await fetch("/api/admin/sellers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "BULK_UPDATE_COMMISSION", commissionRate: rate }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setGlobalCommissionRate(rate);
+        setSiteSettingsForm((prev) => ({ ...prev, defaultCommissionRate: rate }));
+        setSellers((prev) => prev.map((s) => ({ ...s, commissionRate: rate })));
+        setCommissionSuccessMsg(data.message || `All sellers updated to ${rate}% commission rate.`);
+        setTimeout(() => setCommissionSuccessMsg(""), 6000);
+        setShowBulkCommissionModal(false);
+      } else {
+        alert(data.error || "Failed to bulk update commission rate");
+      }
+    } catch (e: any) {
+      console.error(e);
+      alert("Error during bulk commission update");
+    } finally {
+      setIsBulkUpdatingCommission(false);
     }
   };
 
@@ -1116,12 +1191,41 @@ export default function AdminDashboardPage() {
       {/* TAB 2: Seller Approvals & Applications */}
       {activeTab === "sellers" && (
         <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
-          <div className="p-5 border-b flex justify-between items-center">
+          <div className="p-5 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h3 className="text-sm font-bold text-slate-900">Seller Stores & Applications</h3>
-              <p className="text-xs text-slate-500">Approve, verify, or suspend seller storefronts</p>
+              <p className="text-xs text-slate-500">Approve, verify, or suspend seller storefronts & manage custom commission rates</p>
+            </div>
+
+            {/* Global Default Rate & Bulk Action */}
+            <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2">
+              <div>
+                <span className="text-[10px] text-slate-500 font-bold uppercase block">Platform Default Commission</span>
+                <span className="text-xs font-black text-purple-900 font-mono">{globalCommissionRate || 10}%</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setBulkCommissionInput(String(globalCommissionRate || 10));
+                  setShowBulkCommissionModal(true);
+                }}
+                className="px-3 py-1.5 bg-[#0B0F14] hover:bg-slate-800 text-[#C8A96B] font-bold rounded-xl text-xs transition inline-flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-98"
+              >
+                <Percent className="w-3.5 h-3.5" />
+                <span>⚡ Set Rate For ALL Sellers</span>
+              </button>
             </div>
           </div>
+
+          {commissionSuccessMsg && (
+            <div className="mx-5 my-3 p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold flex items-center justify-between animate-in fade-in">
+              <span className="flex items-center gap-1.5">
+                <Check className="w-4 h-4 text-emerald-600" />
+                {commissionSuccessMsg}
+              </span>
+              <button onClick={() => setCommissionSuccessMsg("")} className="text-emerald-600 hover:text-emerald-900 font-black cursor-pointer">✕</button>
+            </div>
+          )}
 
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
@@ -1131,6 +1235,7 @@ export default function AdminDashboardPage() {
                   <th className="py-3 px-4">Applicant & Contact</th>
                   <th className="py-3 px-4">CNIC & Tax NTN</th>
                   <th className="py-3 px-4">KYC Documents</th>
+                  <th className="py-3 px-4">Commission</th>
                   <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4 text-right">Verification Actions</th>
                 </tr>
@@ -1198,6 +1303,36 @@ export default function AdminDashboardPage() {
                           <span className={`w-1.5 h-1.5 rounded-full ${s.bankProofUrl ? "bg-emerald-500" : "bg-slate-300"}`} />
                           Cheque
                         </span>
+                      </div>
+                    </td>
+                    {/* Commission Rate Column */}
+                    <td className="py-3 px-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm font-black text-slate-900 font-mono">
+                            {s.commissionRate ?? globalCommissionRate ?? 10}%
+                          </span>
+                          {s.commissionRate !== undefined && s.commissionRate !== null && s.commissionRate !== globalCommissionRate ? (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                              Custom
+                            </span>
+                          ) : (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-600">
+                              Default
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingCommissionSeller(s);
+                            setNewCommissionInput(String(s.commissionRate ?? globalCommissionRate ?? 10));
+                          }}
+                          className="px-2 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-bold rounded-lg text-[10px] transition inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          <Percent className="w-3 h-3 text-purple-600" />
+                          <span>Edit Rate</span>
+                        </button>
                       </div>
                     </td>
                     <td className="py-3 px-4">
@@ -1362,6 +1497,29 @@ export default function AdminDashboardPage() {
                     <p className="text-[10px] text-amber-700 font-semibold pt-1">
                       ⚠️ Verify that the Account Title matches the name on the CNIC document.
                     </p>
+
+                    <div className="pt-2 border-t border-slate-200 mt-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] text-slate-500 font-bold uppercase block">Platform Commission Rate</span>
+                          <span className="text-xs font-black text-purple-900 font-mono">
+                            {inspectingSeller.commissionRate ?? globalCommissionRate ?? 10}%
+                            {inspectingSeller.commissionRate !== undefined && inspectingSeller.commissionRate !== null && inspectingSeller.commissionRate !== globalCommissionRate ? " (Custom)" : " (Default)"}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingCommissionSeller(inspectingSeller);
+                            setNewCommissionInput(String(inspectingSeller.commissionRate ?? globalCommissionRate ?? 10));
+                          }}
+                          className="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-[10px] font-bold transition inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          <Percent className="w-3 h-3" />
+                          <span>Change Rate</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1547,6 +1705,227 @@ export default function AdminDashboardPage() {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Individual Seller Commission Rate Modal */}
+          {editingCommissionSeller && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in">
+              <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 p-6 space-y-5">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center">
+                      <Percent className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-black text-slate-900">
+                        Edit Commission Rate
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        {editingCommissionSeller.storeName} ({editingCommissionSeller.user?.email})
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditingCommissionSeller(null)}
+                    className="p-1 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+                  >
+                    <XCircle className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <div className="p-3 bg-purple-50/60 rounded-2xl border border-purple-200 text-xs space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Current Rate:</span>
+                    <span className="font-black text-purple-900 font-mono">{editingCommissionSeller.commissionRate ?? 10}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Platform Global Default:</span>
+                    <span className="font-bold text-slate-700 font-mono">{globalCommissionRate}%</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Custom Commission Rate for this Seller (%)
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      max="100"
+                      value={newCommissionInput}
+                      onChange={(e) => setNewCommissionInput(e.target.value)}
+                      placeholder="e.g. 8.5"
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-black text-slate-900 focus:bg-white focus:border-purple-600 outline-none"
+                    />
+                    <span className="text-sm font-black text-slate-500">%</span>
+                  </div>
+                  <div className="flex items-center gap-2 pt-1 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => setNewCommissionInput(String(globalCommissionRate))}
+                      className="text-[11px] font-bold text-purple-600 hover:underline cursor-pointer"
+                    >
+                      Use Platform Default ({globalCommissionRate}%)
+                    </button>
+                    <span className="text-slate-300">•</span>
+                    <button
+                      type="button"
+                      onClick={() => setNewCommissionInput("5")}
+                      className="text-[11px] font-bold text-slate-500 hover:text-slate-800 cursor-pointer"
+                    >
+                      5% (VIP)
+                    </button>
+                    <span className="text-slate-300">•</span>
+                    <button
+                      type="button"
+                      onClick={() => setNewCommissionInput("0")}
+                      className="text-[11px] font-bold text-slate-500 hover:text-slate-800 cursor-pointer"
+                    >
+                      0% (Free Promo)
+                    </button>
+                  </div>
+                </div>
+
+                {/* Calculation Example Box */}
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-600 space-y-1">
+                  <span className="font-bold text-slate-700 block">Calculation Example (Rs. 1,000 Order Item):</span>
+                  <div className="flex justify-between">
+                    <span>Platform Commission:</span>
+                    <span className="font-bold text-rose-600">
+                      Rs. {((1000 * (Number(newCommissionInput) || 0)) / 100).toFixed(0)} ({Number(newCommissionInput) || 0}%)
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Seller Receives:</span>
+                    <span className="font-bold text-emerald-700">
+                      Rs. {(1000 - (1000 * (Number(newCommissionInput) || 0)) / 100).toFixed(0)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setEditingCommissionSeller(null)}
+                    className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isSavingCommission}
+                    onClick={() => handleUpdateSellerCommission(editingCommissionSeller.id, Number(newCommissionInput))}
+                    className="flex-1 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-black shadow-md shadow-purple-600/20 transition cursor-pointer disabled:opacity-50"
+                  >
+                    {isSavingCommission ? "Saving..." : "Save Commission Rate"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Bulk Update All Sellers Commission Rate Modal */}
+          {showBulkCommissionModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in">
+              <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 p-6 space-y-5">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center">
+                      <Percent className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-black text-slate-900">
+                        ⚡ Bulk Commission Update
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        Set uniform rate for all {sellers.length} registered sellers
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowBulkCommissionModal(false)}
+                    className="p-1 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+                  >
+                    <XCircle className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900 space-y-1">
+                  <span className="font-bold flex items-center gap-1 text-amber-950">
+                    ⚠️ Universal Marketplace Update
+                  </span>
+                  <p>
+                    Ye action database me maujood <strong>tamam {sellers.length} sellers</strong> ka commission rate ek sath badal dega aur platform ka global default rate bhi yahi ban jayega.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-slate-700">
+                    New Universal Commission Rate (%) for ALL Sellers
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      max="100"
+                      value={bulkCommissionInput}
+                      onChange={(e) => setBulkCommissionInput(e.target.value)}
+                      placeholder="e.g. 12"
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-black text-slate-900 focus:bg-white focus:border-amber-600 outline-none"
+                    />
+                    <span className="text-sm font-black text-slate-500">%</span>
+                  </div>
+                  <div className="flex items-center gap-2 pt-1 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => setBulkCommissionInput("10")}
+                      className="text-[11px] font-bold text-slate-600 hover:text-slate-900 cursor-pointer"
+                    >
+                      10% (Standard)
+                    </button>
+                    <span className="text-slate-300">•</span>
+                    <button
+                      type="button"
+                      onClick={() => setBulkCommissionInput("12")}
+                      className="text-[11px] font-bold text-slate-600 hover:text-slate-900 cursor-pointer"
+                    >
+                      12%
+                    </button>
+                    <span className="text-slate-300">•</span>
+                    <button
+                      type="button"
+                      onClick={() => setBulkCommissionInput("15")}
+                      className="text-[11px] font-bold text-slate-600 hover:text-slate-900 cursor-pointer"
+                    >
+                      15%
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowBulkCommissionModal(false)}
+                    className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isBulkUpdatingCommission}
+                    onClick={() => handleBulkUpdateCommission(Number(bulkCommissionInput))}
+                    className="flex-1 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-black shadow-md shadow-amber-600/20 transition cursor-pointer disabled:opacity-50"
+                  >
+                    {isBulkUpdatingCommission ? "Updating All..." : `Apply to All ${sellers.length} Sellers`}
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -4097,19 +4476,39 @@ export default function AdminDashboardPage() {
                   <span className="text-[10px] text-emerald-700">Orders equal or above this get free delivery</span>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-purple-50/60 border border-purple-200 space-y-1">
-                  <label className="block font-bold text-purple-950">Marketplace Commission Rate</label>
+                <div className="p-4 rounded-2xl bg-purple-50/60 border border-purple-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block font-bold text-purple-950">Marketplace Commission Rate</label>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-200 text-purple-900">
+                      Default & Bulk Control
+                    </span>
+                  </div>
                   <div className="flex items-center gap-2 pt-1">
                     <input
                       type="number"
                       step="0.5"
+                      min="0"
+                      max="100"
                       value={siteSettingsForm.defaultCommissionRate}
                       onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, defaultCommissionRate: Number(e.target.value) })}
                       className="w-full px-3 py-2 bg-white rounded-xl border border-purple-300 font-black text-purple-900 outline-none focus:border-purple-600"
                     />
                     <span className="font-bold text-purple-600">%</span>
                   </div>
-                  <span className="text-[10px] text-purple-700">Default seller commission deducted on sales</span>
+                  <span className="text-[10px] text-purple-700 block">Default platform fee deducted on delivered seller orders</span>
+
+                  {/* Bulk Apply to all Sellers Checkbox */}
+                  <label className="flex items-center gap-2 pt-2 border-t border-purple-200/80 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(siteSettingsForm.applyCommissionToAllSellers)}
+                      onChange={(e) => setSiteSettingsForm({ ...siteSettingsForm, applyCommissionToAllSellers: e.target.checked })}
+                      className="w-4 h-4 rounded text-purple-600 accent-purple-600 cursor-pointer"
+                    />
+                    <span className="text-[11px] font-bold text-purple-950">
+                      ⚡ Apply this {siteSettingsForm.defaultCommissionRate}% rate to ALL existing sellers upon saving
+                    </span>
+                  </label>
                 </div>
               </div>
 
