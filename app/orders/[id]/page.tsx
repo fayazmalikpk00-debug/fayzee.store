@@ -7,9 +7,11 @@ import {
   Clock,
   CreditCard,
   ExternalLink,
+  FileText,
   Lock,
   MapPin,
   Package,
+  Printer,
   ShieldCheck,
   Smartphone,
   Store,
@@ -146,7 +148,16 @@ export default async function OrderDetailPage({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/orders/${order.id}/invoice`}
+            className="px-3 py-1.5 bg-[#0B0F14] hover:bg-[#1A212D] text-[#C8A96B] text-xs font-bold rounded-full border border-[#C8A96B]/40 flex items-center gap-1.5 transition shadow-xs"
+            title="Download / Print Official Commercial Tax Invoice"
+          >
+            <Printer className="w-3.5 h-3.5 text-[#C8A96B]" />
+            <span>Official Invoice</span>
+          </Link>
+
           {order.status === "PENDING" && (
             <span className="px-3 py-1.5 bg-amber-50 text-amber-800 text-xs font-bold rounded-full border border-amber-200 flex items-center gap-1.5 shadow-xs">
               <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
@@ -598,6 +609,16 @@ export default async function OrderDetailPage({
           <div className="flex justify-between text-sm font-black text-[#0B0F14] pt-2 border-t border-[#E8E5DC]">
             <span>Grand Total:</span>
             <span className="text-[#0B0F14] font-black">{formatPrice(order.grandTotal)}</span>
+          </div>
+
+          <div className="pt-3">
+            <Link
+              href={`/orders/${order.id}/invoice`}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-[#0B0F14] hover:bg-[#1A212D] text-[#C8A96B] rounded-xl text-xs font-bold transition shadow-xs border border-[#C8A96B]/30"
+            >
+              <FileText className="w-3.5 h-3.5 text-[#C8A96B]" />
+              <span>View & Print Official Client Invoice</span>
+            </Link>
           </div>
         </div>
       </div>

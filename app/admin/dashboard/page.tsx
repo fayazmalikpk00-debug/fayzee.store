@@ -39,6 +39,7 @@ import {
   ExternalLink,
   Eye,
   FileCheck,
+  FileText,
   Mail,
   MessageSquare,
   Phone,
@@ -2856,6 +2857,7 @@ export default function AdminDashboardPage() {
                       <th className="py-2.5 px-3">Amount</th>
                       <th className="py-2.5 px-3">Status</th>
                       <th className="py-2.5 px-3">Date</th>
+                      <th className="py-2.5 px-3 text-right">Invoice</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
@@ -2891,6 +2893,21 @@ export default function AdminDashboardPage() {
                         </td>
                         <td className="py-2.5 px-3 text-slate-400 font-sans">
                           {formatDateTime(tx.createdAt)}
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-sans">
+                          {tx.orderId ? (
+                            <Link
+                              href={`/orders/${tx.orderId}/invoice`}
+                              target="_blank"
+                              className="inline-flex items-center gap-1 text-[10px] font-bold text-[#C8A96B] hover:text-[#D4B15A] bg-[#0B0F14] hover:bg-[#1A212D] px-2 py-1 rounded-md transition shadow-2xs"
+                              title="View Client Official Tax Invoice"
+                            >
+                              <FileText className="w-3 h-3 text-[#C8A96B]" />
+                              <span>Invoice</span>
+                            </Link>
+                          ) : (
+                            <span className="text-slate-300">-</span>
+                          )}
                         </td>
                       </tr>
                     ))}

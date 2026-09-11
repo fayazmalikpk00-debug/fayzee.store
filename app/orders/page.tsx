@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/components/providers/AuthProvider";
 import { formatDate, formatPrice } from "@/lib/utils";
-import { ArrowRight, CheckCircle2, Clock, Package, ShoppingBag, Truck } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock, FileText, Package, ShoppingBag, Truck } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -159,13 +159,24 @@ export default function OrdersPage() {
                     {order.paymentStatus === "PAID" ? "✓ Paid" : order.paymentStatus}
                   </span>
                 </span>
-                <Link
-                  href={`/orders/${order.id}`}
-                  className="text-xs font-bold text-[#C8A96B] hover:text-[#D4B15A] flex items-center gap-1 transition"
-                >
-                  <span>Track & View Details</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+                <div className="flex items-center gap-3">
+                  <Link
+                    href={`/orders/${order.id}/invoice`}
+                    className="text-xs font-semibold text-slate-600 hover:text-[#0B0F14] flex items-center gap-1 transition px-2.5 py-1 rounded-lg hover:bg-slate-100"
+                    title="View & Print Official Client Invoice"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-[#C8A96B]" />
+                    <span>Invoice</span>
+                  </Link>
+
+                  <Link
+                    href={`/orders/${order.id}`}
+                    className="text-xs font-bold text-[#C8A96B] hover:text-[#D4B15A] flex items-center gap-1 transition"
+                  >
+                    <span>Track & Details</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
               </div>
             </div>
           ))}
