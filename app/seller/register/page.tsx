@@ -267,6 +267,39 @@ export default function SellerRegisterPage() {
     }
   };
 
+  if (user?.role === "SELLER") {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-6 animate-in fade-in">
+        <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-3xl flex items-center justify-center mx-auto border border-amber-200 shadow-sm">
+          <Store className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <span className="px-3 py-1 rounded-full text-[11px] font-extrabold bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/30 tracking-wider uppercase">
+            Account Already Active
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-black text-[#0B0F14]">
+            Seller Account Already Exists
+          </h1>
+        </div>
+
+        <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
+          Aap ka seller account pehle se bana hua hai (<span className="font-bold text-[#0B0F14]">{user.email}</span>). FAYZEE rules ke mutabiq ek email par sirf ek hi seller account ban sakta hai.
+        </p>
+
+        <div className="pt-3">
+          <Link
+            href="/seller/dashboard"
+            className="inline-flex items-center gap-2 px-6 py-3.5 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] font-bold text-xs rounded-xl shadow-md transition border border-[#C8A96B]/30"
+          >
+            <Store className="w-4 h-4" />
+            <span>Go to Seller Dashboard</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   if (success) {
     return (
       <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-6 animate-in fade-in">
@@ -298,35 +331,34 @@ export default function SellerRegisterPage() {
             <li className="flex items-start gap-2">
               <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <span>
-                <strong>Verified Email:</strong> <span className="text-slate-900 font-semibold">{email}</span> (6-Digit OTP confirmed)
+                <strong>Document Verification:</strong> Admin team 24 se 48 ghanton ke andar aapke CNIC aur Bank documents verify karegi.
               </span>
             </li>
             <li className="flex items-start gap-2">
               <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <span>
-                <strong>Documents Submitted:</strong> CNIC Front, CNIC Back, Bank Cheque Leaf.
+                <strong>WhatsApp / Phone Confirmation:</strong> Zaroorat padne par FAYZEE support team aapke darj kardah number par call karegi.
               </span>
             </li>
-            <li className="flex items-start gap-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900">
-              <MessageSquare className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+            <li className="flex items-start gap-2">
+              <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <span>
-                <strong>Admin WhatsApp Contact:</strong> FAYZEE Admin will inspect your documents and will personally call or message you on WhatsApp at <strong>{phone}</strong> for identity confirmation & onboarding.
+                <strong>Instant Store Activation:</strong> Approval ke foran baad aap FAYZEE par products live list kar sakenge.
               </span>
             </li>
           </ul>
         </div>
 
-        <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
           <a
-            href={`https://wa.me/923306767357?text=${encodeURIComponent(
-              `Assalam-o-Alaikum Super Admin, maine FAYZEE par naya seller account register kiya hai.\nStore: ${storeName}\nEmail: ${email}\nPhone: ${phone}\nBaraye meharbani mere KYC documents check karke verify kar dein.`
-            )}`}
+            href="https://wa.me/923306767357"
             target="_blank"
-            rel="noreferrer"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-2xl shadow-sm transition active:scale-98"
+            rel="noopener noreferrer"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-2xl shadow-sm transition"
           >
             <MessageSquare className="w-4 h-4" />
-            <span>Chat with Super Admin on WhatsApp (+92 330 6767357)</span>
+            <span>Fast-Track Approval on WhatsApp</span>
           </a>
 
           <Link
@@ -366,9 +398,31 @@ export default function SellerRegisterPage() {
       )}
 
       {errorMsg && (
-        <div className="p-4 bg-rose-50 rounded-2xl border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-          <span>{errorMsg}</span>
+        <div className="p-4 bg-rose-50 rounded-2xl border border-rose-200 text-xs text-rose-700 space-y-2">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
+            <span className="font-medium leading-relaxed">{errorMsg}</span>
+          </div>
+          {errorMsg.toLowerCase().includes("already") && (
+            <div className="pt-2 border-t border-rose-200/80 flex items-center justify-between gap-2 text-[11px]">
+              <span className="text-slate-600">Pehle se registered hain?</span>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/seller/dashboard"
+                  className="font-bold underline text-[#0B0F14] hover:text-[#C8A96B]"
+                >
+                  Seller Dashboard
+                </Link>
+                <span>•</span>
+                <Link
+                  href="/forgot-password"
+                  className="font-bold underline text-[#0B0F14] hover:text-[#C8A96B]"
+                >
+                  Forgot Password?
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

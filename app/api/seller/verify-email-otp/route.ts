@@ -27,6 +27,29 @@ export async function POST(req: Request) {
 
     // 1. ACTION: SEND EMAIL OTP
     if (action === "SEND_OTP") {
+      // Check if current user already has a seller profile
+      const userSellerProfile = await prisma.sellerProfile.findUnique({
+        where: { userId: user.id },
+      });
+      if (userSellerProfile) {
+        return NextResponse.json(
+          { error: "A seller account already exists for your account. You can only have one seller account. Please go to your Seller Dashboard." },
+          { status: 409 }
+        );
+      }
+
+      // Check if targetEmail belongs to another user who is already a seller
+      const existingEmailOwner = await prisma.user.findUnique({
+        where: { email: targetEmail },
+        include: { sellerProfile: true },
+      });
+      if (existingEmailOwner?.sellerProfile && existingEmailOwner.id !== user.id) {
+        return NextResponse.json(
+          { error: "This email address is already registered with an active seller store. Only one seller account is allowed per email." },
+          { status: 409 }
+        );
+      }
+
       const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 

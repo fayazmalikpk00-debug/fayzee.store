@@ -62,9 +62,31 @@ export default function RegisterPage() {
       </div>
 
       {errorMsg && (
-        <div className="p-3.5 bg-red-50 rounded-2xl border border-[#DC2626]/30 text-xs text-[#DC2626] flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>{errorMsg}</span>
+        <div className="p-4 bg-red-50 rounded-2xl border border-[#DC2626]/30 text-xs text-[#DC2626] space-y-2">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span className="leading-relaxed font-medium">{errorMsg}</span>
+          </div>
+          {errorMsg.toLowerCase().includes("already exists") && (
+            <div className="pt-2 border-t border-red-200/80 flex items-center justify-between gap-2 text-[11px]">
+              <span className="text-stone-600">Password bhool gaye hain?</span>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/forgot-password"
+                  className="font-bold underline text-[#0B0F14] hover:text-[#C8A96B] transition"
+                >
+                  Forgot Password?
+                </Link>
+                <span className="text-stone-400">•</span>
+                <Link
+                  href="/login"
+                  className="font-bold underline text-[#0B0F14] hover:text-[#C8A96B] transition"
+                >
+                  Log In
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

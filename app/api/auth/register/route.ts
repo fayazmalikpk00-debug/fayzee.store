@@ -24,7 +24,10 @@ export async function POST(req: Request) {
 
     if (existing) {
       return NextResponse.json(
-        { error: "An account with this email address already exists." },
+        {
+          error: "An account with this email address already exists. If you forgot your password, please reset it using Forgot Password to log in.",
+          code: "EMAIL_EXISTS",
+        },
         { status: 409 }
       );
     }

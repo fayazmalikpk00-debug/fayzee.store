@@ -34,6 +34,38 @@ export async function POST(req: Request) {
 
     const sellerEmail = (email || user.email || "").trim();
 
+    // Strict Rule: 1 Email / User = Only 1 Seller Account Allowed
+    const existingSellerProfile = await prisma.sellerProfile.findUnique({
+      where: { userId: user.id },
+    });
+
+    if (existingSellerProfile) {
+      return NextResponse.json(
+        {
+          error: "A seller account already exists for this email address. Each email is restricted to exactly one seller account. Please visit your Seller Dashboard.",
+          alreadyExists: true,
+          redirectTo: "/seller/dashboard",
+        },
+        { status: 409 }
+      );
+    }
+
+    const normalizedSellerEmail = sellerEmail.toLowerCase().trim();
+    const emailOwner = await prisma.user.findUnique({
+      where: { email: normalizedSellerEmail },
+      include: { sellerProfile: true },
+    });
+
+    if (emailOwner?.sellerProfile && emailOwner.id !== user.id) {
+      return NextResponse.json(
+        {
+          error: "This email address is already registered to an existing seller store. Only one seller account is allowed per email.",
+          alreadyExists: true,
+        },
+        { status: 409 }
+      );
+    }
+
     if (!storeName || !businessName || !cnic || !phone || !businessAddress) {
       return NextResponse.json(
         { error: "Please complete all required fields." },
