@@ -190,7 +190,7 @@ export default function SellerDashboardPage() {
   const [chatReplyText, setChatReplyText] = useState("");
   const [sendingChatReply, setSendingChatReply] = useState(false);
   const [chatSearchQuery, setChatSearchQuery] = useState("");
-  const chatMessagesEndRef = useRef<HTMLDivElement>(null);
+  const chatMessagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Check URL query parameters for tab
   useEffect(() => {
@@ -294,8 +294,8 @@ export default function SellerDashboardPage() {
   }, [activeChatId, activeTab]);
 
   useEffect(() => {
-    if (activeTab === "messages") {
-      chatMessagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (activeTab === "messages" && chatMessagesContainerRef.current) {
+      chatMessagesContainerRef.current.scrollTop = chatMessagesContainerRef.current.scrollHeight;
     }
   }, [chatMessages, activeTab]);
 
@@ -2593,7 +2593,10 @@ ${paymentLine}${noteLine}
                       </div>
 
                       {/* Messages Stream */}
-                      <div className="flex-1 p-4 space-y-3 overflow-y-auto max-h-[380px] bg-[#FAF9F6]/40">
+                      <div
+                        ref={chatMessagesContainerRef}
+                        className="flex-1 p-4 space-y-3 overflow-y-auto max-h-[380px] bg-[#FAF9F6]/40"
+                      >
                         {chatMessages.length === 0 ? (
                           <div className="text-center py-10 text-xs text-[#8A8F98]">
                             No messages in this chat yet.
@@ -2636,7 +2639,7 @@ ${paymentLine}${noteLine}
                             );
                           })
                         )}
-                        <div ref={chatMessagesEndRef} />
+
                       </div>
 
                       {/* Quick Seller Responses */}

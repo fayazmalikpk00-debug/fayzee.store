@@ -58,11 +58,13 @@ export function SellerChatDrawer({
   const [loadingConv, setLoadingConv] = useState(false);
   const [sending, setSending] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatFeedRef = useRef<HTMLDivElement>(null);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatFeedRef.current) {
+      chatFeedRef.current.scrollTop = chatFeedRef.current.scrollHeight;
+    }
   };
 
   // 1. Initialize or find conversation when opened
@@ -277,7 +279,7 @@ export function SellerChatDrawer({
         ) : (
           <>
             {/* Messages Feed */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div ref={chatFeedRef} className="flex-1 overflow-y-auto p-4 space-y-3">
               <div className="text-center py-2">
                 <span className="px-3 py-1 bg-[#E8E5DC]/60 text-[#8A8F98] text-[10px] font-bold rounded-full">
                   Direct inquiry with {seller.storeName}
@@ -326,7 +328,7 @@ export function SellerChatDrawer({
                   </div>
                 </div>
               ))}
-              <div ref={messagesEndRef} />
+
             </div>
 
             {/* Quick Suggestion Chips */}
