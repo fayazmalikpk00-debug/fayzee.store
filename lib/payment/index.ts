@@ -4,32 +4,10 @@ import {
   PaymentProvider,
   PaymentVerificationResult,
 } from "./types";
-
-export function detectCardBrand(cardNumber: string): string {
-  const clean = cardNumber.replace(/\D/g, "");
-  if (/^4/.test(clean)) return "Visa";
-  if (/^(5[1-5]|2[2-7])/.test(clean)) return "Mastercard";
-  if (/^(60|62)/.test(clean)) return "PayPak / UnionPay";
-  if (/^3[47]/.test(clean)) return "American Express";
-  return "Debit/Credit Card";
-}
-
-export function isValidLuhn(cardNumber: string): boolean {
-  const digits = cardNumber.replace(/\D/g, "");
-  if (digits.length < 13 || digits.length > 19) return false;
-  let sum = 0;
-  let shouldDouble = false;
-  for (let i = digits.length - 1; i >= 0; i--) {
-    let digit = parseInt(digits.charAt(i), 10);
-    if (shouldDouble) {
-      digit *= 2;
-      if (digit > 9) digit -= 9;
-    }
-    sum += digit;
-    shouldDouble = !shouldDouble;
-  }
-  return sum % 10 === 0;
-}
+import { prisma } from "../db";
+import { SafepayProvider } from "./safepay";
+import { detectCardBrand, isValidLuhn } from "./utils";
+export * from "./utils";
 
 export class CashOnDeliveryProvider implements PaymentProvider {
   name = "CashOnDelivery";
@@ -267,6 +245,20 @@ export class EasyPaisaProvider implements PaymentProvider {
   }
 }
 
+export interface PlatformPaymentConfig {
+  activeGateway: "SAFEPAY" | "PAYFAST" | "JAZZCASH" | "MANUAL_SIMULATION";
+  isSandbox: boolean;
+  safepayApiKey: string | null;
+  safepayApiSecret: string | null;
+  safepayWebhookSecret: string | null;
+  payfastMerchantId: string | null;
+  payfastSecuredKey: string | null;
+  enableCod: boolean;
+  enableOnlineCard: boolean;
+  enableJazzcash: boolean;
+  enableEasypaisa: boolean;
+}
+
 export class PaymentService {
   private static providers: Record<string, PaymentProvider> = {
     COD: new CashOnDeliveryProvider(),
@@ -276,7 +268,100 @@ export class PaymentService {
     WALLET: new JazzCashProvider(),
   };
 
-  static getProvider(method: string): PaymentProvider {
+  /**
+   * Fetch platform payment configuration from DB or env fallback
+   */
+  static async getConfig(): Promise<PlatformPaymentConfig> {
+    try {
+      const dbConfig = await prisma.platformPaymentSetting.findUnique({
+        where: { id: "default" },
+      });
+
+      if (dbConfig) {
+        return {
+          activeGateway: (dbConfig.activeGateway as any) || "SAFEPAY",
+          isSandbox: dbConfig.isSandbox,
+          safepayApiKey: dbConfig.safepayApiKey || process.env.SAFEPAY_API_KEY || null,
+          safepayApiSecret: dbConfig.safepayApiSecret || process.env.SAFEPAY_API_SECRET || null,
+          safepayWebhookSecret: dbConfig.safepayWebhookSecret || process.env.SAFEPAY_WEBHOOK_SECRET || null,
+          payfastMerchantId: dbConfig.payfastMerchantId || process.env.PAYFAST_MERCHANT_ID || null,
+          payfastSecuredKey: dbConfig.payfastSecuredKey || process.env.PAYFAST_SECURED_KEY || null,
+          enableCod: dbConfig.enableCod,
+          enableOnlineCard: dbConfig.enableOnlineCard,
+          enableJazzcash: dbConfig.enableJazzcash,
+          enableEasypaisa: dbConfig.enableEasypaisa,
+        };
+      }
+    } catch (err) {
+      console.warn("Could not fetch PlatformPaymentSetting from DB, using fallback:", err);
+    }
+
+    return {
+      activeGateway: (process.env.ACTIVE_PAYMENT_GATEWAY as any) || "SAFEPAY",
+      isSandbox: process.env.PAYMENT_SANDBOX !== "false",
+      safepayApiKey: process.env.SAFEPAY_API_KEY || null,
+      safepayApiSecret: process.env.SAFEPAY_API_SECRET || null,
+      safepayWebhookSecret: process.env.SAFEPAY_WEBHOOK_SECRET || null,
+      payfastMerchantId: process.env.PAYFAST_MERCHANT_ID || null,
+      payfastSecuredKey: process.env.PAYFAST_SECURED_KEY || null,
+      enableCod: true,
+      enableOnlineCard: true,
+      enableJazzcash: true,
+      enableEasypaisa: true,
+    };
+  }
+
+  /**
+   * Save or update platform payment settings in DB
+   */
+  static async saveConfig(data: Partial<PlatformPaymentConfig>) {
+    return await prisma.platformPaymentSetting.upsert({
+      where: { id: "default" },
+      update: {
+        activeGateway: data.activeGateway || "SAFEPAY",
+        isSandbox: data.isSandbox ?? true,
+        safepayApiKey: data.safepayApiKey !== undefined ? data.safepayApiKey : undefined,
+        safepayApiSecret: data.safepayApiSecret !== undefined ? data.safepayApiSecret : undefined,
+        safepayWebhookSecret: data.safepayWebhookSecret !== undefined ? data.safepayWebhookSecret : undefined,
+        payfastMerchantId: data.payfastMerchantId !== undefined ? data.payfastMerchantId : undefined,
+        payfastSecuredKey: data.payfastSecuredKey !== undefined ? data.payfastSecuredKey : undefined,
+        enableCod: data.enableCod ?? true,
+        enableOnlineCard: data.enableOnlineCard ?? true,
+        enableJazzcash: data.enableJazzcash ?? true,
+        enableEasypaisa: data.enableEasypaisa ?? true,
+      },
+      create: {
+        id: "default",
+        activeGateway: data.activeGateway || "SAFEPAY",
+        isSandbox: data.isSandbox ?? true,
+        safepayApiKey: data.safepayApiKey || null,
+        safepayApiSecret: data.safepayApiSecret || null,
+        safepayWebhookSecret: data.safepayWebhookSecret || null,
+        payfastMerchantId: data.payfastMerchantId || null,
+        payfastSecuredKey: data.payfastSecuredKey || null,
+        enableCod: data.enableCod ?? true,
+        enableOnlineCard: data.enableOnlineCard ?? true,
+        enableJazzcash: data.enableJazzcash ?? true,
+        enableEasypaisa: data.enableEasypaisa ?? true,
+      },
+    });
+  }
+
+  static getProvider(method: string, config?: PlatformPaymentConfig | null): PaymentProvider {
+    if (method === "COD") {
+      return this.providers.COD;
+    }
+
+    // If Safepay is the active gateway and enabled
+    if (config?.activeGateway === "SAFEPAY") {
+      return new SafepayProvider({
+        apiKey: config.safepayApiKey || undefined,
+        apiSecret: config.safepayApiSecret || undefined,
+        webhookSecret: config.safepayWebhookSecret || undefined,
+        isSandbox: config.isSandbox,
+      });
+    }
+
     const provider = this.providers[method] || this.providers["ONLINE_CARD"];
     if (!provider) {
       throw new Error(`Unsupported payment method: ${method}`);
@@ -284,4 +369,6 @@ export class PaymentService {
     return provider;
   }
 }
+
+export { SafepayProvider } from "./safepay";
 

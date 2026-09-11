@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ChevronRight,
   Clock,
+  CreditCard,
   DollarSign,
   Landmark,
   Layers,
@@ -51,7 +52,7 @@ export default function AdminDashboardPage() {
   const [sellers, setSellers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    "analytics" | "sellers" | "categories" | "products" | "finance" | "courier" | "audit"
+    "analytics" | "sellers" | "categories" | "products" | "finance" | "courier" | "payment" | "audit"
   >("analytics");
 
   // Logistics & Courier API State
@@ -69,6 +70,25 @@ export default function AdminDashboardPage() {
   const [savingCourierSettings, setSavingCourierSettings] = useState(false);
   const [courierSettingsSavedMsg, setCourierSettingsSavedMsg] = useState("");
   const [copiedWebhook, setCopiedWebhook] = useState(false);
+
+  // Payment Gateway Settings State
+  const [paymentSettings, setPaymentSettings] = useState({
+    activeGateway: "SAFEPAY",
+    isSandbox: true,
+    safepayApiKey: "",
+    safepayApiSecret: "",
+    safepayWebhookSecret: "",
+    payfastMerchantId: "",
+    payfastSecuredKey: "",
+    enableCod: true,
+    enableOnlineCard: true,
+    enableJazzcash: true,
+    enableEasypaisa: true,
+  });
+  const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
+  const [savingPaymentSettings, setSavingPaymentSettings] = useState(false);
+  const [paymentSettingsSavedMsg, setPaymentSettingsSavedMsg] = useState("");
+  const [copiedPaymentWebhook, setCopiedPaymentWebhook] = useState(false);
 
   // Finance & Settlements State
   const [adminFinanceData, setAdminFinanceData] = useState<any>(null);
@@ -119,7 +139,7 @@ export default function AdminDashboardPage() {
 
   const fetchData = async () => {
     try {
-      const [analyticsRes, sellersRes, catRes, prodRes, finRes, payRes, courierRes] = await Promise.all([
+      const [analyticsRes, sellersRes, catRes, prodRes, finRes, payRes, courierRes, paymentRes] = await Promise.all([
         fetch("/api/admin/analytics"),
         fetch("/api/admin/sellers"),
         fetch("/api/admin/categories"),
@@ -127,6 +147,7 @@ export default function AdminDashboardPage() {
         fetch("/api/admin/finance"),
         fetch("/api/admin/payouts"),
         fetch("/api/admin/courier-settings"),
+        fetch("/api/admin/payment-settings"),
       ]);
 
       const analyticsData = await analyticsRes.json();
@@ -136,6 +157,7 @@ export default function AdminDashboardPage() {
       const finData = await finRes.json();
       const payData = await payRes.json();
       const courierData = await courierRes.json();
+      const paymentData = await paymentRes.json();
 
       if (analyticsData.metrics) setData(analyticsData);
       if (sellersData.sellers) setSellers(sellersData.sellers);
@@ -171,6 +193,24 @@ export default function AdminDashboardPage() {
           defaultPickupCity: courierData.settings.defaultPickupCity || "Karachi",
           webhookSecret: courierData.settings.webhookSecret || "",
         });
+      }
+      if (paymentData?.config) {
+        setPaymentSettings({
+          activeGateway: paymentData.config.activeGateway || "SAFEPAY",
+          isSandbox: paymentData.config.isSandbox ?? true,
+          safepayApiKey: paymentData.config.safepayApiKey || "",
+          safepayApiSecret: paymentData.config.safepayApiSecret || "",
+          safepayWebhookSecret: paymentData.config.safepayWebhookSecret || "",
+          payfastMerchantId: paymentData.config.payfastMerchantId || "",
+          payfastSecuredKey: paymentData.config.payfastSecuredKey || "",
+          enableCod: paymentData.config.enableCod ?? true,
+          enableOnlineCard: paymentData.config.enableOnlineCard ?? true,
+          enableJazzcash: paymentData.config.enableJazzcash ?? true,
+          enableEasypaisa: paymentData.config.enableEasypaisa ?? true,
+        });
+        if (paymentData.recentTransactions) {
+          setRecentTransactions(paymentData.recentTransactions);
+        }
       }
     } catch (e) {
       console.error(e);
@@ -222,6 +262,29 @@ export default function AdminDashboardPage() {
       alert(err.message || "Failed to save courier settings");
     } finally {
       setSavingCourierSettings(false);
+    }
+  };
+
+  const handleSavePaymentSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingPaymentSettings(true);
+    setPaymentSettingsSavedMsg("");
+    try {
+      const res = await fetch("/api/admin/payment-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(paymentSettings),
+      });
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || "Failed to update payment settings");
+
+      setPaymentSettingsSavedMsg("Payment Gateway configuration saved successfully!");
+      setTimeout(() => setPaymentSettingsSavedMsg(""), 4000);
+      fetchData();
+    } catch (err: any) {
+      alert(err.message || "Failed to save payment settings");
+    } finally {
+      setSavingPaymentSettings(false);
     }
   };
 
@@ -465,6 +528,26 @@ export default function AdminDashboardPage() {
           {courierSettings.isSandbox && (
             <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20">
               SANDBOX
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab("payment")}
+          className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
+            activeTab === "payment"
+              ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
+              : "text-[#0B0F14] hover:bg-[#F5F3EE]"
+          }`}
+        >
+          <CreditCard className="w-3.5 h-3.5 text-[#C8A96B]" />
+          <span>Payment Gateways</span>
+          {paymentSettings.isSandbox ? (
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20">
+              SANDBOX
+            </span>
+          ) : (
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+              LIVE
             </span>
           )}
         </button>
@@ -2378,6 +2461,444 @@ export default function AdminDashboardPage() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* TAB: Payment Gateways & Transaction Verification */}
+      {activeTab === "payment" && (
+        <div className="space-y-8 animate-in fade-in duration-300">
+          {/* Header Banner */}
+          <div className="bg-gradient-to-r from-[#0B0F14] via-[#161F2B] to-[#0B0F14] rounded-3xl p-6 sm:p-8 text-white border border-[#C8A96B]/30 shadow-card flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 bg-[#C8A96B]/20 text-[#C8A96B] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#C8A96B]/30">
+                  State Bank of Pakistan (SBP) Standard
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3" />
+                  3D Secure Active
+                </span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-white">
+                Official Payment Gateways & Transaction Verification
+              </h2>
+              <p className="text-xs text-[#8A8F98] max-w-2xl leading-relaxed">
+                Connect your merchant bank accounts with <strong>Safepay</strong> or <strong>PayFast</strong>. 
+                Customer payments are verified via 3D Secure bank OTP and authenticated through encrypted HMAC-SHA256 webhook signatures.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 self-stretch md:self-auto bg-white/5 p-3 rounded-2xl border border-white/10 shrink-0">
+              <div className="w-12 h-12 rounded-xl bg-[#C8A96B]/20 border border-[#C8A96B]/40 flex items-center justify-center text-[#C8A96B]">
+                <CreditCard className="w-6 h-6" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-[#8A8F98] uppercase block">Active Gateway</span>
+                <span className="text-sm font-black text-[#C8A96B] block">
+                  {paymentSettings.activeGateway}
+                </span>
+                <span className="text-[10px] text-slate-300">
+                  {paymentSettings.isSandbox ? "🟡 Sandbox Test Mode" : "🟢 Live Production"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {paymentSettingsSavedMsg && (
+            <div className="p-4 bg-emerald-50 text-emerald-800 rounded-2xl border border-emerald-200 text-xs font-bold flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <span>{paymentSettingsSavedMsg}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSavePaymentSettings} className="space-y-6">
+            {/* Step 1: Select Active Gateway */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
+              <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-[#C8A96B]" />
+                <span>1. Select Active Online Gateway</span>
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Safepay */}
+                <div
+                  onClick={() => setPaymentSettings({ ...paymentSettings, activeGateway: "SAFEPAY" })}
+                  className={`p-5 rounded-2xl border-2 transition cursor-pointer space-y-2 relative ${
+                    paymentSettings.activeGateway === "SAFEPAY"
+                      ? "border-[#C8A96B] bg-[#FAF9F5] shadow-sm"
+                      : "border-slate-200 hover:border-slate-300 bg-white"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-black text-sm text-slate-900">Safepay Gateway</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#0B0F14] text-[#C8A96B]">
+                      Recommended
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Visa, Mastercard, PayPak, EasyPaisa & Bank Transfer. Includes hosted 3D Secure checkout and automated webhook confirmation.
+                  </p>
+                </div>
+
+                {/* PayFast */}
+                <div
+                  onClick={() => setPaymentSettings({ ...paymentSettings, activeGateway: "PAYFAST" })}
+                  className={`p-5 rounded-2xl border-2 transition cursor-pointer space-y-2 relative ${
+                    paymentSettings.activeGateway === "PAYFAST"
+                      ? "border-[#C8A96B] bg-[#FAF9F5] shadow-sm"
+                      : "border-slate-200 hover:border-slate-300 bg-white"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-black text-sm text-slate-900">PayFast (APPs)</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
+                      SBP Licensed
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Direct union of 1Link bank accounts, UnionPay, PayPak, JazzCash, EasyPaisa, and debit/credit cards across Pakistan.
+                  </p>
+                </div>
+
+                {/* Simulator */}
+                <div
+                  onClick={() => setPaymentSettings({ ...paymentSettings, activeGateway: "MANUAL_SIMULATION" })}
+                  className={`p-5 rounded-2xl border-2 transition cursor-pointer space-y-2 relative ${
+                    paymentSettings.activeGateway === "MANUAL_SIMULATION"
+                      ? "border-[#C8A96B] bg-[#FAF9F5] shadow-sm"
+                      : "border-slate-200 hover:border-slate-300 bg-white"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-black text-sm text-slate-900">Sandbox Simulator</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
+                      Testing Mode
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Test orders with sample Visa/Mastercard numbers and simulated 3D Secure SMS OTP codes without real bank credentials.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 2: Environment Mode (Sandbox vs Live) */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
+              <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                <Shield className="w-4 h-4 text-[#C8A96B]" />
+                <span>2. Environment & Processing Mode</span>
+              </h3>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <label className="flex-1 p-4 rounded-2xl border border-slate-200 hover:border-slate-300 cursor-pointer flex items-center gap-3 bg-slate-50/50">
+                  <input
+                    type="radio"
+                    name="paymentMode"
+                    checked={paymentSettings.isSandbox}
+                    onChange={() => setPaymentSettings({ ...paymentSettings, isSandbox: true })}
+                    className="w-4 h-4 text-[#C8A96B] focus:ring-[#C8A96B]"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 block">
+                      Sandbox / Test Mode (Safe Testing)
+                    </span>
+                    <span className="text-[11px] text-slate-500 block">
+                      Simulate 3D Secure and transactions without real money deduction.
+                    </span>
+                  </div>
+                </label>
+
+                <label className="flex-1 p-4 rounded-2xl border border-slate-200 hover:border-slate-300 cursor-pointer flex items-center gap-3 bg-slate-50/50">
+                  <input
+                    type="radio"
+                    name="paymentMode"
+                    checked={!paymentSettings.isSandbox}
+                    onChange={() => setPaymentSettings({ ...paymentSettings, isSandbox: false })}
+                    className="w-4 h-4 text-[#C8A96B] focus:ring-[#C8A96B]"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 block">
+                      Live Production Mode (Real Banking)
+                    </span>
+                    <span className="text-[11px] text-slate-500 block">
+                      Deduct actual funds from customer bank accounts and settle to your merchant account.
+                    </span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            {/* Step 3: Gateway Credentials */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-5">
+              <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                <Landmark className="w-4 h-4 text-[#C8A96B]" />
+                <span>3. Merchant API Credentials & Security Keys</span>
+              </h3>
+
+              {paymentSettings.activeGateway === "SAFEPAY" && (
+                <div className="space-y-4 p-5 bg-slate-50 rounded-2xl border border-slate-200">
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    Safepay Merchant Credentials
+                  </span>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                        Public API Key (Client Secret)
+                      </label>
+                      <input
+                        type="text"
+                        value={paymentSettings.safepayApiKey}
+                        onChange={(e) => setPaymentSettings({ ...paymentSettings, safepayApiKey: e.target.value })}
+                        placeholder="sec_..."
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30"
+                      />
+                      <span className="text-[10px] text-slate-400 mt-1 block">Safepay Portal → Developers → API Key</span>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                        API Secret Key
+                      </label>
+                      <input
+                        type="password"
+                        value={paymentSettings.safepayApiSecret}
+                        onChange={(e) => setPaymentSettings({ ...paymentSettings, safepayApiSecret: e.target.value })}
+                        placeholder="••••••••••••••••"
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                        Webhook Shared Secret (HMAC Verification)
+                      </label>
+                      <input
+                        type="password"
+                        value={paymentSettings.safepayWebhookSecret}
+                        onChange={(e) => setPaymentSettings({ ...paymentSettings, safepayWebhookSecret: e.target.value })}
+                        placeholder="••••••••"
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30"
+                      />
+                      <span className="text-[10px] text-slate-400 mt-1 block">Safepay Portal → Webhooks → Secret</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {paymentSettings.activeGateway === "PAYFAST" && (
+                <div className="space-y-4 p-5 bg-slate-50 rounded-2xl border border-slate-200">
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-blue-500" />
+                    PayFast (APPs) Merchant Credentials
+                  </span>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                        PayFast Merchant ID
+                      </label>
+                      <input
+                        type="text"
+                        value={paymentSettings.payfastMerchantId}
+                        onChange={(e) => setPaymentSettings({ ...paymentSettings, payfastMerchantId: e.target.value })}
+                        placeholder="e.g. 10482"
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                        Secured Key / Hash Secret
+                      </label>
+                      <input
+                        type="password"
+                        value={paymentSettings.payfastSecuredKey}
+                        onChange={(e) => setPaymentSettings({ ...paymentSettings, payfastSecuredKey: e.target.value })}
+                        placeholder="••••••••••••••••"
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Payment Methods Activation Toggles */}
+              <div className="pt-2">
+                <span className="text-xs font-bold text-slate-800 block mb-3">
+                  Supported Customer Payment Channels
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <label className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={paymentSettings.enableCod}
+                      onChange={(e) => setPaymentSettings({ ...paymentSettings, enableCod: e.target.checked })}
+                      className="rounded text-[#C8A96B] focus:ring-[#C8A96B]"
+                    />
+                    <span className="text-xs font-bold text-slate-800">Cash on Delivery</span>
+                  </label>
+
+                  <label className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={paymentSettings.enableOnlineCard}
+                      onChange={(e) => setPaymentSettings({ ...paymentSettings, enableOnlineCard: e.target.checked })}
+                      className="rounded text-[#C8A96B] focus:ring-[#C8A96B]"
+                    />
+                    <span className="text-xs font-bold text-slate-800">Visa / Mastercard</span>
+                  </label>
+
+                  <label className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={paymentSettings.enableJazzcash}
+                      onChange={(e) => setPaymentSettings({ ...paymentSettings, enableJazzcash: e.target.checked })}
+                      className="rounded text-[#C8A96B] focus:ring-[#C8A96B]"
+                    />
+                    <span className="text-xs font-bold text-slate-800">JazzCash Wallet</span>
+                  </label>
+
+                  <label className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={paymentSettings.enableEasypaisa}
+                      onChange={(e) => setPaymentSettings({ ...paymentSettings, enableEasypaisa: e.target.checked })}
+                      className="rounded text-[#C8A96B] focus:ring-[#C8A96B]"
+                    />
+                    <span className="text-xs font-bold text-slate-800">EasyPaisa Wallet</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 4: Automated Bank Webhook */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-3">
+              <h3 className="text-sm font-black text-slate-900 flex items-center gap-1.5">
+                <Send className="w-4 h-4 text-[#C8A96B]" />
+                <span>4. Bank Webhook Notification URL (Anti-Fraud Protection)</span>
+              </h3>
+              <p className="text-xs text-slate-500">
+                Copy this URL and enter it in your <strong>Safepay Developer Dashboard → Webhooks</strong>. 
+                When a customer authorizes payment via bank OTP, Safepay will send an encrypted HMAC-SHA256 signature to this URL, instantly confirming the order as <strong>PAID</strong>.
+              </p>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value="https://fayzee.store/api/webhooks/payment/safepay"
+                  className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono font-bold text-slate-800 select-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText("https://fayzee.store/api/webhooks/payment/safepay");
+                    setCopiedPaymentWebhook(true);
+                    setTimeout(() => setCopiedPaymentWebhook(false), 3000);
+                  }}
+                  className="px-4 py-2.5 bg-[#0B0F14] hover:bg-[#1a222c] text-[#C8A96B] rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0"
+                >
+                  {copiedPaymentWebhook ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedPaymentWebhook ? "Copied!" : "Copy Webhook"}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <div className="flex justify-end pt-2">
+              <button
+                type="submit"
+                disabled={savingPaymentSettings}
+                className="px-6 py-3 bg-[#0B0F14] hover:bg-[#1a222c] text-[#C8A96B] rounded-2xl text-xs font-black transition shadow-lg flex items-center gap-2 active:scale-98 disabled:opacity-50"
+              >
+                {savingPaymentSettings ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-[#C8A96B]" />
+                    <span>Saving Payment Gateway Configuration...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4 text-[#C8A96B]" />
+                    <span>Save Payment Gateway Configuration</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+
+          {/* Step 5: Recent Transactions & Webhook Audit Log */}
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-[#C8A96B]" />
+                <span>Recent Online Transactions & Payment Audit Logs</span>
+              </h3>
+              <span className="text-xs text-slate-400 font-mono">
+                Total Logs: {recentTransactions.length}
+              </span>
+            </div>
+
+            {recentTransactions.length === 0 ? (
+              <p className="text-xs text-slate-500 py-4 text-center">
+                No online payment transactions recorded yet.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+                    <tr>
+                      <th className="py-2.5 px-3">Order Number</th>
+                      <th className="py-2.5 px-3">Transaction ID</th>
+                      <th className="py-2.5 px-3">Method</th>
+                      <th className="py-2.5 px-3">Customer</th>
+                      <th className="py-2.5 px-3">Amount</th>
+                      <th className="py-2.5 px-3">Status</th>
+                      <th className="py-2.5 px-3">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
+                    {recentTransactions.map((tx: any) => (
+                      <tr key={tx.id} className="hover:bg-slate-50/50">
+                        <td className="py-2.5 px-3 font-bold text-slate-900">
+                          {tx.order?.orderNumber || tx.orderId}
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-600 truncate max-w-[150px]">
+                          {tx.transactionId}
+                        </td>
+                        <td className="py-2.5 px-3 font-bold text-[#0B0F14]">
+                          {tx.paymentMethod}
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-700 font-sans">
+                          {tx.order?.user?.name || "Customer"}
+                        </td>
+                        <td className="py-2.5 px-3 font-bold text-slate-900">
+                          Rs. {Math.round(tx.amount).toLocaleString()}
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              tx.status === "PAID"
+                                ? "bg-emerald-100 text-emerald-800"
+                                : tx.status === "PROCESSING"
+                                ? "bg-amber-100 text-amber-800"
+                                : "bg-slate-100 text-slate-700"
+                            }`}
+                          >
+                            {tx.status}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-400 font-sans">
+                          {formatDateTime(tx.createdAt)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

@@ -3,7 +3,7 @@
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useCart } from "@/components/providers/CartProvider";
 import { formatPrice } from "@/lib/utils";
-import { detectCardBrand, isValidLuhn } from "@/lib/payment";
+import { detectCardBrand, isValidLuhn } from "@/lib/payment/utils";
 import {
   AlertCircle,
   ArrowRight,
@@ -241,6 +241,13 @@ export default function CheckoutPage() {
 
       await refreshCart();
       setIsOtpModalOpen(false);
+
+      // If official gateway provided a hosted 3D-secure checkout redirect
+      if (data.paymentResult?.redirectUrl && data.paymentResult?.status === "PROCESSING") {
+        window.location.href = data.paymentResult.redirectUrl;
+        return;
+      }
+
       router.push(`/orders/${data.order.id}?success=true&payment=${paymentMethod.toLowerCase()}`);
     } catch (err: any) {
       setErrorMsg(err.message || "An error occurred during payment processing.");

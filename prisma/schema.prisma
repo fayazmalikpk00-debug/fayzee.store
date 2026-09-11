@@ -720,5 +720,18 @@ model SellerChatMessage {
   @@index([createdAt])
 }
 
-
-
+model PlatformPaymentSetting {
+  id                   String   @id @default("default")
+  activeGateway        String   @default("SAFEPAY") // SAFEPAY, PAYFAST, JAZZCASH, MANUAL_SIMULATION
+  isSandbox            Boolean  @default(true)      // true = Test Mode, false = Live Production Mode
+  safepayApiKey        String?
+  safepayApiSecret     String?
+  safepayWebhookSecret String?
+  payfastMerchantId    String?
+  payfastSecuredKey    String?
+  enableCod            Boolean  @default(true)
+  enableOnlineCard     Boolean  @default(true)
+  enableJazzcash       Boolean  @default(true)
+  enableEasypaisa      Boolean  @default(true)
+  updatedAt            DateTime @updatedAt
+}

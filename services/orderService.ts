@@ -194,7 +194,8 @@ export async function createOrder(input: CreateOrderInput) {
     }
 
     // D. Process Payment through payment abstraction
-    const paymentProvider = PaymentService.getProvider(paymentMethod);
+    const paymentConfig = await PaymentService.getConfig();
+    const paymentProvider = PaymentService.getProvider(paymentMethod, paymentConfig);
     const paymentResult = await paymentProvider.processPayment({
       orderId: order.id,
       orderNumber: order.orderNumber,
