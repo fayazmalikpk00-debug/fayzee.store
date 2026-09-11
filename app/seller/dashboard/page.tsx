@@ -12,6 +12,8 @@ import {
   CheckCheck,
   CheckCircle2,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Copy,
   CreditCard,
@@ -46,7 +48,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface UploadedImageItem {
   url: string;
@@ -152,6 +154,34 @@ export default function SellerDashboardPage() {
   const [profileSuccessMsg, setProfileSuccessMsg] = useState("");
   const logoInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
+
+  // Horizontal Slider state for Navigation Tabs
+  const tabsNavRef = useRef<HTMLDivElement>(null);
+  const [canScrollTabsLeft, setCanScrollTabsLeft] = useState(false);
+  const [canScrollTabsRight, setCanScrollTabsRight] = useState(false);
+
+  const checkTabsScroll = useCallback(() => {
+    if (tabsNavRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = tabsNavRef.current;
+      setCanScrollTabsLeft(scrollLeft > 6);
+      setCanScrollTabsRight(scrollLeft < scrollWidth - clientWidth - 6);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkTabsScroll();
+    const handleResize = () => checkTabsScroll();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [checkTabsScroll, activeTab]);
+
+  const handleTabsScroll = (direction: "left" | "right") => {
+    if (tabsNavRef.current) {
+      const offset = direction === "left" ? -280 : 280;
+      tabsNavRef.current.scrollBy({ left: offset, behavior: "smooth" });
+      setTimeout(checkTabsScroll, 350);
+    }
+  };
 
   // Customer Chat & Direct Messages State
   const [chatConversations, setChatConversations] = useState<any[]>([]);
@@ -1062,101 +1092,136 @@ ${paymentLine}${noteLine}
         </div>
       )}
 
-      {/* Navigation Tabs */}
-      <div className="flex border-b border-[#E8E5DC] gap-6 sm:gap-8 text-sm font-bold overflow-x-auto no-scrollbar">
-        <button
-          onClick={() => setActiveTab("overview")}
-          className={`pb-3 transition relative whitespace-nowrap ${
-            activeTab === "overview"
-              ? "text-[#0B0F14] border-b-2 border-[#C8A96B]"
-              : "text-[#8A8F98] hover:text-[#0B0F14]"
-          }`}
+      {/* Navigation Tabs with Smooth Horizontal Slide Controls */}
+      <div className="relative group/tabs mb-1">
+        {/* Left Slide Button */}
+        {canScrollTabsLeft && (
+          <div className="absolute left-0 top-0 bottom-0 z-20 flex items-center pr-3 bg-gradient-to-r from-[#FAF9F6] via-[#FAF9F6]/90 to-transparent pointer-events-none">
+            <button
+              type="button"
+              onClick={() => handleTabsScroll("left")}
+              className="pointer-events-auto w-8 h-8 rounded-full bg-white border border-[#E8E5DC] text-[#0B0F14] shadow-md hover:bg-[#0B0F14] hover:text-[#C8A96B] hover:border-[#0B0F14] flex items-center justify-center transition active:scale-90"
+              title="Slide Left"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Tab Buttons Scrollable Container */}
+        <div
+          ref={tabsNavRef}
+          onScroll={checkTabsScroll}
+          className="flex border-b border-[#E8E5DC] gap-6 sm:gap-8 text-sm font-bold overflow-x-auto no-scrollbar scroll-smooth px-1"
         >
-          Overview & Metrics
-        </button>
-        <button
-          onClick={() => setActiveTab("products")}
-          className={`pb-3 transition relative whitespace-nowrap ${
-            activeTab === "products"
-              ? "text-[#0B0F14] border-b-2 border-[#C8A96B]"
-              : "text-[#8A8F98] hover:text-[#0B0F14]"
-          }`}
-        >
-          Product Catalog ({products.length})
-        </button>
-        <button
-          onClick={() => setActiveTab("orders")}
-          className={`pb-3 transition relative whitespace-nowrap ${
-            activeTab === "orders"
-              ? "text-[#0B0F14] border-b-2 border-[#C8A96B]"
-              : "text-[#8A8F98] hover:text-[#0B0F14]"
-          }`}
-        >
-          Customer Orders ({orderItems.length})
-        </button>
-        <button
-          onClick={() => setActiveTab("reviews")}
-          className={`pb-3 transition relative whitespace-nowrap flex items-center gap-1.5 ${
-            activeTab === "reviews"
-              ? "text-[#0B0F14] border-b-2 border-[#C8A96B]"
-              : "text-[#8A8F98] hover:text-[#0B0F14]"
-          }`}
-        >
-          <span>Customer Reviews</span>
-          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-            activeTab === "reviews" ? "bg-[#C8A96B]/15 text-[#A07C38]" : "bg-stone-100 text-stone-600"
-          }`}>
-            {sellerReviews.length}
-          </span>
-        </button>
-        <button
-          onClick={() => setActiveTab("finance")}
-          className={`pb-3 transition relative whitespace-nowrap flex items-center gap-1.5 ${
-            activeTab === "finance"
-              ? "text-[#0B0F14] border-b-2 border-[#C8A96B]"
-              : "text-[#8A8F98] hover:text-[#0B0F14]"
-          }`}
-        >
-          <Wallet className="w-4 h-4" />
-          <span>Finance & Payouts</span>
-          {financeData?.summary?.availableBalance > 0 && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">
-              Rs. {Math.floor(financeData.summary.availableBalance).toLocaleString()}
+          <button
+            onClick={() => setActiveTab("overview")}
+            className={`pb-3 transition relative whitespace-nowrap shrink-0 ${
+              activeTab === "overview"
+                ? "text-[#0B0F14] border-b-2 border-[#C8A96B]"
+                : "text-[#8A8F98] hover:text-[#0B0F14]"
+            }`}
+          >
+            Overview & Metrics
+          </button>
+          <button
+            onClick={() => setActiveTab("products")}
+            className={`pb-3 transition relative whitespace-nowrap shrink-0 ${
+              activeTab === "products"
+                ? "text-[#0B0F14] border-b-2 border-[#C8A96B]"
+                : "text-[#8A8F98] hover:text-[#0B0F14]"
+            }`}
+          >
+            Product Catalog ({products.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("orders")}
+            className={`pb-3 transition relative whitespace-nowrap shrink-0 ${
+              activeTab === "orders"
+                ? "text-[#0B0F14] border-b-2 border-[#C8A96B]"
+                : "text-[#8A8F98] hover:text-[#0B0F14]"
+            }`}
+          >
+            Customer Orders ({orderItems.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("reviews")}
+            className={`pb-3 transition relative whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
+              activeTab === "reviews"
+                ? "text-[#0B0F14] border-b-2 border-[#C8A96B]"
+                : "text-[#8A8F98] hover:text-[#0B0F14]"
+            }`}
+          >
+            <span>Customer Reviews</span>
+            <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+              activeTab === "reviews" ? "bg-[#C8A96B]/15 text-[#A07C38]" : "bg-stone-100 text-stone-600"
+            }`}>
+              {sellerReviews.length}
             </span>
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab("messages")}
-          className={`pb-3 transition relative whitespace-nowrap flex items-center gap-1.5 ${
-            activeTab === "messages"
-              ? "text-[#0B0F14] border-b-2 border-[#C8A96B]"
-              : "text-[#8A8F98] hover:text-[#0B0F14]"
-          }`}
-        >
-          <MessageSquare className="w-4 h-4" />
-          <span>Customer Messages</span>
-          {chatConversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0) > 0 && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white animate-pulse">
-              {chatConversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0)}
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab("settings")}
-          className={`pb-3 transition relative whitespace-nowrap flex items-center gap-1.5 ${
-            activeTab === "settings"
-              ? "text-[#0B0F14] border-b-2 border-[#C8A96B]"
-              : "text-[#8A8F98] hover:text-[#0B0F14]"
-          }`}
-        >
-          <Settings className="w-4 h-4" />
-          <span>Brand Logo & Store Settings</span>
-          {followersCount > 0 && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#C8A96B]/15 text-[#A07C38]">
-              {followersCount} Followers
-            </span>
-          )}
-        </button>
+          </button>
+          <button
+            onClick={() => setActiveTab("finance")}
+            className={`pb-3 transition relative whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
+              activeTab === "finance"
+                ? "text-[#0B0F14] border-b-2 border-[#C8A96B]"
+                : "text-[#8A8F98] hover:text-[#0B0F14]"
+            }`}
+          >
+            <Wallet className="w-4 h-4" />
+            <span>Finance & Payouts</span>
+            {financeData?.summary?.availableBalance > 0 && (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">
+                Rs. {Math.floor(financeData.summary.availableBalance).toLocaleString()}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("messages")}
+            className={`pb-3 transition relative whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
+              activeTab === "messages"
+                ? "text-[#0B0F14] border-b-2 border-[#C8A96B]"
+                : "text-[#8A8F98] hover:text-[#0B0F14]"
+            }`}
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>Customer Messages</span>
+            {chatConversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0) > 0 && (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white animate-pulse">
+                {chatConversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0)}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("settings")}
+            className={`pb-3 transition relative whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
+              activeTab === "settings"
+                ? "text-[#0B0F14] border-b-2 border-[#C8A96B]"
+                : "text-[#8A8F98] hover:text-[#0B0F14]"
+            }`}
+          >
+            <Settings className="w-4 h-4" />
+            <span>Brand Logo & Store Settings</span>
+            {followersCount > 0 && (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#C8A96B]/15 text-[#A07C38]">
+                {followersCount} Followers
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Right Slide Button */}
+        {canScrollTabsRight && (
+          <div className="absolute right-0 top-0 bottom-0 z-20 flex items-center pl-3 bg-gradient-to-l from-[#FAF9F6] via-[#FAF9F6]/90 to-transparent pointer-events-none">
+            <button
+              type="button"
+              onClick={() => handleTabsScroll("right")}
+              className="pointer-events-auto w-8 h-8 rounded-full bg-white border border-[#E8E5DC] text-[#0B0F14] shadow-md hover:bg-[#0B0F14] hover:text-[#C8A96B] hover:border-[#0B0F14] flex items-center justify-center transition active:scale-90"
+              title="Slide Right to View More Tabs"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* TAB 1: Overview Dashboard */}

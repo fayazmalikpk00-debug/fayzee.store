@@ -9,6 +9,7 @@ import {
   Check,
   CheckCircle2,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Clock,
   CreditCard,
@@ -46,7 +47,7 @@ import {
   Phone,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export default function AdminDashboardPage() {
   const { user, loading: authLoading } = useAuth();
@@ -145,6 +146,34 @@ export default function AdminDashboardPage() {
   const [prodSearch, setProdSearch] = useState("");
   const [prodFilter, setProdFilter] = useState<"all" | "topPick" | "ads">("all");
   const [updatingProdId, setUpdatingProdId] = useState<string | null>(null);
+
+  // Horizontal Slider state for Navigation Tabs
+  const adminTabsRef = useRef<HTMLDivElement>(null);
+  const [canScrollAdminLeft, setCanScrollAdminLeft] = useState(false);
+  const [canScrollAdminRight, setCanScrollAdminRight] = useState(false);
+
+  const checkAdminTabsScroll = useCallback(() => {
+    if (adminTabsRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = adminTabsRef.current;
+      setCanScrollAdminLeft(scrollLeft > 6);
+      setCanScrollAdminRight(scrollLeft < scrollWidth - clientWidth - 6);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkAdminTabsScroll();
+    const handleResize = () => checkAdminTabsScroll();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [checkAdminTabsScroll, activeTab]);
+
+  const handleAdminTabsScroll = (direction: "left" | "right") => {
+    if (adminTabsRef.current) {
+      const offset = direction === "left" ? -280 : 280;
+      adminTabsRef.current.scrollBy({ left: offset, behavior: "smooth" });
+      setTimeout(checkAdminTabsScroll, 350);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -522,128 +551,163 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-[#E8E5DC] pb-2 text-xs font-bold overflow-x-auto no-scrollbar">
-        <button
-          onClick={() => setActiveTab("analytics")}
-          className={`px-4 py-2 rounded-xl transition ${
-            activeTab === "analytics"
-              ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
-              : "text-[#0B0F14] hover:bg-[#F5F3EE]"
-          }`}
+      {/* Tabs with Horizontal Slider Controls */}
+      <div className="relative group/admintabs mb-2">
+        {/* Left Slide Button */}
+        {canScrollAdminLeft && (
+          <div className="absolute left-0 top-0 bottom-0 z-20 flex items-center pr-3 bg-gradient-to-r from-[#FAF9F6] via-[#FAF9F6]/90 to-transparent pointer-events-none">
+            <button
+              type="button"
+              onClick={() => handleAdminTabsScroll("left")}
+              className="pointer-events-auto w-7 h-7 rounded-full bg-white border border-[#E8E5DC] text-[#0B0F14] shadow-md hover:bg-[#0B0F14] hover:text-[#C8A96B] hover:border-[#0B0F14] flex items-center justify-center transition active:scale-90"
+              title="Slide Left"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
+        {/* Scrollable Tabs */}
+        <div
+          ref={adminTabsRef}
+          onScroll={checkAdminTabsScroll}
+          className="flex gap-2 border-b border-[#E8E5DC] pb-2 text-xs font-bold overflow-x-auto no-scrollbar scroll-smooth px-1"
         >
-          Platform Analytics
-        </button>
-        <button
-          onClick={() => setActiveTab("sellers")}
-          className={`px-4 py-2 rounded-xl transition ${
-            activeTab === "sellers"
-              ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
-              : "text-[#0B0F14] hover:bg-[#F5F3EE]"
-          }`}
-        >
-          Seller Approvals ({sellers.length})
-        </button>
-        <button
-          onClick={() => setActiveTab("categories")}
-          className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
-            activeTab === "categories"
-              ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
-              : "text-[#0B0F14] hover:bg-[#F5F3EE]"
-          }`}
-        >
-          <Layers className="w-3.5 h-3.5 text-[#C8A96B]" />
-          <span>Category Hierarchy ({categoriesList.length})</span>
-        </button>
-        <button
-          onClick={() => setActiveTab("products")}
-          className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
-            activeTab === "products"
-              ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
-              : "text-[#0B0F14] hover:bg-[#F5F3EE]"
-          }`}
-        >
-          <Flame className="w-3.5 h-3.5 text-amber-500" />
-          <span>Featured & Trending ({productsList.filter((p) => p.isTrending).length})</span>
-        </button>
-        <button
-          onClick={() => setActiveTab("finance")}
-          className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
-            activeTab === "finance"
-              ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
-              : "text-[#0B0F14] hover:bg-[#F5F3EE]"
-          }`}
-        >
-          <Landmark className="w-3.5 h-3.5 text-[#C8A96B]" />
-          <span>Finance & Settlements</span>
-          {adminFinanceData?.metrics?.pendingPayoutsCount > 0 && (
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-rose-500 text-white animate-pulse">
-              {adminFinanceData.metrics.pendingPayoutsCount}
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab("courier")}
-          className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
-            activeTab === "courier"
-              ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
-              : "text-[#0B0F14] hover:bg-[#F5F3EE]"
-          }`}
-        >
-          <Truck className="w-3.5 h-3.5 text-[#C8A96B]" />
-          <span>Courier & Delivery API</span>
-          {courierSettings.isSandbox && (
-            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20">
-              SANDBOX
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab("payment")}
-          className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
-            activeTab === "payment"
-              ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
-              : "text-[#0B0F14] hover:bg-[#F5F3EE]"
-          }`}
-        >
-          <CreditCard className="w-3.5 h-3.5 text-[#C8A96B]" />
-          <span>Payment Gateways</span>
-          {paymentSettings.isSandbox ? (
-            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20">
-              SANDBOX
-            </span>
-          ) : (
-            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-              LIVE
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab("support")}
-          className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
-            activeTab === "support"
-              ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
-              : "text-[#0B0F14] hover:bg-[#F5F3EE]"
-          }`}
-        >
-          <Mail className="w-3.5 h-3.5 text-[#C8A96B]" />
-          <span>Support Tickets</span>
-          {supportTickets.filter((t) => t.status === "OPEN").length > 0 && (
-            <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-500 text-black">
-              {supportTickets.filter((t) => t.status === "OPEN").length}
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab("audit")}
-          className={`px-4 py-2 rounded-xl transition ${
-            activeTab === "audit"
-              ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
-              : "text-[#0B0F14] hover:bg-[#F5F3EE]"
-          }`}
-        >
-          Security Audit Logs ({data?.recentAuditLogs?.length || 0})
-        </button>
+          <button
+            onClick={() => setActiveTab("analytics")}
+            className={`px-4 py-2 rounded-xl transition whitespace-nowrap shrink-0 ${
+              activeTab === "analytics"
+                ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
+                : "text-[#0B0F14] hover:bg-[#F5F3EE]"
+            }`}
+          >
+            Platform Analytics
+          </button>
+          <button
+            onClick={() => setActiveTab("sellers")}
+            className={`px-4 py-2 rounded-xl transition whitespace-nowrap shrink-0 ${
+              activeTab === "sellers"
+                ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
+                : "text-[#0B0F14] hover:bg-[#F5F3EE]"
+            }`}
+          >
+            Seller Approvals ({sellers.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("categories")}
+            className={`px-4 py-2 rounded-xl transition whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
+              activeTab === "categories"
+                ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
+                : "text-[#0B0F14] hover:bg-[#F5F3EE]"
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5 text-[#C8A96B]" />
+            <span>Category Hierarchy ({categoriesList.length})</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("products")}
+            className={`px-4 py-2 rounded-xl transition whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
+              activeTab === "products"
+                ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
+                : "text-[#0B0F14] hover:bg-[#F5F3EE]"
+            }`}
+          >
+            <Flame className="w-3.5 h-3.5 text-amber-500" />
+            <span>Featured & Trending ({productsList.filter((p) => p.isTrending).length})</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("finance")}
+            className={`px-4 py-2 rounded-xl transition whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
+              activeTab === "finance"
+                ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
+                : "text-[#0B0F14] hover:bg-[#F5F3EE]"
+            }`}
+          >
+            <Landmark className="w-3.5 h-3.5 text-[#C8A96B]" />
+            <span>Finance & Settlements</span>
+            {adminFinanceData?.metrics?.pendingPayoutsCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-rose-500 text-white animate-pulse">
+                {adminFinanceData.metrics.pendingPayoutsCount}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("courier")}
+            className={`px-4 py-2 rounded-xl transition whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
+              activeTab === "courier"
+                ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
+                : "text-[#0B0F14] hover:bg-[#F5F3EE]"
+            }`}
+          >
+            <Truck className="w-3.5 h-3.5 text-[#C8A96B]" />
+            <span>Courier & Delivery API</span>
+            {courierSettings.isSandbox && (
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20">
+                SANDBOX
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("payment")}
+            className={`px-4 py-2 rounded-xl transition whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
+              activeTab === "payment"
+                ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
+                : "text-[#0B0F14] hover:bg-[#F5F3EE]"
+            }`}
+          >
+            <CreditCard className="w-3.5 h-3.5 text-[#C8A96B]" />
+            <span>Payment Gateways</span>
+            {paymentSettings.isSandbox ? (
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20">
+                SANDBOX
+              </span>
+            ) : (
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                LIVE
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("support")}
+            className={`px-4 py-2 rounded-xl transition whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
+              activeTab === "support"
+                ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
+                : "text-[#0B0F14] hover:bg-[#F5F3EE]"
+            }`}
+          >
+            <Mail className="w-3.5 h-3.5 text-[#C8A96B]" />
+            <span>Support Tickets</span>
+            {supportTickets.filter((t) => t.status === "OPEN").length > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-500 text-black">
+                {supportTickets.filter((t) => t.status === "OPEN").length}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("audit")}
+            className={`px-4 py-2 rounded-xl transition whitespace-nowrap shrink-0 ${
+              activeTab === "audit"
+                ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/40 shadow-xs"
+                : "text-[#0B0F14] hover:bg-[#F5F3EE]"
+            }`}
+          >
+            Security Audit Logs ({data?.recentAuditLogs?.length || 0})
+          </button>
+        </div>
+
+        {/* Right Slide Button */}
+        {canScrollAdminRight && (
+          <div className="absolute right-0 top-0 bottom-0 z-20 flex items-center pl-3 bg-gradient-to-l from-[#FAF9F6] via-[#FAF9F6]/90 to-transparent pointer-events-none">
+            <button
+              type="button"
+              onClick={() => handleAdminTabsScroll("right")}
+              className="pointer-events-auto w-7 h-7 rounded-full bg-white border border-[#E8E5DC] text-[#0B0F14] shadow-md hover:bg-[#0B0F14] hover:text-[#C8A96B] hover:border-[#0B0F14] flex items-center justify-center transition active:scale-90"
+              title="Slide Right"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* TAB 1: Analytics & KPIs */}

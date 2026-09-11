@@ -5,6 +5,8 @@ import { ProductSkeletonGrid } from "@/components/marketplace/ProductSkeleton";
 import {
   ArrowRight,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ChevronUp,
   Grid,
   Layers,
@@ -48,6 +50,34 @@ export function HomeProductsFeed({
   const [hasMore, setHasMore] = useState<boolean>(initialProducts.length < totalCount);
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
   const observerRef = useRef<HTMLDivElement | null>(null);
+
+  // Horizontal Slider state for Categories
+  const catsScrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollCatLeft, setCanScrollCatLeft] = useState(false);
+  const [canScrollCatRight, setCanScrollCatRight] = useState(false);
+
+  const checkCatScroll = useCallback(() => {
+    if (catsScrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = catsScrollRef.current;
+      setCanScrollCatLeft(scrollLeft > 6);
+      setCanScrollCatRight(scrollLeft < scrollWidth - clientWidth - 6);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkCatScroll();
+    const handleResize = () => checkCatScroll();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [checkCatScroll, categories]);
+
+  const handleCatScroll = (direction: "left" | "right") => {
+    if (catsScrollRef.current) {
+      const offset = direction === "left" ? -260 : 260;
+      catsScrollRef.current.scrollBy({ left: offset, behavior: "smooth" });
+      setTimeout(checkCatScroll, 350);
+    }
+  };
 
   const loadMoreProducts = useCallback(async () => {
     if (isLoading || isLoadingMore || !hasMore) return;
@@ -250,54 +280,88 @@ export function HomeProductsFeed({
         </div>
       )}
 
-      {/* 3. Quick Horizontal Category Filter Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 pt-1">
-        <button
-          type="button"
-          onClick={() => handleCategorySelect("all")}
-          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all shadow-2xs flex items-center gap-1.5 shrink-0 ${
-            selectedCategory === "all"
-              ? "bg-[#0B0F14] text-white shadow-md border border-[#0B0F14]"
-              : "bg-white text-[#0B0F14] border border-[#E8E5DC] hover:border-[#0B0F14]"
-          }`}
+      {/* 3. Quick Horizontal Category Filter Pills with Slide Controls */}
+      <div className="relative group/cats">
+        {/* Left Slide Button */}
+        {canScrollCatLeft && (
+          <div className="absolute left-0 top-0 bottom-0 z-20 flex items-center pr-3 bg-gradient-to-r from-[#FAF9F6] via-[#FAF9F6]/90 to-transparent pointer-events-none">
+            <button
+              type="button"
+              onClick={() => handleCatScroll("left")}
+              className="pointer-events-auto w-8 h-8 rounded-full bg-white border border-[#E8E5DC] text-[#0B0F14] shadow-md hover:bg-[#0B0F14] hover:text-[#C8A96B] hover:border-[#0B0F14] flex items-center justify-center transition active:scale-90"
+              title="Slide Left"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        <div
+          ref={catsScrollRef}
+          onScroll={checkCatScroll}
+          className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth pb-1 pt-1 px-1"
         >
-          <Sparkles className="w-3.5 h-3.5 text-[#C8A96B]" />
-          <span>All Products</span>
-          <span
-            className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-              selectedCategory === "all" ? "bg-white/20 text-[#C8A96B]" : "bg-[#F5F3EE] text-[#0B0F14]"
+          <button
+            type="button"
+            onClick={() => handleCategorySelect("all")}
+            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all shadow-2xs flex items-center gap-1.5 shrink-0 ${
+              selectedCategory === "all"
+                ? "bg-[#0B0F14] text-white shadow-md border border-[#0B0F14]"
+                : "bg-white text-[#0B0F14] border border-[#E8E5DC] hover:border-[#0B0F14]"
             }`}
           >
-            {totalCount}
-          </span>
-        </button>
-
-        {categories.map((cat) => {
-          const isSelected = selectedCategory === cat.slug;
-          return (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => handleCategorySelect(cat.slug)}
-              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all shadow-2xs flex items-center gap-1.5 shrink-0 ${
-                isSelected
-                  ? "bg-[#0B0F14] text-[#C8A96B] shadow-md font-bold border border-[#0B0F14]"
-                  : "bg-white text-[#0B0F14] border border-[#E8E5DC] hover:border-[#0B0F14]"
+            <Sparkles className="w-3.5 h-3.5 text-[#C8A96B]" />
+            <span>All Products</span>
+            <span
+              className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                selectedCategory === "all" ? "bg-white/20 text-[#C8A96B]" : "bg-[#F5F3EE] text-[#0B0F14]"
               }`}
             >
-              <span>{cat.name}</span>
-              {cat._count?.products !== undefined && (
-                <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                    isSelected ? "bg-white/10 text-[#C8A96B]" : "bg-[#F5F3EE] text-[#8A8F98]"
-                  }`}
-                >
-                  {cat._count.products}
-                </span>
-              )}
+              {totalCount}
+            </span>
+          </button>
+
+          {categories.map((cat) => {
+            const isSelected = selectedCategory === cat.slug;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => handleCategorySelect(cat.slug)}
+                className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all shadow-2xs flex items-center gap-1.5 shrink-0 ${
+                  isSelected
+                    ? "bg-[#0B0F14] text-[#C8A96B] shadow-md font-bold border border-[#0B0F14]"
+                    : "bg-white text-[#0B0F14] border border-[#E8E5DC] hover:border-[#0B0F14]"
+                }`}
+              >
+                <span>{cat.name}</span>
+                {cat._count?.products !== undefined && (
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                      isSelected ? "bg-white/10 text-[#C8A96B]" : "bg-[#F5F3EE] text-[#8A8F98]"
+                    }`}
+                  >
+                    {cat._count.products}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right Slide Button */}
+        {canScrollCatRight && (
+          <div className="absolute right-0 top-0 bottom-0 z-20 flex items-center pl-3 bg-gradient-to-l from-[#FAF9F6] via-[#FAF9F6]/90 to-transparent pointer-events-none">
+            <button
+              type="button"
+              onClick={() => handleCatScroll("right")}
+              className="pointer-events-auto w-8 h-8 rounded-full bg-white border border-[#E8E5DC] text-[#0B0F14] shadow-md hover:bg-[#0B0F14] hover:text-[#C8A96B] hover:border-[#0B0F14] flex items-center justify-center transition active:scale-90"
+              title="Slide Right to View More Categories"
+            >
+              <ChevronRight className="w-4 h-4" />
             </button>
-          );
-        })}
+          </div>
+        )}
       </div>
 
       {/* 4. Active Category Indicator (If filtered) */}
