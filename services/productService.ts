@@ -247,9 +247,9 @@ export async function getFlashSaleProducts() {
   return flashSale;
 }
 
-export async function getTrendingProducts(limit = 8) {
-  // 1. Fetch products manually marked as trending by Admin
-  const trending = await prisma.product.findMany({
+export async function getTrendingProducts(limit = 12) {
+  // Return ONLY products explicitly selected by Admin for the Featured / Trending Collection
+  return prisma.product.findMany({
     where: { status: "ACTIVE", isTrending: true },
     take: limit,
     include: {
@@ -259,35 +259,6 @@ export async function getTrendingProducts(limit = 8) {
     },
     orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
   });
-
-  // 2. If fewer than limit, automatically fill remaining spots with top-rated active products
-  if (trending.length < limit) {
-    const remaining = limit - trending.length;
-    const existingIds = trending.map((p) => p.id);
-
-    const fallbacks = await prisma.product.findMany({
-      where: {
-        status: "ACTIVE",
-        id: { notIn: existingIds },
-      },
-      take: remaining,
-      include: {
-        images: { orderBy: { sortOrder: "asc" } },
-        category: true,
-        seller: { select: { storeName: true, storeSlug: true } },
-      },
-      orderBy: [
-        { rating: "desc" },
-        { reviewCount: "desc" },
-        { isFeatured: "desc" },
-        { createdAt: "desc" },
-      ],
-    });
-
-    return [...trending, ...fallbacks];
-  }
-
-  return trending;
 }
 
 export async function getFeaturedProducts(limit = 8) {

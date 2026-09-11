@@ -396,19 +396,31 @@ export default function AdminDashboardPage() {
 
   const handleToggleTopPick = async (productId: string, currentVal: boolean) => {
     setUpdatingProdId(productId);
+    const newVal = !currentVal;
+    // 1. Instant optimistic state update so UI and counter reflect instantly
+    setProductsList((prev) =>
+      prev.map((p) => (p.id === productId ? { ...p, isTrending: newVal } : p))
+    );
     try {
       const res = await fetch("/api/admin/products", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId, isTrending: !currentVal }),
+        body: JSON.stringify({ productId, isTrending: newVal }),
       });
-      if (res.ok) {
-        const prodRes = await fetch("/api/admin/products");
-        const prodData = await prodRes.json();
-        if (prodData.products) setProductsList(prodData.products);
+      const d = await res.json();
+      if (!res.ok) {
+        // Revert on failure
+        setProductsList((prev) =>
+          prev.map((p) => (p.id === productId ? { ...p, isTrending: currentVal } : p))
+        );
+        alert(d.error || "Failed to update Trending Collection status");
       }
     } catch (e) {
       console.error(e);
+      setProductsList((prev) =>
+        prev.map((p) => (p.id === productId ? { ...p, isTrending: currentVal } : p))
+      );
+      alert("Network error updating product");
     } finally {
       setUpdatingProdId(null);
     }
@@ -416,19 +428,31 @@ export default function AdminDashboardPage() {
 
   const handleToggleAd = async (productId: string, currentVal: boolean) => {
     setUpdatingProdId(productId);
+    const newVal = !currentVal;
+    // 1. Instant optimistic state update
+    setProductsList((prev) =>
+      prev.map((p) => (p.id === productId ? { ...p, isFeatured: newVal } : p))
+    );
     try {
       const res = await fetch("/api/admin/products", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId, isFeatured: !currentVal }),
+        body: JSON.stringify({ productId, isFeatured: newVal }),
       });
-      if (res.ok) {
-        const prodRes = await fetch("/api/admin/products");
-        const prodData = await prodRes.json();
-        if (prodData.products) setProductsList(prodData.products);
+      const d = await res.json();
+      if (!res.ok) {
+        // Revert on failure
+        setProductsList((prev) =>
+          prev.map((p) => (p.id === productId ? { ...p, isFeatured: currentVal } : p))
+        );
+        alert(d.error || "Failed to update Ad status");
       }
     } catch (e) {
       console.error(e);
+      setProductsList((prev) =>
+        prev.map((p) => (p.id === productId ? { ...p, isFeatured: currentVal } : p))
+      );
+      alert("Network error updating product");
     } finally {
       setUpdatingProdId(null);
     }

@@ -1,5 +1,6 @@
 import { getSessionUser } from "@/lib/auth";
 import prisma from "@/lib/db";
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -45,7 +46,14 @@ export async function GET(req: Request) {
       take: 200,
     });
 
-    return NextResponse.json({ products });
+    return NextResponse.json(
+      { products },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        },
+      }
+    );
   } catch (error: any) {
     console.error("Admin products fetch error:", error);
     return NextResponse.json({ error: error.message || "Failed to fetch products" }, { status: 500 });
@@ -103,6 +111,15 @@ export async function PATCH(req: Request) {
         }),
       },
     });
+
+    // Invalidate caches immediately so changes are visible instantly on the homepage
+    try {
+      revalidatePath("/");
+      revalidatePath("/admin/dashboard");
+      revalidatePath("/products");
+    } catch (revalErr) {
+      console.warn("Path revalidation warning:", revalErr);
+    }
 
     return NextResponse.json({ success: true, product: updated });
   } catch (error: any) {

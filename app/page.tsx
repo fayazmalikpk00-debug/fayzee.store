@@ -22,6 +22,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function HomePage() {
   const [allProductsData, categories, flashSale, trendingProducts, topSellers] =
@@ -268,16 +269,16 @@ export default async function HomePage() {
               <div className="w-12 h-12 rounded-2xl bg-[#0B0F14] text-[#C8A96B] flex items-center justify-center mx-auto border border-[#C8A96B]/30">
                 <Flame className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-[#0B0F14]">No products listed yet</h3>
+              <h3 className="text-lg font-bold text-[#0B0F14]">No Products in Featured Collection</h3>
               <p className="text-sm text-[#8A8F98] max-w-md mx-auto">
-                Verified seller products will appear here as soon as they are added to the catalog.
+                Admin can select products from the Admin Dashboard (&quot;Featured &amp; Trending&quot; tab) to spotlight them here.
               </p>
               <div className="pt-2">
                 <Link
                   href="/products"
                   className="inline-block px-5 py-2.5 bg-[#0B0F14] hover:bg-[#1A222C] text-white text-sm font-bold rounded-xl transition shadow-xs border border-[#0B0F14]"
                 >
-                  Explore Categories
+                  Explore All Products
                 </Link>
               </div>
             </div>
