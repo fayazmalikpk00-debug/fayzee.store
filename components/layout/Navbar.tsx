@@ -50,6 +50,25 @@ export function Navbar() {
     COMPLETE_MARKETPLACE_HIERARCHY[0]?.slug || "electronics"
   );
   const megaMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const megaMenuContainerRef = useRef<HTMLDivElement>(null);
+
+  // Close mega menu on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        megaMenuContainerRef.current &&
+        !megaMenuContainerRef.current.contains(event.target as Node)
+      ) {
+        setMegaMenuOpen(false);
+      }
+    }
+    if (megaMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [megaMenuOpen]);
 
   // Mobile Categories Accordion State
   const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState(false);
@@ -61,13 +80,10 @@ export function Navbar() {
 
   const handleMouseEnterMega = () => {
     if (megaMenuTimeoutRef.current) clearTimeout(megaMenuTimeoutRef.current);
-    setMegaMenuOpen(true);
   };
 
   const handleMouseLeaveMega = () => {
-    megaMenuTimeoutRef.current = setTimeout(() => {
-      setMegaMenuOpen(false);
-    }, 200);
+    // Keep open on click, only brief delay if needed
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -372,6 +388,7 @@ export function Navbar() {
           <div className="flex items-center space-x-2 sm:space-x-3 overflow-x-auto no-scrollbar py-0.5 w-full md:w-auto -mx-1 px-1">
             {/* Mega Menu Toggle Button */}
             <div
+              ref={megaMenuContainerRef}
               className="relative shrink-0"
               onMouseEnter={handleMouseEnterMega}
               onMouseLeave={handleMouseLeaveMega}
@@ -379,14 +396,15 @@ export function Navbar() {
               <button
                 type="button"
                 onClick={() => setMegaMenuOpen(!megaMenuOpen)}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-bold text-sm transition ${
+                className={`flex items-center gap-2 px-4 py-1.5 rounded-full font-bold text-sm transition cursor-pointer ${
                   megaMenuOpen
-                    ? "bg-[#C8A96B] text-[#0B0F14] shadow-xs"
+                    ? "bg-[#C8A96B] text-[#0B0F14] shadow-md ring-2 ring-[#C8A96B]/50"
                     : "bg-white/10 text-white hover:bg-white/20 hover:text-[#C8A96B]"
                 }`}
+                title="Browse All Categories"
               >
-                <Layers className="w-4 h-4" />
-                <span>All Categories</span>
+                <Layers className="w-4 h-4 text-[#C8A96B]" />
+                <span>Categories</span>
                 <ChevronDown
                   className={`w-4 h-4 transition-transform duration-200 ${
                     megaMenuOpen ? "rotate-180" : ""
@@ -520,58 +538,14 @@ export function Navbar() {
               )}
             </div>
 
-            {/* Quick Links across major departments */}
+            {/* All Products Link */}
             <Link
               href="/products"
-              className="hover:text-[#C8A96B] font-bold text-white shrink-0 px-3 py-1 rounded-full hover:bg-white/10 transition text-sm"
+              className="hover:text-[#C8A96B] font-bold text-white shrink-0 px-4 py-1.5 rounded-full hover:bg-white/10 transition text-sm flex items-center gap-1.5"
             >
-              All Products
+              <ShoppingBag className="w-4 h-4 text-[#C8A96B]" />
+              <span>All Products</span>
             </Link>
-            <Link
-              href="/category/electronics"
-              className="hover:text-[#C8A96B] font-medium shrink-0 px-3 py-1 rounded-full hover:bg-white/10 transition text-sm text-white/90"
-            >
-              Electronics
-            </Link>
-            <Link
-              href="/category/mens-fashion"
-              className="hover:text-[#C8A96B] font-medium shrink-0 px-3 py-1 rounded-full hover:bg-white/10 transition text-sm text-white/90"
-            >
-              Men&apos;s Fashion
-            </Link>
-            <Link
-              href="/category/womens-fashion"
-              className="hover:text-[#C8A96B] font-medium shrink-0 px-3 py-1 rounded-full hover:bg-white/10 transition text-sm text-white/90"
-            >
-              Women&apos;s Fashion
-            </Link>
-            <Link
-              href="/category/home-kitchen"
-              className="hover:text-[#C8A96B] font-medium shrink-0 px-3 py-1 rounded-full hover:bg-white/10 transition text-sm text-white/90"
-            >
-              Home & Kitchen
-            </Link>
-            <Link
-              href="/category/beauty-personal-care"
-              className="hover:text-[#C8A96B] font-medium shrink-0 px-3 py-1 rounded-full hover:bg-white/10 transition text-sm text-white/90"
-            >
-              Beauty
-            </Link>
-            <Link
-              href="/category/groceries-pets"
-              className="hover:text-[#C8A96B] font-medium shrink-0 px-3 py-1 rounded-full hover:bg-white/10 transition text-sm text-white/90"
-            >
-              Groceries
-            </Link>
-            <Link
-              href="/flash-sale"
-              className="text-[#C8A96B] hover:text-[#E2CB99] font-bold flex items-center gap-1 shrink-0 px-3 py-1 rounded-full hover:bg-white/10 transition text-sm"
-            >
-              <span>⚡ Flash Sale</span>
-            </Link>
-          </div>
-          <div className="hidden lg:block shrink-0 font-semibold text-slate-400 text-xs">
-            18 Departments • Verified Sellers
           </div>
         </div>
       </div>
@@ -713,6 +687,50 @@ export function Navbar() {
               </Link>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Mobile Categories Modal (when clicking Categories on mobile) */}
+      {megaMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex flex-col justify-end animate-in fade-in duration-200">
+          <div className="bg-[#F5F3EE] rounded-t-3xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl border-t border-[#E8E5DC]">
+            <div className="p-4 bg-white border-b border-[#E8E5DC] flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Layers className="w-5 h-5 text-[#C8A96B]" />
+                <div>
+                  <h3 className="font-black text-sm text-[#0B0F14]">All Categories</h3>
+                  <p className="text-[11px] text-slate-500">18 Departments Available</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setMegaMenuOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-black cursor-pointer transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-3 overflow-y-auto space-y-2 flex-1">
+              {COMPLETE_MARKETPLACE_HIERARCHY.map((cat) => (
+                <Link
+                  key={cat.slug}
+                  href={`/category/${cat.slug}`}
+                  onClick={() => setMegaMenuOpen(false)}
+                  className="flex items-center justify-between p-3 rounded-2xl bg-white border border-[#E8E5DC] hover:border-[#C8A96B] text-xs font-bold text-[#0B0F14] shadow-xs active:scale-98 transition"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="text-2xl">{cat.icon}</span>
+                    <div>
+                      <span className="block text-slate-900">{cat.name}</span>
+                      <span className="text-[10px] text-slate-400 font-normal">
+                        {cat.subcategories?.length || 0} subcategories
+                      </span>
+                    </div>
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-[#C8A96B]" />
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </header>
