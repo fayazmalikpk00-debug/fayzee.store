@@ -13,7 +13,6 @@ import {
   Search,
   ShoppingBag,
   Sparkles,
-  Store,
   User as UserIcon,
   X,
 } from "lucide-react";
@@ -122,33 +121,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 bg-[#0B0F14] border-b border-[#1A222C] shadow-subtle w-full max-w-full">
-      {/* 1. Top micro-announcement bar */}
-      <div className="bg-[#060A0E] text-[#8A8F98] text-xs sm:text-sm py-1.5 px-3 sm:px-6 lg:px-8 border-b border-[#141B22]">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
-          <div className="flex items-center space-x-2 truncate">
-            <span className="text-[#C8A96B] font-bold flex items-center gap-1 shrink-0">
-              ⚡ Flash Deals Live Now!
-            </span>
-            <span className="hidden md:inline text-slate-700">|</span>
-            <span className="hidden md:inline text-slate-400">Shop Smart. Shop Easy.</span>
-          </div>
 
-          <div className="flex items-center space-x-3 shrink-0 text-xs sm:text-sm">
-            <Link
-              href="/seller/register"
-              className="hover:text-white transition flex items-center gap-1 text-[#8A8F98] hover:text-[#C8A96B] font-medium"
-            >
-              <Store className="w-4 h-4 text-[#C8A96B] shrink-0" />
-              <span className="hidden xs:inline sm:inline">Become a Seller</span>
-              <span className="xs:hidden sm:hidden">Sell</span>
-            </Link>
-            <span className="text-slate-700">|</span>
-            <Link href="/help" className="hover:text-white transition text-[#8A8F98] hover:text-[#C8A96B] font-medium">
-              Help
-            </Link>
-          </div>
-        </div>
-      </div>
 
       {/* 2. Main Navbar Row - LEFT: Branding | CENTER: Search | RIGHT: Profile | Wishlist | Cart */}
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex items-center justify-between gap-3 sm:gap-4">
