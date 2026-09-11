@@ -49,12 +49,9 @@ export default async function HomePage() {
     ]);
 
   // Hero Fayzee AI Top Pick:
-  // #1 TOP PRIORITY: Product explicitly designated by Admin as Fayzee AI Top Pick (isFeatured = true)
-  const aiTopPick =
-    explicitFeaturedProduct ||
-    trendingProducts[0] ||
-    allProductsData.products[0] ||
-    null;
+  // Strictly 100% Admin Controlled: ONLY product explicitly designated by Admin (isFeatured = true)
+  // ZERO automatic fallback.
+  const aiTopPick = explicitFeaturedProduct || null;
 
   return (
     <div className="space-y-12 pb-16">
@@ -78,8 +75,8 @@ export default async function HomePage() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-            {/* Primary Hero Content (Left, 7 cols) - Clean floating text directly over background */}
-            <div className="lg:col-span-7 space-y-6 sm:space-y-7">
+            {/* Primary Hero Content - Clean floating text directly over background */}
+            <div className={`${aiTopPick ? "lg:col-span-7" : "lg:col-span-9 max-w-3xl"} space-y-6 sm:space-y-7`}>
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0B0F14]/85 backdrop-blur-md border border-[#C8A96B]/50 text-xs sm:text-sm font-semibold text-[#C8A96B] shadow-lg">
                 <Sparkles className="w-4 h-4 text-[#C8A96B] shrink-0 animate-pulse" />
                 <span className="text-[#F5F3EE]">Powered by Fayzee AI Shopping Intelligence</span>
@@ -145,24 +142,25 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* Hero Interactive Products Showcase Card (Right, 5 cols) */}
-            <div className="lg:col-span-5 hidden lg:block">
-              <div className="p-6 sm:p-7 rounded-3xl bg-[#161F2B]/85 backdrop-blur-xl border border-[#C8A96B]/40 shadow-[0_20px_60px_rgba(0,0,0,0.8)] space-y-4 animate-float">
-                <div className="flex items-center justify-between text-sm text-slate-200">
-                  <span className="font-bold flex items-center gap-1.5 text-[#F5F3EE]">
-                    <Sparkles className="w-4 h-4 text-[#C8A96B]" /> Fayzee AI Top Pick
-                  </span>
-                  <span
-                    className={`px-2.5 py-0.5 rounded-md font-bold text-xs ${
-                      ((aiTopPick?.stockQuantity ?? 1) > 0)
-                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                        : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                    }`}
-                  >
-                    {((aiTopPick?.stockQuantity ?? 1) > 0) ? "In Stock" : "Limited Stock"}
-                  </span>
-                </div>
-                {aiTopPick ? (
+            {/* Hero Interactive Products Showcase Card (Right, 5 cols) - Only shown when Admin explicitly designates an AI Top Pick */}
+            {aiTopPick && (
+              <div className="lg:col-span-5 hidden lg:block">
+                <div className="p-6 sm:p-7 rounded-3xl bg-[#161F2B]/85 backdrop-blur-xl border border-[#C8A96B]/40 shadow-[0_20px_60px_rgba(0,0,0,0.8)] space-y-4 animate-float">
+                  <div className="flex items-center justify-between text-sm text-slate-200">
+                    <span className="font-bold flex items-center gap-1.5 text-[#F5F3EE]">
+                      <Sparkles className="w-4 h-4 text-[#C8A96B]" /> Fayzee AI Top Pick
+                    </span>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-md font-bold text-xs ${
+                        ((aiTopPick.stockQuantity ?? 1) > 0)
+                          ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                          : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                      }`}
+                    >
+                      {((aiTopPick.stockQuantity ?? 1) > 0) ? "In Stock" : "Limited Stock"}
+                    </span>
+                  </div>
+
                   <div className="space-y-4">
                     <div className="relative overflow-hidden rounded-2xl border border-white/10 group/item">
                       <img
@@ -203,33 +201,9 @@ export default async function HomePage() {
                       </Link>
                     </div>
                   </div>
-                ) : (
-                  <div className="py-8 text-center space-y-3">
-                    <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center mx-auto text-[#C8A96B]">
-                      <Sparkles className="w-6 h-6" />
-                    </div>
-                    <h4 className="font-bold text-white text-lg">Fayzee Catalog Ready</h4>
-                    <p className="text-sm text-[#8A8F98] max-w-xs mx-auto leading-relaxed">
-                      18 marketplace departments configured and ready for official seller product listings.
-                    </p>
-                    <div className="pt-2 flex justify-center gap-3">
-                      <Link
-                        href="/products"
-                        className="px-5 py-2.5 bg-[#C8A96B] hover:bg-[#B89858] text-[#0B0F14] text-sm font-bold rounded-xl transition shadow-sm"
-                      >
-                        Browse Categories
-                      </Link>
-                      <Link
-                        href="/seller/register"
-                        className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white text-sm font-semibold rounded-xl border border-white/20 transition"
-                      >
-                        Become a Seller
-                      </Link>
-                    </div>
-                  </div>
-                )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </section>

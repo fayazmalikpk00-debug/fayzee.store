@@ -1358,18 +1358,39 @@ export default function AdminDashboardPage() {
                 <span className="text-xs font-bold text-[#C8A96B] uppercase flex items-center gap-1">
                   <Sparkles className="w-3.5 h-3.5" /> Fayzee AI Top Pick
                 </span>
-                <span className="px-2 py-0.5 bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/30 rounded-full font-black text-xs">
-                  {productsList.filter((p) => p.isFeatured).length > 0 ? "1 Active" : "Auto"}
+                <span
+                  className={`px-2 py-0.5 rounded-full font-black text-xs ${
+                    productsList.filter((p) => p.isFeatured).length > 0
+                      ? "bg-[#0B0F14] text-[#C8A96B] border border-[#C8A96B]/30"
+                      : "bg-slate-100 text-slate-500 border border-slate-200"
+                  }`}
+                >
+                  {productsList.filter((p) => p.isFeatured).length > 0 ? "1 Active (Admin Set)" : "Disabled (No Auto)"}
                 </span>
               </div>
               <p className="text-base font-black text-slate-900 truncate">
-                {productsList.find((p) => p.isFeatured)?.title || "Auto-Selected"}
+                {productsList.find((p) => p.isFeatured)?.title || "No Product Selected (Hero Clean)"}
               </p>
-              <span className="text-xs text-[#8A8F98] font-medium">
-                {productsList.find((p) => p.isFeatured)
-                  ? "✓ Active in Homepage Hero Right Card"
-                  : "Click 'Set as AI Top Pick' below to spotlight"}
-              </span>
+              <div className="flex items-center justify-between gap-2 pt-0.5">
+                <span className="text-xs text-[#8A8F98] font-medium">
+                  {productsList.find((p) => p.isFeatured)
+                    ? "✓ Active in Homepage Hero Card"
+                    : "100% Admin Controlled. Click 'Set as AI Top Pick' below to feature a product."}
+                </span>
+                {productsList.find((p) => p.isFeatured) && (
+                  <button
+                    type="button"
+                    disabled={updatingProdId === productsList.find((p) => p.isFeatured)?.id}
+                    onClick={() => {
+                      const active = productsList.find((p) => p.isFeatured);
+                      if (active) handleToggleAd(active.id, true);
+                    }}
+                    className="text-xs text-red-600 hover:text-red-700 font-bold underline cursor-pointer disabled:opacity-50 shrink-0"
+                  >
+                    Remove Top Pick
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 

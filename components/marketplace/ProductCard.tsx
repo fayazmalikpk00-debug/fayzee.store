@@ -76,7 +76,7 @@ export function ProductCard({
         {isFeatured ? (
           <span className="px-2 py-0.5 bg-[#0B0F14]/95 backdrop-blur-xs text-[#C8A96B] text-[10px] font-black rounded-md border border-[#C8A96B]/40 shadow-xs flex items-center gap-1 animate-pulse-glow">
             <span className="w-1.5 h-1.5 rounded-full bg-[#C8A96B] animate-ping"></span>
-            Sponsored Ad
+            AI Top Pick
           </span>
         ) : null}
         {discountPercent && discountPercent > 0 ? (
