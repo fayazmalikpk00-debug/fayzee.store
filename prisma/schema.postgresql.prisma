@@ -34,6 +34,8 @@ model User {
   recentlyViewed RecentlyViewed[]
   auditLogs     AuditLog[]
   couponUsages  CouponUsage[]
+  followingSellers SellerFollow[] @relation("UserFollowedSellersPostgres")
+  customerChats    SellerChatConversation[] @relation("CustomerSellerChatsPostgres")
 
   @@index([email])
   @@index([role])
@@ -91,6 +93,8 @@ model SellerProfile {
   products        Product[]
   orderItems      OrderItem[]
   payouts         SellerPayout[]
+  followers         SellerFollow[]           @relation("SellerFollowersPostgres")
+  chatConversations SellerChatConversation[] @relation("SellerChatConversationsPostgres")
 
   @@index([storeSlug])
   @@index([status])
@@ -572,4 +576,51 @@ model PlatformFinancialSetting {
   payoutInstructions    String?
   updatedAt             DateTime @updatedAt
 }
+
+model SellerFollow {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation("UserFollowedSellersPostgres", fields: [userId], references: [id], onDelete: Cascade)
+  sellerId  String
+  seller    SellerProfile @relation("SellerFollowersPostgres", fields: [sellerId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+
+  @@unique([userId, sellerId])
+  @@index([userId])
+  @@index([sellerId])
+}
+
+model SellerChatConversation {
+  id            String              @id @default(cuid())
+  customerId    String
+  customer      User                @relation("CustomerSellerChatsPostgres", fields: [customerId], references: [id], onDelete: Cascade)
+  sellerId      String
+  seller        SellerProfile       @relation("SellerChatConversationsPostgres", fields: [sellerId], references: [id], onDelete: Cascade)
+  lastMessageAt DateTime            @default(now())
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  messages      SellerChatMessage[]
+
+  @@unique([customerId, sellerId])
+  @@index([customerId])
+  @@index([sellerId])
+  @@index([lastMessageAt])
+}
+
+model SellerChatMessage {
+  id             String                 @id @default(cuid())
+  conversationId String
+  conversation   SellerChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  senderRole     String                 // CUSTOMER, SELLER
+  content        String
+  isRead         Boolean                @default(false)
+  createdAt      DateTime               @default(now())
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
+}
+
 

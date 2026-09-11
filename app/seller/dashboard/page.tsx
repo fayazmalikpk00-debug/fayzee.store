@@ -9,6 +9,7 @@ import {
   ArrowUpRight,
   Building2,
   Check,
+  CheckCheck,
   CheckCircle2,
   ChevronDown,
   Clock,
@@ -27,6 +28,7 @@ import {
   Printer,
   Search,
   Send,
+  Settings,
   ShieldCheck,
   ShoppingBag,
   Sliders,
@@ -38,6 +40,8 @@ import {
   Trash2,
   Truck,
   Upload,
+  User,
+  Users,
   Wallet,
   X,
 } from "lucide-react";
@@ -62,7 +66,9 @@ interface VariantFormItem {
 
 export default function SellerDashboardPage() {
   const { user, loading: authLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState<"overview" | "products" | "orders" | "reviews" | "finance">("overview");
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "products" | "orders" | "reviews" | "finance" | "messages" | "settings"
+  >("overview");
 
   const [products, setProducts] = useState<any[]>([]);
   const [orderItems, setOrderItems] = useState<any[]>([]);
@@ -133,16 +139,60 @@ export default function SellerDashboardPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Store Brand Logo, Banner & Settings State
+  const [storeLogoUrl, setStoreLogoUrl] = useState("");
+  const [storeBannerUrl, setStoreBannerUrl] = useState("");
+  const [storeDesc, setStoreDesc] = useState("");
+  const [storePhone, setStorePhone] = useState("");
+  const [storeAddress, setStoreAddress] = useState("");
+  const [followersCount, setFollowersCount] = useState(0);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileSuccessMsg, setProfileSuccessMsg] = useState("");
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+
+  // Customer Chat & Direct Messages State
+  const [chatConversations, setChatConversations] = useState<any[]>([]);
+  const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatReplyText, setChatReplyText] = useState("");
+  const [sendingChatReply, setSendingChatReply] = useState(false);
+  const [chatSearchQuery, setChatSearchQuery] = useState("");
+  const chatMessagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Check URL query parameters for tab
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get("tab");
+      if (
+        tabParam === "messages" ||
+        tabParam === "settings" ||
+        tabParam === "products" ||
+        tabParam === "orders" ||
+        tabParam === "finance" ||
+        tabParam === "reviews"
+      ) {
+        setActiveTab(tabParam as any);
+      }
+    }
+  }, []);
+
   const fetchSellerData = async () => {
     try {
-      const [prodRes, orderRes, catRes, revRes, finRes, payRes] = await Promise.all([
-        fetch("/api/seller/products"),
-        fetch("/api/seller/orders"),
-        fetch("/api/categories"),
-        fetch("/api/seller/reviews"),
-        fetch("/api/seller/finance"),
-        fetch("/api/seller/payouts"),
-      ]);
+      const [prodRes, orderRes, catRes, revRes, finRes, payRes, profRes, chatRes] =
+        await Promise.all([
+          fetch("/api/seller/products"),
+          fetch("/api/seller/orders"),
+          fetch("/api/categories"),
+          fetch("/api/seller/reviews"),
+          fetch("/api/seller/finance"),
+          fetch("/api/seller/payouts"),
+          fetch("/api/seller/profile"),
+          fetch("/api/chat/seller"),
+        ]);
 
       const prodData = await prodRes.json();
       const orderData = await orderRes.json();
@@ -150,6 +200,8 @@ export default function SellerDashboardPage() {
       const revData = await revRes.json();
       const finData = await finRes.json();
       const payData = await payRes.json();
+      const profData = await profRes.json();
+      const chatData = await chatRes.json();
 
       if (prodData.products) setProducts(prodData.products);
       if (orderData.orderItems) setOrderItems(orderData.orderItems);
@@ -165,10 +217,185 @@ export default function SellerDashboardPage() {
         }
       }
       if (payData.payouts) setPayoutsList(payData.payouts);
+
+      if (profData.seller) {
+        setStoreLogoUrl(profData.seller.logoUrl || "");
+        setStoreBannerUrl(profData.seller.bannerUrl || "");
+        setStoreDesc(profData.seller.description || "");
+        setStorePhone(profData.seller.phone || "");
+        setStoreAddress(profData.seller.address || "");
+        setFollowersCount(profData.seller.followersCount || 0);
+      }
+
+      if (chatData.asSeller) {
+        setChatConversations(chatData.asSeller);
+        if (chatData.asSeller.length > 0 && !activeChatId) {
+          setActiveChatId(chatData.asSeller[0].id);
+        }
+      }
     } catch (e) {
       console.error("Fetch seller data error:", e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Poll chat messages for active chat
+  const fetchActiveChatMessages = async (convId: string) => {
+    try {
+      const res = await fetch(`/api/chat/seller/${convId}/messages`);
+      if (res.ok) {
+        const data = await res.json();
+        setChatMessages(data.messages || []);
+      }
+    } catch (e) {
+      console.error("fetchActiveChatMessages error:", e);
+    }
+  };
+
+  useEffect(() => {
+    if (activeChatId && activeTab === "messages") {
+      fetchActiveChatMessages(activeChatId);
+      const interval = setInterval(() => {
+        fetchActiveChatMessages(activeChatId);
+      }, 4000);
+      return () => clearInterval(interval);
+    }
+  }, [activeChatId, activeTab]);
+
+  useEffect(() => {
+    if (activeTab === "messages") {
+      chatMessagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [chatMessages, activeTab]);
+
+  // Brand Logo Upload Handler
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingLogo(true);
+    try {
+      const formData = new FormData();
+      formData.append("files", file);
+      const upRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const upData = await upRes.json();
+      if (!upRes.ok) throw new Error(upData.error || "Failed to upload logo image");
+      const url = upData.images?.[0]?.url;
+      if (!url) throw new Error("No image URL returned");
+
+      setStoreLogoUrl(url);
+
+      const saveRes = await fetch("/api/seller/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ logoUrl: url }),
+      });
+      if (!saveRes.ok) throw new Error("Failed to save brand logo to profile");
+
+      setSuccessToast("Brand logo updated successfully! It is now live on your store.");
+      setTimeout(() => setSuccessToast(""), 5000);
+    } catch (err: any) {
+      alert(err.message || "Logo upload failed");
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  // Store Banner Upload Handler
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingBanner(true);
+    try {
+      const formData = new FormData();
+      formData.append("files", file);
+      const upRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const upData = await upRes.json();
+      if (!upRes.ok) throw new Error(upData.error || "Failed to upload banner");
+      const url = upData.images?.[0]?.url;
+      if (!url) throw new Error("No image URL returned");
+
+      setStoreBannerUrl(url);
+
+      const saveRes = await fetch("/api/seller/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bannerUrl: url }),
+      });
+      if (!saveRes.ok) throw new Error("Failed to save banner to profile");
+
+      setSuccessToast("Store banner updated successfully!");
+      setTimeout(() => setSuccessToast(""), 5000);
+    } catch (err: any) {
+      alert(err.message || "Banner upload failed");
+    } finally {
+      setUploadingBanner(false);
+    }
+  };
+
+  // Save Store Profile Details
+  const handleSaveStoreProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingProfile(true);
+    setProfileSuccessMsg("");
+    try {
+      const res = await fetch("/api/seller/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: storeDesc,
+          phone: storePhone,
+          address: storeAddress,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save profile details");
+
+      setProfileSuccessMsg("Store profile details saved successfully!");
+      setTimeout(() => setProfileSuccessMsg(""), 4000);
+    } catch (err: any) {
+      alert(err.message || "Failed to save profile");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  // Send Seller Chat Reply
+  const handleSendSellerReply = async (textToSend?: string) => {
+    const text = (textToSend || chatReplyText).trim();
+    if (!text || !activeChatId || sendingChatReply) return;
+
+    setSendingChatReply(true);
+    try {
+      const res = await fetch(`/api/chat/seller/${activeChatId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: text }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send message");
+
+      setChatMessages((prev) => [...prev, data.message]);
+      setChatReplyText("");
+
+      // Refresh conversations list in background
+      const convRes = await fetch("/api/chat/seller");
+      if (convRes.ok) {
+        const cData = await convRes.json();
+        if (cData.asSeller) setChatConversations(cData.asSeller);
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to send message");
+    } finally {
+      setSendingChatReply(false);
     }
   };
 
@@ -711,8 +938,16 @@ ${paymentLine}${noteLine}
       {/* Top Header & Store Status */}
       <div className="bg-white rounded-3xl p-6 border border-[#E8E5DC] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-[#0B0F14] text-[#C8A96B] rounded-2xl flex items-center justify-center font-black text-xl shadow-md border border-[#C8A96B]/30">
-            {user.sellerProfile?.storeName?.[0] || "S"}
+          <div className="w-14 h-14 bg-[#0B0F14] text-[#C8A96B] rounded-2xl flex items-center justify-center font-black text-xl shadow-md border border-[#C8A96B]/30 overflow-hidden shrink-0">
+            {storeLogoUrl || (user.sellerProfile as any)?.logoUrl ? (
+              <img
+                src={(storeLogoUrl || (user.sellerProfile as any)?.logoUrl) as string}
+                alt="Brand Logo"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              user.sellerProfile?.storeName?.[0] || "S"
+            )}
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -885,6 +1120,38 @@ ${paymentLine}${noteLine}
           {financeData?.summary?.availableBalance > 0 && (
             <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">
               Rs. {Math.floor(financeData.summary.availableBalance).toLocaleString()}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab("messages")}
+          className={`pb-3 transition relative whitespace-nowrap flex items-center gap-1.5 ${
+            activeTab === "messages"
+              ? "text-[#0B0F14] border-b-2 border-[#C8A96B]"
+              : "text-[#8A8F98] hover:text-[#0B0F14]"
+          }`}
+        >
+          <MessageSquare className="w-4 h-4" />
+          <span>Customer Messages</span>
+          {chatConversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0) > 0 && (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white animate-pulse">
+              {chatConversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0)}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab("settings")}
+          className={`pb-3 transition relative whitespace-nowrap flex items-center gap-1.5 ${
+            activeTab === "settings"
+              ? "text-[#0B0F14] border-b-2 border-[#C8A96B]"
+              : "text-[#8A8F98] hover:text-[#0B0F14]"
+          }`}
+        >
+          <Settings className="w-4 h-4" />
+          <span>Brand Logo & Store Settings</span>
+          {followersCount > 0 && (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#C8A96B]/15 text-[#A07C38]">
+              {followersCount} Followers
             </span>
           )}
         </button>
@@ -2089,6 +2356,580 @@ ${paymentLine}${noteLine}
                 </table>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 6: Customer Direct Messages & Inquiries */}
+      {activeTab === "messages" && (
+        <div className="bg-white rounded-3xl border border-[#E8E5DC] shadow-card overflow-hidden">
+          <div className="p-5 border-b border-[#E8E5DC] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#FAF9F6]">
+            <div>
+              <h2 className="text-lg font-black text-[#0B0F14] flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-[#C8A96B]" />
+                <span>Customer Inquiries & Messages</span>
+              </h2>
+              <p className="text-xs text-[#8A8F98] mt-0.5">
+                Chat directly with shoppers inquiring about your products, stock, and orders in real-time.
+              </p>
+            </div>
+            <button
+              onClick={() => fetchSellerData()}
+              className="px-3.5 py-1.5 bg-white border border-[#E8E5DC] hover:border-[#C8A96B] text-xs font-bold text-[#0B0F14] rounded-xl transition self-start sm:self-auto shadow-2xs"
+            >
+              Refresh Chats
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-[#E8E5DC] min-h-[550px]">
+            {/* Left Column: Conversations List */}
+            <div className="p-4 space-y-3 bg-[#FAF9F6]/60">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={chatSearchQuery}
+                  onChange={(e) => setChatSearchQuery(e.target.value)}
+                  placeholder="Search customer name..."
+                  className="w-full pl-9 pr-3 py-2 bg-white text-xs rounded-xl border border-[#E8E5DC] text-[#0B0F14] placeholder:text-[#8A8F98] focus:outline-none focus:border-[#C8A96B] transition shadow-2xs"
+                />
+                <Search className="w-4 h-4 text-[#8A8F98] absolute left-3 top-1/2 -translate-y-1/2" />
+              </div>
+
+              <div className="space-y-1.5 max-h-[460px] overflow-y-auto">
+                {chatConversations.length === 0 ? (
+                  <div className="text-center py-12 px-4 space-y-2">
+                    <MessageSquare className="w-8 h-8 text-[#C8A96B]/50 mx-auto" />
+                    <p className="text-xs font-bold text-[#0B0F14]">No Customer Inquiries Yet</p>
+                    <p className="text-[11px] text-[#8A8F98] leading-relaxed">
+                      When shoppers browse your products and click "Chat with Seller", their messages will appear here.
+                    </p>
+                  </div>
+                ) : (
+                  chatConversations
+                    .filter((c) =>
+                      chatSearchQuery
+                        ? c.customer?.name?.toLowerCase().includes(chatSearchQuery.toLowerCase())
+                        : true
+                    )
+                    .map((conv) => {
+                      const isSelected = activeChatId === conv.id;
+                      return (
+                        <button
+                          key={conv.id}
+                          type="button"
+                          onClick={() => {
+                            setActiveChatId(conv.id);
+                            fetchActiveChatMessages(conv.id);
+                          }}
+                          className={`w-full text-left p-3 rounded-2xl transition flex items-start gap-3 ${
+                            isSelected
+                              ? "bg-[#0B0F14] text-white shadow-sm"
+                              : "bg-white hover:bg-stone-100 text-[#0B0F14] border border-[#E8E5DC]/80"
+                          }`}
+                        >
+                          <div
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 border ${
+                              isSelected
+                                ? "bg-[#161F2B] text-[#C8A96B] border-[#C8A96B]/30"
+                                : "bg-[#FAF9F6] text-[#0B0F14] border-[#E8E5DC]"
+                            }`}
+                          >
+                            {conv.customer?.avatar ? (
+                              <img
+                                src={conv.customer.avatar}
+                                alt={conv.customer.name}
+                                className="w-full h-full object-cover rounded-xl"
+                              />
+                            ) : (
+                              conv.customer?.name?.[0]?.toUpperCase() || "C"
+                            )}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-1">
+                              <span
+                                className={`text-xs font-bold truncate ${
+                                  isSelected ? "text-white" : "text-[#0B0F14]"
+                                }`}
+                              >
+                                {conv.customer?.name || "Customer"}
+                              </span>
+                              {conv.unreadCount > 0 && (
+                                <span className="px-1.5 py-0.5 bg-rose-600 text-white rounded-full text-[9px] font-black shrink-0">
+                                  {conv.unreadCount} new
+                                </span>
+                              )}
+                            </div>
+
+                            <p
+                              className={`text-[11px] truncate mt-0.5 ${
+                                isSelected ? "text-slate-300" : "text-[#8A8F98]"
+                              }`}
+                            >
+                              {conv.lastMessage?.content || "Started conversation"}
+                            </p>
+
+                            <span
+                              className={`text-[9px] block mt-1 ${
+                                isSelected ? "text-slate-400" : "text-[#8A8F98]/70"
+                              }`}
+                            >
+                              {new Date(conv.lastMessageAt).toLocaleDateString([], {
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })
+                )}
+              </div>
+            </div>
+
+            {/* Right Column: Chat Stream & Reply Box */}
+            <div className="lg:col-span-2 flex flex-col justify-between bg-white min-h-[500px]">
+              {activeChatId && chatConversations.find((c) => c.id === activeChatId) ? (
+                (() => {
+                  const currentConv = chatConversations.find((c) => c.id === activeChatId);
+                  return (
+                    <>
+                      {/* Active Chat Header */}
+                      <div className="p-3.5 sm:p-4 border-b border-[#E8E5DC] flex items-center justify-between bg-white">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-[#0B0F14] text-[#C8A96B] font-bold flex items-center justify-center border border-[#C8A96B]/30 shrink-0">
+                            {currentConv.customer?.avatar ? (
+                              <img
+                                src={currentConv.customer.avatar}
+                                alt={currentConv.customer.name}
+                                className="w-full h-full object-cover rounded-xl"
+                              />
+                            ) : (
+                              currentConv.customer?.name?.[0]?.toUpperCase() || "C"
+                            )}
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-sm text-[#0B0F14]">
+                              {currentConv.customer?.name}
+                            </h3>
+                            <span className="text-[11px] text-[#8A8F98]">
+                              {currentConv.customer?.email}
+                            </span>
+                          </div>
+                        </div>
+
+                        <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-lg border border-emerald-200">
+                          Direct Customer Thread
+                        </span>
+                      </div>
+
+                      {/* Messages Stream */}
+                      <div className="flex-1 p-4 space-y-3 overflow-y-auto max-h-[380px] bg-[#FAF9F6]/40">
+                        {chatMessages.length === 0 ? (
+                          <div className="text-center py-10 text-xs text-[#8A8F98]">
+                            No messages in this chat yet.
+                          </div>
+                        ) : (
+                          chatMessages.map((m) => {
+                            const isSellerMsg = m.senderRole === "SELLER";
+                            return (
+                              <div
+                                key={m.id}
+                                className={`flex flex-col ${
+                                  isSellerMsg ? "items-end" : "items-start"
+                                }`}
+                              >
+                                <div
+                                  className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-xs leading-relaxed shadow-xs ${
+                                    isSellerMsg
+                                      ? "bg-[#0B0F14] text-white rounded-br-xs border border-[#C8A96B]/20"
+                                      : "bg-white text-[#0B0F14] rounded-bl-xs border border-[#E8E5DC]"
+                                  }`}
+                                >
+                                  <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                                </div>
+                                <div className="flex items-center gap-1 mt-1 text-[10px] text-[#8A8F98] px-1">
+                                  <span>
+                                    {new Date(m.createdAt).toLocaleTimeString([], {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </span>
+                                  {isSellerMsg && (
+                                    m.isRead ? (
+                                      <CheckCheck className="w-3 h-3 text-[#C8A96B]" />
+                                    ) : (
+                                      <Check className="w-3 h-3 text-[#8A8F98]" />
+                                    )
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                        <div ref={chatMessagesEndRef} />
+                      </div>
+
+                      {/* Quick Seller Responses */}
+                      <div className="px-4 py-2 bg-[#FAF9F6] border-t border-[#E8E5DC] flex gap-1.5 overflow-x-auto no-scrollbar">
+                        {[
+                          "Assalam-o-Alaikum, yes this item is available in stock!",
+                          "Your order has been packed and will be dispatched today.",
+                          "Yes, we can provide original photos on request.",
+                          "Thank you for contacting us! Let us know if you need any other help.",
+                        ].map((phrase) => (
+                          <button
+                            key={phrase}
+                            type="button"
+                            onClick={() => handleSendSellerReply(phrase)}
+                            disabled={sendingChatReply}
+                            className="px-2.5 py-1 bg-white hover:bg-[#0B0F14] hover:text-[#C8A96B] border border-[#E8E5DC] rounded-full text-[11px] font-medium text-[#0B0F14] whitespace-nowrap transition shrink-0 active:scale-95"
+                          >
+                            {phrase}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Reply Input Bar */}
+                      <div className="p-3.5 bg-white border-t border-[#E8E5DC]">
+                        <form
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            handleSendSellerReply();
+                          }}
+                          className="flex items-center gap-2"
+                        >
+                          <input
+                            type="text"
+                            value={chatReplyText}
+                            onChange={(e) => setChatReplyText(e.target.value)}
+                            placeholder={`Reply to ${currentConv.customer?.name}...`}
+                            disabled={sendingChatReply}
+                            className="flex-1 px-4 py-2.5 bg-[#FAF9F6] text-xs text-[#0B0F14] placeholder:text-[#8A8F98] rounded-xl border border-[#E8E5DC] focus:border-[#C8A96B] focus:outline-none transition"
+                          />
+                          <button
+                            type="submit"
+                            disabled={!chatReplyText.trim() || sendingChatReply}
+                            className="px-4 py-2.5 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] rounded-xl text-xs font-bold transition disabled:opacity-40 disabled:cursor-not-allowed border border-[#C8A96B]/30 shadow-xs flex items-center gap-1.5 active:scale-95"
+                          >
+                            {sendingChatReply ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <>
+                                <Send className="w-3.5 h-3.5" />
+                                <span>Send</span>
+                              </>
+                            )}
+                          </button>
+                        </form>
+                      </div>
+                    </>
+                  );
+                })()
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-3 text-[#8A8F98]">
+                  <MessageSquare className="w-12 h-12 text-[#C8A96B]/40" />
+                  <p className="text-sm font-bold text-[#0B0F14]">Select a Customer Thread</p>
+                  <p className="text-xs max-w-xs">
+                    Choose an inquiry from the left panel to view message history and send direct replies.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 7: Store Profile & Brand Logo Settings */}
+      {activeTab === "settings" && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left: Brand Logo & Store Banner Uploaders */}
+            <div className="space-y-6">
+              {/* Brand Logo Card */}
+              <div className="bg-white p-6 rounded-3xl border border-[#E8E5DC] shadow-card space-y-5">
+                <div className="flex items-center justify-between pb-3 border-b border-[#E8E5DC]">
+                  <div>
+                    <h3 className="text-base font-black text-[#0B0F14] flex items-center gap-2">
+                      <Store className="w-5 h-5 text-[#C8A96B]" />
+                      <span>Official Brand Logo</span>
+                    </h3>
+                    <p className="text-xs text-[#8A8F98] mt-0.5">
+                      Your brand icon displayed on products, verified badges, and public storefront.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-6">
+                  {/* Logo Preview */}
+                  <div className="relative group shrink-0">
+                    <div className="w-28 h-28 rounded-3xl bg-[#0B0F14] border-2 border-[#C8A96B] flex items-center justify-center overflow-hidden shadow-card">
+                      {storeLogoUrl ? (
+                        <img
+                          src={storeLogoUrl}
+                          alt="Brand Logo"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Store className="w-10 h-10 text-[#C8A96B]" />
+                      )}
+                    </div>
+
+                    {uploadingLogo && (
+                      <div className="absolute inset-0 bg-black/60 rounded-3xl flex items-center justify-center">
+                        <Loader2 className="w-6 h-6 animate-spin text-[#C8A96B]" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions & Instructions */}
+                  <div className="space-y-3 flex-1 text-center sm:text-left">
+                    <div>
+                      <span className="text-xs font-bold text-[#0B0F14] block">
+                        Upload Store Brand Logo
+                      </span>
+                      <p className="text-[11px] text-[#8A8F98] mt-0.5">
+                        Recommended: Square format 500x500px (PNG, JPG, WebP).
+                      </p>
+                    </div>
+
+                    <input
+                      type="file"
+                      ref={logoInputRef}
+                      onChange={handleLogoUpload}
+                      accept="image/*"
+                      className="hidden"
+                    />
+
+                    <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
+                      <button
+                        type="button"
+                        onClick={() => logoInputRef.current?.click()}
+                        disabled={uploadingLogo}
+                        className="px-4 py-2.5 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs border border-[#C8A96B]/30 active:scale-95"
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>{storeLogoUrl ? "Change Brand Logo" : "Upload Brand Logo"}</span>
+                      </button>
+
+                      {storeLogoUrl && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!confirm("Are you sure you want to remove your brand logo?")) return;
+                            setStoreLogoUrl("");
+                            await fetch("/api/seller/profile", {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ logoUrl: null }),
+                            });
+                            setSuccessToast("Logo removed.");
+                            setTimeout(() => setSuccessToast(""), 3000);
+                          }}
+                          className="px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl border border-rose-200 transition"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Store Banner Card */}
+              <div className="bg-white p-6 rounded-3xl border border-[#E8E5DC] shadow-card space-y-5">
+                <div className="flex items-center justify-between pb-3 border-b border-[#E8E5DC]">
+                  <div>
+                    <h3 className="text-base font-black text-[#0B0F14] flex items-center gap-2">
+                      <ImageIcon className="w-5 h-5 text-[#C8A96B]" />
+                      <span>Store Cover Banner</span>
+                    </h3>
+                    <p className="text-xs text-[#8A8F98] mt-0.5">
+                      Wide panoramic banner shown at the top of your public seller store.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Banner Preview */}
+                  <div className="h-32 sm:h-40 w-full rounded-2xl bg-[#0B0F14] border border-[#E8E5DC] overflow-hidden relative shadow-xs">
+                    {storeBannerUrl ? (
+                      <img
+                        src={storeBannerUrl}
+                        alt="Store Banner"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-[#8A8F98] space-y-1">
+                        <ImageIcon className="w-8 h-8 text-[#C8A96B]/60" />
+                        <span className="text-xs font-medium">No banner uploaded yet</span>
+                      </div>
+                    )}
+
+                    {uploadingBanner && (
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                        <Loader2 className="w-6 h-6 animate-spin text-[#C8A96B]" />
+                      </div>
+                    )}
+                  </div>
+
+                  <input
+                    type="file"
+                    ref={bannerInputRef}
+                    onChange={handleBannerUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-[#8A8F98]">
+                      Recommended: 1400x400px (16:9 or 3:1 ratio).
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => bannerInputRef.current?.click()}
+                      disabled={uploadingBanner}
+                      className="px-4 py-2 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-[#C8A96B]/30 shadow-xs active:scale-95"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{storeBannerUrl ? "Change Banner" : "Upload Banner"}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Store Bio, Followers Metric & Business Info */}
+            <div className="space-y-6">
+              {/* Followers & Public URL Card */}
+              <div className="bg-gradient-to-br from-[#0B0F14] to-[#1A222C] p-6 rounded-3xl text-white shadow-card border border-[#C8A96B]/30 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-5 h-5 text-[#C8A96B]" />
+                    <span className="text-xs uppercase tracking-wider font-extrabold text-[#C8A96B]">
+                      Community & Reach
+                    </span>
+                  </div>
+                  {user.sellerProfile?.storeSlug && (
+                    <Link
+                      href={`/sellers/${user.sellerProfile.storeSlug}`}
+                      target="_blank"
+                      className="text-xs text-white/90 hover:text-[#C8A96B] font-bold flex items-center gap-1 transition"
+                    >
+                      <span>Preview Live Store</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </Link>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-1">
+                  <div className="bg-white/10 p-4 rounded-2xl border border-white/15">
+                    <span className="text-2xl sm:text-3xl font-black text-white block">
+                      {followersCount}
+                    </span>
+                    <span className="text-xs text-white/70 font-medium">Store Followers</span>
+                  </div>
+                  <div className="bg-white/10 p-4 rounded-2xl border border-white/15">
+                    <span className="text-2xl sm:text-3xl font-black text-white block">
+                      {products.length}
+                    </span>
+                    <span className="text-xs text-white/70 font-medium">Listed Products</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Edit Store Information Form */}
+              <div className="bg-white p-6 rounded-3xl border border-[#E8E5DC] shadow-card space-y-4">
+                <div className="pb-3 border-b border-[#E8E5DC]">
+                  <h3 className="text-base font-black text-[#0B0F14]">Store Details</h3>
+                  <p className="text-xs text-[#8A8F98]">
+                    Manage store bio, contact number, and pickup address.
+                  </p>
+                </div>
+
+                {profileSuccessMsg && (
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>{profileSuccessMsg}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleSaveStoreProfile} className="space-y-4 text-xs">
+                  <div>
+                    <label className="block font-bold text-[#0B0F14] mb-1">Store Name</label>
+                    <input
+                      type="text"
+                      disabled
+                      value={user.sellerProfile?.storeName || ""}
+                      className="w-full px-3 py-2 bg-stone-100 rounded-xl border border-[#E8E5DC] text-[#8A8F98] font-bold cursor-not-allowed"
+                    />
+                    <span className="text-[10px] text-[#8A8F98] mt-0.5 block">
+                      Store name is verified by Admin. Contact support to request name changes.
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-[#0B0F14] mb-1">
+                      Store Description & Bio
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={storeDesc}
+                      onChange={(e) => setStoreDesc(e.target.value)}
+                      placeholder="Introduce your brand to shoppers: what makes your products special, warranty policies, etc."
+                      className="w-full px-3 py-2.5 bg-[#FAF9F6] rounded-xl border border-[#E8E5DC] text-[#0B0F14] focus:outline-none focus:border-[#C8A96B] transition"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-[#0B0F14] mb-1">Business Phone</label>
+                      <input
+                        type="text"
+                        value={storePhone}
+                        onChange={(e) => setStorePhone(e.target.value)}
+                        placeholder="03001234567"
+                        className="w-full px-3 py-2 bg-[#FAF9F6] rounded-xl border border-[#E8E5DC] text-[#0B0F14] focus:outline-none focus:border-[#C8A96B] transition"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-[#0B0F14] mb-1">
+                        Pickup City / Location
+                      </label>
+                      <input
+                        type="text"
+                        value={storeAddress}
+                        onChange={(e) => setStoreAddress(e.target.value)}
+                        placeholder="Karachi, Pakistan"
+                        className="w-full px-3 py-2 bg-[#FAF9F6] rounded-xl border border-[#E8E5DC] text-[#0B0F14] focus:outline-none focus:border-[#C8A96B] transition"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <button
+                      type="submit"
+                      disabled={savingProfile}
+                      className="px-5 py-2.5 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] font-bold rounded-xl text-xs transition border border-[#C8A96B]/30 shadow-xs flex items-center gap-1.5 active:scale-95 disabled:opacity-50"
+                    >
+                      {savingProfile ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Saving Changes...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Save Store Details</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
           </div>
         </div>
       )}

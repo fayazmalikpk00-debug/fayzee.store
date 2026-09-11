@@ -18,6 +18,8 @@ export interface UserSession {
     rejectionReason?: string | null;
     isPhoneVerified?: boolean;
     isEmailVerified?: boolean;
+    logoUrl?: string | null;
+    bannerUrl?: string | null;
   } | null;
 }
 

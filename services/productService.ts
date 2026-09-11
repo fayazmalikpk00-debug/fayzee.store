@@ -177,6 +177,9 @@ export async function getProductBySlug(slug: string) {
           rating: true,
           reviewCount: true,
           logoUrl: true,
+          _count: {
+            select: { followers: true },
+          },
         },
       },
       reviews: {

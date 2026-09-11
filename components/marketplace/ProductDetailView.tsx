@@ -23,12 +23,15 @@ import {
   Store,
   Truck,
   User as UserIcon,
+  UserPlus,
+  Users,
   X,
   Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { SellerChatDrawer } from "@/components/chat/SellerChatDrawer";
 
 function getColorHex(colorName: string): string {
   const lower = colorName.toLowerCase();
@@ -100,6 +103,55 @@ export function ProductDetailView({ product }: { product: any }) {
   );
   const [sizeError, setSizeError] = useState<string>("");
   const [showSizeGuide, setShowSizeGuide] = useState<boolean>(false);
+
+  // Seller follow & chat state
+  const { user } = useAuth();
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followerCount, setFollowerCount] = useState<number>(
+    product.seller?._count?.followers || 0
+  );
+  const [loadingFollow, setLoadingFollow] = useState(false);
+
+  useEffect(() => {
+    if (!product.seller?.id) return;
+    fetch(`/api/sellers/${product.seller.id}/follow`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (typeof data.isFollowing === "boolean") setIsFollowing(data.isFollowing);
+        if (typeof data.followerCount === "number") setFollowerCount(data.followerCount);
+      })
+      .catch((e) => console.error("Error checking follow status:", e));
+  }, [product.seller?.id, user]);
+
+  const handleToggleFollow = async () => {
+    if (!user) {
+      router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
+    if (!product.seller?.id) return;
+
+    setLoadingFollow(true);
+    const nextFollowing = !isFollowing;
+    setIsFollowing(nextFollowing);
+    setFollowerCount((prev) => (nextFollowing ? prev + 1 : Math.max(0, prev - 1)));
+
+    try {
+      const res = await fetch(`/api/sellers/${product.seller.id}/follow`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to toggle follow");
+      setIsFollowing(data.isFollowing);
+      setFollowerCount(data.followerCount);
+    } catch (err: any) {
+      setIsFollowing(!nextFollowing);
+      setFollowerCount((prev) => (nextFollowing ? Math.max(0, prev - 1) : prev + 1));
+      alert(err.message || "Could not update follow status");
+    } finally {
+      setLoadingFollow(false);
+    }
+  };
 
   // Helper to find best matching variant for color + size
   const getMatchingVariant = (color: string, size: string) => {
@@ -298,7 +350,6 @@ export function ProductDetailView({ product }: { product: any }) {
     }
   };
 
-  const { user } = useAuth();
   const [reviewsList, setReviewsList] = useState<any[]>(product.reviews || []);
   const [currentRating, setCurrentRating] = useState<number>(product.rating || 0);
   const [currentReviewCount, setCurrentReviewCount] = useState<number>(product.reviewCount || 0);
@@ -694,33 +745,88 @@ export function ProductDetailView({ product }: { product: any }) {
             </div>
           </div>
 
-          {/* Seller Snapshot Card */}
-          <div className="p-3.5 sm:p-4 bg-white rounded-2xl border border-[#E8E5DC] shadow-xs flex items-center justify-between gap-2">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-[#0B0F14] border border-[#C8A96B]/30 flex items-center justify-center text-[#C8A96B] shrink-0">
-                <Store className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] sm:text-[11px] text-[#8A8F98] font-medium">Sold by</p>
+          {/* Seller Snapshot / Brand Card */}
+          {product.seller && (
+            <div className="p-4 bg-white rounded-2xl border border-[#E8E5DC] shadow-xs space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-12 h-12 rounded-2xl bg-[#0B0F14] border border-[#C8A96B]/30 flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
+                    {product.seller.logoUrl ? (
+                      <img
+                        src={product.seller.logoUrl}
+                        alt={product.seller.storeName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Store className="w-6 h-6 text-[#C8A96B]" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <Link
+                        href={`/sellers/${product.seller.storeSlug}`}
+                        className="text-sm font-bold text-[#0B0F14] hover:text-[#C8A96B] transition truncate block"
+                      >
+                        {product.seller.storeName}
+                      </Link>
+                      <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded text-[9px] font-bold border border-emerald-200">
+                        <ShieldCheck className="w-2.5 h-2.5 inline mr-0.5" /> Verified
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[11px] text-[#8A8F98] mt-0.5">
+                      <span className="text-[#C8A96B] font-bold">
+                        ★ {product.seller.rating?.toFixed(1) || "5.0"}
+                      </span>
+                      <span>•</span>
+                      <span>{followerCount} Followers</span>
+                    </div>
+                  </div>
+                </div>
+
                 <Link
                   href={`/sellers/${product.seller.storeSlug}`}
-                  className="text-xs font-bold text-[#0B0F14] hover:text-[#C8A96B] transition truncate block"
+                  className="px-3 py-1.5 text-xs font-bold text-[#0B0F14] bg-[#F5F3EE] hover:bg-[#E8E5DC] border border-[#E8E5DC] rounded-xl transition shrink-0"
                 >
-                  {product.seller.storeName}
+                  Visit Store
                 </Link>
-                <p className="text-[10px] text-[#C8A96B] font-bold truncate">
-                  ★ {product.seller.rating.toFixed(1)} Rating
-                </p>
+              </div>
+
+              {/* Action buttons: Follow + Direct Chat */}
+              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#E8E5DC]">
+                <button
+                  type="button"
+                  onClick={handleToggleFollow}
+                  disabled={loadingFollow}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                    isFollowing
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+                      : "bg-[#F5F3EE] hover:bg-[#0B0F14] hover:text-[#C8A96B] text-[#0B0F14] border border-[#E8E5DC]"
+                  }`}
+                >
+                  {loadingFollow ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : isFollowing ? (
+                    <>
+                      <Check className="w-3.5 h-3.5" /> <span>Following</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-3.5 h-3.5 text-[#C8A96B]" /> <span>Follow</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsChatOpen(true)}
+                  className="py-2 px-3 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] border border-[#C8A96B]/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs active:scale-98"
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-[#C8A96B]" />
+                  <span>Chat with Seller</span>
+                </button>
               </div>
             </div>
-
-            <Link
-              href={`/sellers/${product.seller.storeSlug}`}
-              className="px-3 py-1.5 text-xs font-bold text-[#0B0F14] bg-[#F5F3EE] hover:bg-[#E8E5DC] border border-[#E8E5DC] rounded-lg transition shrink-0"
-            >
-              Visit Store
-            </Link>
-          </div>
+          )}
 
           {/* Delivery & Warranty perks */}
           <div className="grid grid-cols-2 gap-2.5 sm:gap-3 text-xs">
@@ -1232,6 +1338,20 @@ export function ProductDetailView({ product }: { product: any }) {
             </div>
           </div>
         </div>
+      )}
+      {/* Direct Chat with Seller Drawer */}
+      {product.seller && (
+        <SellerChatDrawer
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+          seller={product.seller}
+          productContext={{
+            id: product.id,
+            title: product.title,
+            price: currentPrice,
+            image: product.images?.[0]?.url,
+          }}
+        />
       )}
     </div>
   );

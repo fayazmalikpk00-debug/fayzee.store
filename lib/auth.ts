@@ -63,6 +63,8 @@ export async function getSessionUser() {
             rejectionReason: true,
             isPhoneVerified: true,
             isEmailVerified: true,
+            logoUrl: true,
+            bannerUrl: true,
           },
         },
       },

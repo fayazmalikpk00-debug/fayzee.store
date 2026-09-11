@@ -34,6 +34,8 @@ export default function SellerRegisterPage() {
   const [businessAddress, setBusinessAddress] = useState("");
   const [city, setCity] = useState("Karachi");
   const [description, setDescription] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   // Step 2: Email OTP & Contact Information
   const [email, setEmail] = useState("");
@@ -91,13 +93,14 @@ export default function SellerRegisterPage() {
   // Image Uploader Helper
   const handleDocumentUpload = async (
     file: File,
-    type: "front" | "back" | "proof"
+    type: "front" | "back" | "proof" | "logo"
   ) => {
     if (!file) return;
 
     if (type === "front") setUploadingFront(true);
     if (type === "back") setUploadingBack(true);
     if (type === "proof") setUploadingProof(true);
+    if (type === "logo") setUploadingLogo(true);
     setErrorMsg("");
 
     try {
@@ -118,12 +121,14 @@ export default function SellerRegisterPage() {
       if (type === "front") setCnicFrontUrl(uploadedUrl);
       if (type === "back") setCnicBackUrl(uploadedUrl);
       if (type === "proof") setBankProofUrl(uploadedUrl);
+      if (type === "logo") setLogoUrl(uploadedUrl);
     } catch (err: any) {
       setErrorMsg(err.message || "Document upload failed");
     } finally {
       if (type === "front") setUploadingFront(false);
       if (type === "back") setUploadingBack(false);
       if (type === "proof") setUploadingProof(false);
+      if (type === "logo") setUploadingLogo(false);
     }
   };
 
@@ -235,6 +240,7 @@ export default function SellerRegisterPage() {
           phone,
           email,
           description,
+          logoUrl: logoUrl || undefined,
           cnicFrontUrl,
           cnicBackUrl,
           bankProofUrl,
@@ -442,6 +448,47 @@ export default function SellerRegisterPage() {
               <span className="text-[10px] text-slate-400 mt-1 block">
                 Courier riders will pick up parcels from this address.
               </span>
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="block font-bold text-[#0B0F14] mb-1">
+                Store / Brand Logo <span className="text-slate-400 font-normal">(Optional — Can also upload later)</span>
+              </label>
+              <div className="flex items-center gap-4 p-3 bg-[#F5F3EE] rounded-xl border border-[#E8E5DC]">
+                <div className="w-14 h-14 rounded-2xl bg-[#0B0F14] border border-[#C8A96B]/30 flex items-center justify-center overflow-hidden shrink-0">
+                  {logoUrl ? (
+                    <img src={logoUrl} alt="Store Logo" className="w-full h-full object-cover" />
+                  ) : (
+                    <Store className="w-6 h-6 text-[#C8A96B]" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="file"
+                    id="logo-upload-reg"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleDocumentUpload(file, "logo");
+                    }}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="logo-upload-reg"
+                    className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-stone-50 border border-[#E8E5DC] text-xs font-bold text-[#0B0F14] rounded-lg transition shadow-2xs"
+                  >
+                    {uploadingLogo ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#C8A96B]" />
+                    ) : (
+                      <Upload className="w-3.5 h-3.5 text-[#C8A96B]" />
+                    )}
+                    <span>{logoUrl ? "Change Brand Logo" : "Upload Brand Logo"}</span>
+                  </label>
+                  <p className="text-[10px] text-[#8A8F98] mt-1">
+                    Upload your shop logo or brand icon (Square PNG, JPG, or WebP).
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="sm:col-span-2">

@@ -1,4 +1,5 @@
 import { ProductCard } from "@/components/marketplace/ProductCard";
+import { SellerStoreHeaderActions } from "@/components/marketplace/SellerStoreHeaderActions";
 import prisma from "@/lib/db";
 import { ShieldCheck, Star, Store } from "lucide-react";
 import { notFound } from "next/navigation";
@@ -11,6 +12,9 @@ export default async function SellerStorePage({
   const seller = await prisma.sellerProfile.findUnique({
     where: { storeSlug: params.slug },
     include: {
+      _count: {
+        select: { followers: true },
+      },
       products: {
         where: { status: "ACTIVE" },
         include: {
@@ -80,18 +84,31 @@ export default async function SellerStorePage({
             </div>
           </div>
 
-          <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/15 text-xs self-stretch sm:self-auto justify-around">
-            <div className="text-center">
-              <span className="text-[#C8A96B] font-extrabold flex items-center justify-center gap-1">
-                <Star className="w-3.5 h-3.5 fill-[#C8A96B]" /> {seller.rating.toFixed(1)}
-              </span>
-              <span className="text-[10px] text-white/70 block">({seller.reviewCount} Ratings)</span>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 self-stretch sm:self-auto">
+            <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/15 text-xs justify-around">
+              <div className="text-center">
+                <span className="text-[#C8A96B] font-extrabold flex items-center justify-center gap-1">
+                  <Star className="w-3.5 h-3.5 fill-[#C8A96B]" /> {seller.rating.toFixed(1)}
+                </span>
+                <span className="text-[10px] text-white/70 block">({seller.reviewCount} Ratings)</span>
+              </div>
+              <div className="h-6 w-px bg-white/20" />
+              <div className="text-center">
+                <span className="font-extrabold text-white">{seller.products.length}</span>
+                <span className="text-[10px] text-white/70 block">Products</span>
+              </div>
             </div>
-            <div className="h-6 w-px bg-white/20" />
-            <div className="text-center">
-              <span className="font-extrabold text-white">{seller.products.length}</span>
-              <span className="text-[10px] text-white/70 block">Products</span>
-            </div>
+
+            <SellerStoreHeaderActions
+              seller={{
+                id: seller.id,
+                storeName: seller.storeName,
+                storeSlug: seller.storeSlug,
+                logoUrl: seller.logoUrl,
+                rating: seller.rating,
+                initialFollowerCount: (seller as any)._count?.followers || 0,
+              }}
+            />
           </div>
         </div>
       </div>

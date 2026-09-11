@@ -120,6 +120,21 @@ export default function AccountPage() {
             </p>
           </Link>
 
+          <Link
+            href="/account/following"
+            className="p-5 bg-white rounded-2xl border border-[#E8E5DC] hover:border-[#C8A96B] hover:shadow-card-hover transition space-y-2 group shadow-xs"
+          >
+            <div className="w-10 h-10 rounded-xl bg-[#0B0F14] text-[#C8A96B] flex items-center justify-center border border-[#C8A96B]/20">
+              <Store className="w-5 h-5" />
+            </div>
+            <h4 className="font-bold text-[#0B0F14] group-hover:text-[#C8A96B] transition text-sm">
+              Followed Stores & Seller Chats
+            </h4>
+            <p className="text-xs text-[#8A8F98]">
+              View your favorite brands and direct messages with sellers.
+            </p>
+          </Link>
+
           {/* Role specific link: Seller */}
           {(user.role === "SELLER" || user.sellerProfile) && (
             <Link
