@@ -1,5 +1,6 @@
 import { getSessionUser } from "@/lib/auth";
 import prisma from "@/lib/db";
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -91,6 +92,14 @@ export async function PATCH(req: Request) {
         },
       },
     });
+
+    try {
+      revalidatePath("/seller/dashboard");
+      revalidatePath("/sellers/" + updated.storeSlug);
+      revalidatePath("/");
+    } catch (e) {
+      console.warn("Revalidation warning:", e);
+    }
 
     return NextResponse.json({
       message: "Store profile updated successfully!",

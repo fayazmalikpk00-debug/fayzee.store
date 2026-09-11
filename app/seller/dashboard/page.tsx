@@ -284,8 +284,8 @@ export default function SellerDashboardPage() {
       });
       const upData = await upRes.json();
       if (!upRes.ok) throw new Error(upData.error || "Failed to upload logo image");
-      const url = upData.images?.[0]?.url;
-      if (!url) throw new Error("No image URL returned");
+      const url = upData.url || upData.images?.[0]?.url || upData.urls?.[0] || upData.files?.[0]?.url;
+      if (!url) throw new Error("No image URL returned from upload server");
 
       setStoreLogoUrl(url);
 
@@ -302,6 +302,7 @@ export default function SellerDashboardPage() {
       alert(err.message || "Logo upload failed");
     } finally {
       setUploadingLogo(false);
+      if (logoInputRef.current) logoInputRef.current.value = "";
     }
   };
 
@@ -320,8 +321,8 @@ export default function SellerDashboardPage() {
       });
       const upData = await upRes.json();
       if (!upRes.ok) throw new Error(upData.error || "Failed to upload banner");
-      const url = upData.images?.[0]?.url;
-      if (!url) throw new Error("No image URL returned");
+      const url = upData.url || upData.images?.[0]?.url || upData.urls?.[0] || upData.files?.[0]?.url;
+      if (!url) throw new Error("No image URL returned from upload server");
 
       setStoreBannerUrl(url);
 
@@ -338,6 +339,7 @@ export default function SellerDashboardPage() {
       alert(err.message || "Banner upload failed");
     } finally {
       setUploadingBanner(false);
+      if (bannerInputRef.current) bannerInputRef.current.value = "";
     }
   };
 

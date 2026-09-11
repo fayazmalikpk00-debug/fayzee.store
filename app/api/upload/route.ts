@@ -147,6 +147,7 @@ export async function POST(req: Request) {
       size: uploadedResults[0].size,
       urls: uploadedResults.map((r) => r.url),
       files: uploadedResults,
+      images: uploadedResults,
     });
   } catch (error: any) {
     console.error("❌ [UPLOAD ROUTE EXCEPTION]:", error);
