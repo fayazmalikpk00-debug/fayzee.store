@@ -262,6 +262,23 @@ svg {
   transform: scale(0.94);
 }
 
+/* Hero Banner Cinematic Ken Burns Slow Motion Animation */
+@keyframes kenBurnsHero {
+  0% {
+    transform: scale(1) translate(0%, 0%);
+  }
+  50% {
+    transform: scale(1.07) translate(-1.2%, -0.8%);
+  }
+  100% {
+    transform: scale(1.03) translate(0.8%, 0.5%);
+  }
+}
+
+.animate-ken-burns {
+  animation: kenBurnsHero 22s ease-in-out infinite alternate;
+}
+
 /* 7. Flash Sale Diagonal Progress Stripes (Daraz style) */
 @keyframes progressStripes {
   0% { background-position: 1rem 0; }

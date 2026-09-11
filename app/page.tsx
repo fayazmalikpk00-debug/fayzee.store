@@ -47,44 +47,57 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-12 pb-16">
-      {/* 1. Hero Promotional Banner with Luxury Visual Showcase */}
-      <section className="relative overflow-hidden bg-[#0B0F14] text-white py-10 sm:py-14 md:py-20 border-b border-[#1A222C]">
-        {/* Subtle Luxury Pattern Background & Radial Glow */}
-        <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#C8A96B_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none"></div>
-        <div className="absolute -top-32 -right-32 w-96 h-96 bg-[#C8A96B]/15 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-[#C8A96B]/10 rounded-full blur-3xl pointer-events-none"></div>
+      {/* 1. Full-Width Animated Hero Section with Cinematic Background & Products Showcase */}
+      <section className="relative overflow-hidden bg-[#0B0F14] text-white py-14 sm:py-16 md:py-24 border-b border-[#1A222C] min-h-[580px] sm:min-h-[640px] flex items-center">
+        {/* Full-Width Animated Background Banner (Ken Burns motion effect) */}
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          <Image
+            src="/images/hero-banner.jpg"
+            alt="Fayzee Store - Luxury Shopping Experience"
+            fill
+            priority
+            className="object-cover object-center animate-ken-burns will-change-transform opacity-45 sm:opacity-55"
+            sizes="100vw"
+          />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
-            {/* Primary Hero Content (Left, 6 cols) */}
-            <div className="lg:col-span-6 space-y-5 sm:space-y-6 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#161F2B] backdrop-blur-md border border-[#C8A96B]/30 text-xs sm:text-sm font-semibold text-[#C8A96B] shadow-xs">
+          {/* Cinematic Multi-Layer Gradient Overlays for Razor-Sharp Readability */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0B0F14] via-[#0B0F14]/90 sm:via-[#0B0F14]/80 to-[#0B0F14]/40"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0B0F14] via-transparent to-[#0B0F14]/70"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(200,169,107,0.25),transparent_70%)]"></div>
+          <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#C8A96B_1px,transparent_1px)] [background-size:24px_24px]"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            {/* Primary Hero Content (Left, 7 cols) */}
+            <div className="lg:col-span-7 space-y-6 sm:space-y-7">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#161F2B]/90 backdrop-blur-md border border-[#C8A96B]/40 text-xs sm:text-sm font-semibold text-[#C8A96B] shadow-lg">
                 <Sparkles className="w-4 h-4 text-[#C8A96B] shrink-0 animate-pulse" />
-                <span className="text-[#F5F3EE]">Pakistan&apos;s Premier Multi-Vendor Marketplace</span>
+                <span className="text-[#F5F3EE]">Powered by Fayzee AI Shopping Intelligence</span>
               </div>
 
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] text-white break-words">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[64px] font-black tracking-tight leading-[1.1] text-white break-words drop-shadow-md">
                 Shop Smart. <br />
-                <span className="bg-gradient-to-r from-[#C8A96B] via-[#E8D9B5] to-[#C8A96B] bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-[#C8A96B] via-[#F3E7C4] to-[#C8A96B] bg-clip-text text-transparent">
                   Shop Luxury.
                 </span>
               </h1>
 
-              <p className="text-sm sm:text-base md:text-lg text-[#8A8F98] max-w-xl mx-auto lg:mx-0 leading-relaxed font-normal">
-                Explore thousands of verified authentic electronics, designer fashion, beauty, and home appliances directly from certified sellers with 100% genuine guarantees.
+              <p className="text-sm sm:text-base md:text-lg lg:text-xl text-slate-300 max-w-2xl leading-relaxed font-normal drop-shadow-sm">
+                Explore thousands of verified authentic electronics, footwear, designer apparel, and home appliances directly from certified sellers with 100% genuine guarantees.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-4 pt-1">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-2">
                 <Link
                   href="/products"
-                  className="px-7 py-3.5 bg-[#C8A96B] hover:bg-[#B89858] text-[#0B0F14] font-black text-base rounded-full shadow-[0_4px_20px_rgba(200,169,107,0.35)] transition flex items-center justify-center gap-2 active:scale-98 text-center"
+                  className="px-7 py-3.5 bg-[#C8A96B] hover:bg-[#B89858] text-[#0B0F14] font-black text-base sm:text-lg rounded-full shadow-[0_4px_20px_rgba(200,169,107,0.4)] transition flex items-center justify-center gap-2 active:scale-98 text-center"
                 >
                   <span>Explore Catalog</span>
                   <ArrowRight className="w-5 h-5 stroke-[2.5]" />
                 </Link>
                 <Link
                   href="/flash-sale"
-                  className="px-7 py-3.5 bg-white/5 hover:bg-white/10 text-white font-bold text-base rounded-full border border-white/20 backdrop-blur-md transition flex items-center justify-center gap-2 active:scale-98 text-center"
+                  className="px-7 py-3.5 bg-white/10 hover:bg-white/15 text-white font-bold text-base sm:text-lg rounded-full border border-white/20 backdrop-blur-md transition flex items-center justify-center gap-2 active:scale-98 text-center"
                 >
                   <Zap className="w-5 h-5 text-[#C8A96B]" />
                   <span>View Flash Deals</span>
@@ -92,84 +105,120 @@ export default async function HomePage() {
               </div>
 
               {/* Trust Indicators Strip */}
-              <div className="pt-5 border-t border-white/10 grid grid-cols-3 gap-2 sm:gap-4 text-left">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-[#C8A96B]/15 border border-[#C8A96B]/30 flex items-center justify-center text-[#C8A96B] shrink-0 shadow-xs">
+              <div className="pt-4 border-t border-white/15 grid grid-cols-3 gap-2 sm:gap-4 text-left">
+                <div className="flex items-center gap-2 sm:gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-[#C8A96B]/20 border border-[#C8A96B]/40 flex items-center justify-center text-[#C8A96B] shrink-0 shadow-xs backdrop-blur-md">
                     <ShieldCheck className="w-4 h-4" />
                   </div>
                   <div>
                     <p className="text-xs font-bold text-white leading-tight">100% Authentic</p>
-                    <p className="text-[10px] text-slate-400">Verified Sellers</p>
+                    <p className="text-[10px] text-slate-300">Verified Sellers</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-[#C8A96B]/15 border border-[#C8A96B]/30 flex items-center justify-center text-[#C8A96B] shrink-0 shadow-xs">
+                <div className="flex items-center gap-2 sm:gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-[#C8A96B]/20 border border-[#C8A96B]/40 flex items-center justify-center text-[#C8A96B] shrink-0 shadow-xs backdrop-blur-md">
                     <Zap className="w-4 h-4" />
                   </div>
                   <div>
                     <p className="text-xs font-bold text-white leading-tight">Fast Delivery</p>
-                    <p className="text-[10px] text-slate-400">Nationwide COD</p>
+                    <p className="text-[10px] text-slate-300">Nationwide COD</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-[#C8A96B]/15 border border-[#C8A96B]/30 flex items-center justify-center text-[#C8A96B] shrink-0 shadow-xs">
+                <div className="flex items-center gap-2 sm:gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-[#C8A96B]/20 border border-[#C8A96B]/40 flex items-center justify-center text-[#C8A96B] shrink-0 shadow-xs backdrop-blur-md">
                     <Sparkles className="w-4 h-4" />
                   </div>
                   <div>
                     <p className="text-xs font-bold text-white leading-tight">18+ Departments</p>
-                    <p className="text-[10px] text-slate-400">Curated Brands</p>
+                    <p className="text-[10px] text-slate-300">Curated Brands</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Hero Visual Banner Showcase (Right, 6 cols) */}
-            <div className="lg:col-span-6 w-full">
-              <div className="relative group">
-                {/* Ambient Golden Glow Backdrop */}
-                <div className="absolute -inset-1.5 bg-gradient-to-tr from-[#C8A96B]/40 via-[#E2C889]/30 to-[#C8A96B]/20 rounded-3xl sm:rounded-[36px] blur-xl opacity-75 group-hover:opacity-100 transition duration-700"></div>
-
-                <div className="relative rounded-3xl sm:rounded-[32px] overflow-hidden border-2 border-[#C8A96B]/50 bg-[#161F2B] shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
-                  <Link href="/products" className="block relative overflow-hidden group">
-                    <Image
-                      src="/images/hero-banner.jpg"
-                      alt="Fayzee Store - Luxury Shopping Experience"
-                      width={1280}
-                      height={720}
-                      priority
-                      className="w-full h-[280px] sm:h-[380px] md:h-[430px] lg:h-[450px] object-cover transform group-hover:scale-103 transition duration-700 ease-out"
-                    />
-
-                    {/* Gradient Overlay for Sleek Contrast */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0B0F14]/85 via-[#0B0F14]/20 to-transparent pointer-events-none"></div>
-
-                    {/* Floating Top Badge */}
-                    <div className="absolute top-3 sm:top-4 right-3 sm:right-4 z-10">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0B0F14]/85 backdrop-blur-md border border-[#C8A96B]/60 text-[11px] sm:text-xs font-bold text-[#C8A96B] shadow-lg">
-                        <Sparkles className="w-3.5 h-3.5 text-[#C8A96B]" />
-                        <span>Official Marketplace</span>
-                      </span>
+            {/* Hero Interactive Products Showcase Card (Right, 5 cols) */}
+            <div className="lg:col-span-5 hidden lg:block">
+              <div className="p-6 sm:p-7 rounded-3xl bg-[#161F2B]/85 backdrop-blur-xl border border-[#C8A96B]/40 shadow-[0_20px_60px_rgba(0,0,0,0.8)] space-y-4 animate-float">
+                <div className="flex items-center justify-between text-sm text-slate-200">
+                  <span className="font-bold flex items-center gap-1.5 text-[#F5F3EE]">
+                    <Sparkles className="w-4 h-4 text-[#C8A96B]" /> Fayzee AI Top Pick
+                  </span>
+                  <span
+                    className={`px-2.5 py-0.5 rounded-md font-bold text-xs ${
+                      ((aiTopPick?.stockQuantity ?? 1) > 0)
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                        : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                    }`}
+                  >
+                    {((aiTopPick?.stockQuantity ?? 1) > 0) ? "In Stock" : "Limited Stock"}
+                  </span>
+                </div>
+                {aiTopPick ? (
+                  <div className="space-y-4">
+                    <div className="relative overflow-hidden rounded-2xl border border-white/10 group/item">
+                      <img
+                        src={
+                          aiTopPick.images[0]?.url ||
+                          "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=800"
+                        }
+                        alt={aiTopPick.title}
+                        className="w-full h-52 object-cover transform group-hover/item:scale-105 transition duration-500"
+                      />
+                      <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-[#0B0F14]/85 backdrop-blur-md text-[11px] font-bold text-[#C8A96B] border border-[#C8A96B]/40">
+                        {aiTopPick.category?.name || "Featured"}
+                      </div>
                     </div>
-
-                    {/* Floating Bottom Bar */}
-                    <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 right-3 sm:right-4 z-10 flex items-center justify-between pointer-events-none gap-2">
-                      <div className="px-3.5 py-2 rounded-2xl bg-[#0B0F14]/90 backdrop-blur-md border border-white/10 shadow-lg">
-                        <p className="text-xs sm:text-sm font-black text-white flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
-                          <span>Verified Brands &amp; Gadgets</span>
-                        </p>
-                        <p className="text-[10px] text-slate-400 hidden sm:block">
-                          Electronics • Fashion • Beauty • Home Appliances
+                    <div>
+                      <h4 className="font-bold text-white text-lg truncate">
+                        {aiTopPick.title}
+                      </h4>
+                      <p className="text-sm text-[#8A8F98] line-clamp-2 mt-1 leading-normal">
+                        {aiTopPick.shortDescription ||
+                          aiTopPick.description?.slice(0, 110) ||
+                          "Authentic marketplace item with verified seller warranty."}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between pt-3 border-t border-white/10">
+                      <div>
+                        <span className="text-xs text-[#8A8F98]">Special Price</span>
+                        <p className="text-2xl font-black text-[#C8A96B]">
+                          Rs. {Math.round(aiTopPick.salePrice || aiTopPick.price).toLocaleString()}
                         </p>
                       </div>
-
-                      <span className="pointer-events-auto px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-[#C8A96B] hover:bg-white text-[#0B0F14] font-black text-xs sm:text-sm shadow-lg transition flex items-center gap-1.5 shrink-0 active:scale-95">
-                        <span>Shop Now</span>
+                      <Link
+                        href={`/products/${aiTopPick.slug}`}
+                        className="px-5 py-2.5 bg-[#C8A96B] hover:bg-[#B89858] text-[#0B0F14] text-sm font-black rounded-xl transition shadow-md active:scale-95 flex items-center gap-1.5"
+                      >
+                        <span>View Product</span>
                         <ArrowRight className="w-4 h-4 stroke-[2.5]" />
-                      </span>
+                      </Link>
                     </div>
-                  </Link>
-                </div>
+                  </div>
+                ) : (
+                  <div className="py-8 text-center space-y-3">
+                    <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center mx-auto text-[#C8A96B]">
+                      <Sparkles className="w-6 h-6" />
+                    </div>
+                    <h4 className="font-bold text-white text-lg">Fayzee Catalog Ready</h4>
+                    <p className="text-sm text-[#8A8F98] max-w-xs mx-auto leading-relaxed">
+                      18 marketplace departments configured and ready for official seller product listings.
+                    </p>
+                    <div className="pt-2 flex justify-center gap-3">
+                      <Link
+                        href="/products"
+                        className="px-5 py-2.5 bg-[#C8A96B] hover:bg-[#B89858] text-[#0B0F14] text-sm font-bold rounded-xl transition shadow-sm"
+                      >
+                        Browse Categories
+                      </Link>
+                      <Link
+                        href="/seller/register"
+                        className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white text-sm font-semibold rounded-xl border border-white/20 transition"
+                      >
+                        Become a Seller
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
