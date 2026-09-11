@@ -151,7 +151,8 @@ export class JazzCashProvider implements PaymentProvider {
       };
     }
 
-    const transactionId = `JC-${Date.now().toString().slice(-8)}${Math.floor(100 + Math.random() * 900)}`;
+    const customerTid = (details?.transactionId || details?.tid || "").toString().trim();
+    const transactionId = customerTid || `JC-${Date.now().toString().slice(-8)}${Math.floor(100 + Math.random() * 900)}`;
     const formattedPhone = walletPhone.startsWith("92") ? "0" + walletPhone.slice(2) : walletPhone;
 
     return {
@@ -159,12 +160,13 @@ export class JazzCashProvider implements PaymentProvider {
       transactionId,
       status: "PAID",
       redirectUrl: `/orders/${request.orderId}?paymentSuccess=true&txn=${transactionId}`,
-      paymentInstructions: `Payment authorized via JazzCash Mobile Account (${formattedPhone}).`,
+      paymentInstructions: `Payment submitted via JazzCash Mobile Account (${formattedPhone}). Ref/TID: ${transactionId}`,
       gatewayDetails: {
         paymentMethod: "JAZZ_CASH",
         channel: "JazzCash Mobile Account",
         accountPhone: formattedPhone,
         transactionRef: transactionId,
+        userTid: customerTid || null,
         settledAmount: request.amount,
         currency: "PKR",
         settlementTime: new Date().toISOString(),
@@ -206,7 +208,8 @@ export class EasyPaisaProvider implements PaymentProvider {
       };
     }
 
-    const transactionId = `EP-${Date.now().toString().slice(-8)}${Math.floor(100 + Math.random() * 900)}`;
+    const customerTid = (details?.transactionId || details?.tid || "").toString().trim();
+    const transactionId = customerTid || `EP-${Date.now().toString().slice(-8)}${Math.floor(100 + Math.random() * 900)}`;
     const formattedPhone = walletPhone.startsWith("92") ? "0" + walletPhone.slice(2) : walletPhone;
 
     return {
@@ -214,12 +217,13 @@ export class EasyPaisaProvider implements PaymentProvider {
       transactionId,
       status: "PAID",
       redirectUrl: `/orders/${request.orderId}?paymentSuccess=true&txn=${transactionId}`,
-      paymentInstructions: `Payment authorized via EasyPaisa Mobile Account (${formattedPhone}).`,
+      paymentInstructions: `Payment submitted via EasyPaisa Mobile Account (${formattedPhone}). Ref/TID: ${transactionId}`,
       gatewayDetails: {
         paymentMethod: "EASYPAISA",
         channel: "EasyPaisa Mobile Account",
         accountPhone: formattedPhone,
         transactionRef: transactionId,
+        userTid: customerTid || null,
         settledAmount: request.amount,
         currency: "PKR",
         settlementTime: new Date().toISOString(),
@@ -352,8 +356,8 @@ export class PaymentService {
       return this.providers.COD;
     }
 
-    // If Safepay is the active gateway and enabled
-    if (config?.activeGateway === "SAFEPAY") {
+    // If Safepay is the active gateway and this is a card payment
+    if (method === "ONLINE_CARD" && config?.activeGateway === "SAFEPAY") {
       return new SafepayProvider({
         apiKey: config.safepayApiKey || undefined,
         apiSecret: config.safepayApiSecret || undefined,

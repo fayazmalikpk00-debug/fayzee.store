@@ -38,9 +38,9 @@ export class SafepayProvider implements PaymentProvider {
       ? "https://sandbox.api.getsafepay.com"
       : "https://getsafepay.com";
 
-    // Return URL for customer to return to after payment
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://fayzee.store";
     const redirectParam = encodeURIComponent(
-      `/orders/${orderId}?paymentSuccess=true&gateway=safepay&tracker=${trackerToken}`
+      `${baseUrl}/orders/${orderId}?paymentSuccess=true&gateway=safepay&tracker=${trackerToken}`
     );
 
     return `${host}/components?env=${env}&beacon=${trackerToken}&source=custom&redirect_url=${redirectParam}`;
@@ -62,7 +62,7 @@ export class SafepayProvider implements PaymentProvider {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-SFPY-MERCHANT-SECRET": this.config.apiKey,
+            "X-SFPY-MERCHANT-SECRET": this.config.apiSecret || this.config.apiKey,
           },
           body: JSON.stringify({
             client: this.config.apiKey,
@@ -91,32 +91,33 @@ export class SafepayProvider implements PaymentProvider {
               amount: request.amount,
             },
           };
+        } else {
+          const errMsg =
+            data?.status?.errors?.[0] ||
+            data?.message ||
+            "Safepay could not verify merchant identifier. Your Safepay merchant account might still be under review by Safepay team.";
+          return {
+            success: false,
+            transactionId: "",
+            status: "FAILED",
+            error: errMsg,
+          };
         }
       } catch (err: any) {
-        console.warn("Safepay API call failed, falling back to sandbox simulator:", err.message);
+        return {
+          success: false,
+          transactionId: "",
+          status: "FAILED",
+          error: `Safepay connection error: ${err.message}`,
+        };
       }
     }
 
-    // Fallback Sandbox / Simulation Mode
-    const simulatedTracker = `sf_track_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
-    const simulatedAuth = `AUTH-${Math.floor(100000 + Math.random() * 900000)}`;
-
     return {
-      success: true,
-      transactionId: `SF-${simulatedTracker}`,
-      status: "PAID",
-      redirectUrl: `/orders/${request.orderId}?paymentSuccess=true&gateway=safepay&tracker=${simulatedTracker}`,
-      paymentInstructions: "Payment authorized via Safepay 3D Secure checkout.",
-      gatewayDetails: {
-        gateway: "Safepay",
-        tracker: simulatedTracker,
-        authCode: request.paymentDetails?.authCode || simulatedAuth,
-        environment: this.config.isSandbox ? "sandbox" : "production",
-        mode: hasLiveKey ? "PRODUCTION" : "SANDBOX_SIMULATOR",
-        settledAmount: request.amount,
-        currency: "PKR",
-        settlementTime: new Date().toISOString(),
-      },
+      success: false,
+      transactionId: "",
+      status: "FAILED",
+      error: "No active payment gateway configured. Please select Cash on Delivery (COD).",
     };
   }
 

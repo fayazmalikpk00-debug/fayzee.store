@@ -9,14 +9,10 @@ import {
   ArrowRight,
   Check,
   CheckCircle2,
-  Clock,
   CreditCard,
-  Key,
   Lock,
-  RefreshCw,
   ShieldCheck,
   Smartphone,
-  Sparkles,
   Tag,
   Truck,
   X,
@@ -58,14 +54,7 @@ export default function CheckoutPage() {
   // Mobile Wallet Details (JazzCash / EasyPaisa)
   const [walletPhone, setWalletPhone] = useState("");
   const [walletCnic, setWalletCnic] = useState("");
-
-  // 3D Secure & Mobile OTP Simulation Modal
-  const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
-  const [otpCode, setOtpCode] = useState("");
-  const [demoOtp, setDemoOtp] = useState("482910");
-  const [otpVerifying, setOtpVerifying] = useState(false);
-  const [otpError, setOtpError] = useState("");
-  const [otpSecondsLeft, setOtpSecondsLeft] = useState(120);
+  const [walletTid, setWalletTid] = useState("");
 
   useEffect(() => {
     if (user?.name) {
@@ -78,19 +67,6 @@ export default function CheckoutPage() {
       if (!walletPhone && user.phone) setWalletPhone(user.phone);
     }
   }, [user]);
-
-  // OTP Countdown Timer
-  useEffect(() => {
-    let timer: any = null;
-    if (isOtpModalOpen && otpSecondsLeft > 0) {
-      timer = setInterval(() => {
-        setOtpSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0));
-      }, 1000);
-    }
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [isOtpModalOpen, otpSecondsLeft]);
 
   const shippingTotal =
     cart?.items?.reduce((acc, item) => acc + (item.product?.shippingFee || 0), 0) || 0;
@@ -124,23 +100,6 @@ export default function CheckoutPage() {
     if (cardErrors.cardCvv) {
       setCardErrors((prev) => ({ ...prev, cardCvv: "" }));
     }
-  };
-
-  const fillDemoCard = () => {
-    setCardNumber("4242 4242 4242 4242");
-    setCardHolder(user?.name ? user.name.toUpperCase() : "FAYAZ MALIK");
-    setCardExpiry("12/28");
-    setCardCvv("123");
-    setCardErrors({});
-  };
-
-  const fillDemoJazzCash = () => {
-    setWalletPhone(user?.phone || "03001234567");
-    setWalletCnic("892014");
-  };
-
-  const fillDemoEasyPaisa = () => {
-    setWalletPhone(user?.phone || "03457654321");
   };
 
   const handleApplyCoupon = () => {
@@ -200,13 +159,17 @@ export default function CheckoutPage() {
   const validateWalletInputs = (): boolean => {
     const cleanPhone = walletPhone.replace(/\D/g, "");
     if (!cleanPhone || cleanPhone.length < 11 || !cleanPhone.startsWith("03")) {
-      setErrorMsg(`Please enter a valid 11-digit Pakistani mobile number (e.g. 03XXXXXXXXX) for ${paymentMethod === "JAZZ_CASH" ? "JazzCash" : "EasyPaisa"}.`);
+      setErrorMsg(`Please enter your valid 11-digit Pakistani mobile number (e.g. 03XXXXXXXXX) for ${paymentMethod === "JAZZ_CASH" ? "JazzCash" : "EasyPaisa"}.`);
+      return false;
+    }
+    if (!walletTid.trim()) {
+      setErrorMsg(`Please enter the Transaction ID (TID) from your ${paymentMethod === "JAZZ_CASH" ? "JazzCash / 8558" : "EasyPaisa / 3737"} payment confirmation SMS.`);
       return false;
     }
     return true;
   };
 
-  const executeOrderPlacement = async (authPayload?: any) => {
+  const executeOrderPlacement = async () => {
     setSubmitting(true);
     setErrorMsg("");
 
@@ -227,8 +190,8 @@ export default function CheckoutPage() {
             cardBrand: detectCardBrand(cleanCard),
             walletPhone: walletPhone.replace(/\D/g, ""),
             walletCnicLast6: walletCnic,
-            authCode: authPayload?.authCode,
-            otpCode: authPayload?.otpCode,
+            transactionId: walletTid.trim(),
+            tid: walletTid.trim(),
           },
           couponCode: couponApplied?.code,
         }),
@@ -240,9 +203,8 @@ export default function CheckoutPage() {
       }
 
       await refreshCart();
-      setIsOtpModalOpen(false);
 
-      // If official gateway provided a hosted 3D-secure checkout redirect
+      // If official gateway (Safepay) provided a hosted 3D-secure checkout redirect
       if (data.paymentResult?.redirectUrl && data.paymentResult?.status === "PROCESSING") {
         window.location.href = data.paymentResult.redirectUrl;
         return;
@@ -251,7 +213,6 @@ export default function CheckoutPage() {
       router.push(`/orders/${data.order.id}?success=true&payment=${paymentMethod.toLowerCase()}`);
     } catch (err: any) {
       setErrorMsg(err.message || "An error occurred during payment processing.");
-      setIsOtpModalOpen(false);
     } finally {
       setSubmitting(false);
     }
@@ -284,48 +245,15 @@ export default function CheckoutPage() {
 
     if (paymentMethod === "ONLINE_CARD") {
       if (!validateCardInputs()) return;
-      const randomOtp = Math.floor(100000 + Math.random() * 900000).toString();
-      setDemoOtp(randomOtp);
-      setOtpCode("");
-      setOtpError("");
-      setOtpSecondsLeft(120);
-      setIsOtpModalOpen(true);
+      await executeOrderPlacement();
       return;
     }
 
     if (paymentMethod === "JAZZ_CASH" || paymentMethod === "EASYPAISA") {
       if (!validateWalletInputs()) return;
-      const randomOtp = Math.floor(1000 + Math.random() * 9000).toString();
-      setDemoOtp(randomOtp);
-      setOtpCode("");
-      setOtpError("");
-      setOtpSecondsLeft(120);
-      setIsOtpModalOpen(true);
+      await executeOrderPlacement();
       return;
     }
-  };
-
-  const handleVerifyOtpAndPay = async () => {
-    if (!otpCode.trim()) {
-      setOtpError("Please enter the authorization code.");
-      return;
-    }
-
-    setOtpVerifying(true);
-    setOtpError("");
-
-    // Realistic verification simulation
-    setTimeout(async () => {
-      if (otpCode.trim() !== demoOtp && otpCode.trim() !== "1234" && otpCode.trim() !== "482910") {
-        setOtpError("Invalid OTP code. Please check the code and try again.");
-        setOtpVerifying(false);
-        return;
-      }
-
-      setOtpVerifying(false);
-      const authCode = `AUTH-${Math.floor(100000 + Math.random() * 900000)}`;
-      await executeOrderPlacement({ authCode, otpCode });
-    }, 900);
   };
 
   if (authLoading) {
@@ -593,14 +521,10 @@ export default function CheckoutPage() {
                   <h4 className="text-xs font-bold text-[#0B0F14] uppercase tracking-wider">
                     Credit / Debit Card Details
                   </h4>
-                  <button
-                    type="button"
-                    onClick={fillDemoCard}
-                    className="text-[11px] font-bold text-[#0B0F14] hover:text-[#C8A96B] flex items-center gap-1 self-start sm:self-auto bg-[#F5F3EE] px-2.5 py-1 rounded-lg border border-[#E8E5DC] hover:border-[#C8A96B] transition"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-[#C8A96B]" />
-                    <span>Auto-Fill Test Visa Card</span>
-                  </button>
+                  <div className="flex items-center gap-1.5 text-[11px] text-[#8A8F98] font-medium">
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#C8A96B]" />
+                    <span>Safepay 3D-Secure 256-bit Encrypted</span>
+                  </div>
                 </div>
 
                 {/* Interactive Live Card Graphic Preview */}
@@ -736,56 +660,76 @@ export default function CheckoutPage() {
             {/* CHANNEL CONTENT 2: JazzCash Mobile Account Details */}
             {paymentMethod === "JAZZ_CASH" && (
               <div className="pt-4 border-t border-[#E8E5DC] space-y-4 animate-in fade-in duration-300">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 bg-red-600 text-white font-black text-xs rounded">
-                      JazzCash
-                    </span>
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-1 bg-red-600 text-white font-black text-xs rounded-lg">
+                    JazzCash
+                  </span>
+                  <div>
                     <h4 className="text-xs font-bold text-[#0B0F14]">
-                      Mobile Account Checkout
+                      Direct JazzCash Mobile Transfer
                     </h4>
+                    <p className="text-[10px] text-[#8A8F98]">
+                      Transfer exact total to official account and enter TID below
+                    </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={fillDemoJazzCash}
-                    className="text-[11px] font-bold text-red-600 hover:text-red-700 flex items-center gap-1 self-start sm:self-auto bg-red-50 px-2.5 py-1 rounded-lg border border-red-200 transition"
-                  >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Auto-Fill Test JazzCash</span>
-                  </button>
+                </div>
+
+                {/* Official Store Recipient Box */}
+                <div className="bg-red-50/80 p-4 rounded-2xl border border-red-200 text-xs space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-red-950 uppercase tracking-wide flex items-center gap-1.5">
+                      <Smartphone className="w-3.5 h-3.5 text-red-600" />
+                      <span>Official Fayzee JazzCash Account</span>
+                    </span>
+                    <span className="text-[10px] font-bold bg-red-600 text-white px-2 py-0.5 rounded-full">
+                      Verified
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    <div>
+                      <span className="text-[10px] text-red-700 block">Account Title:</span>
+                      <span className="font-bold text-[#0B0F14] text-xs">Fayaz Ullah</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-red-700 block">Account / Mobile Number:</span>
+                      <span className="font-mono font-black text-red-600 text-sm select-all">03306767357</span>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-red-900/90 pt-1.5 border-t border-red-200 leading-relaxed font-medium">
+                    💡 JazzCash App ya *786# se <span className="font-mono font-bold">03306767357</span> par <span className="font-bold">{formatPrice(grandTotal)}</span> send karein. Uske baad 8558 se aane wala Transaction ID (TID) neeche likhein:
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
                   <div>
                     <label className="block font-semibold text-[#0B0F14] mb-1">
-                      JazzCash Registered Number <span className="text-red-500">*</span>
+                      Your Sender Mobile Number <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={walletPhone}
                       onChange={(e) => setWalletPhone(e.target.value.replace(/\D/g, "").slice(0, 11))}
-                      placeholder="03001234567"
+                      placeholder="03XXXXXXXXX"
                       className="w-full px-3.5 py-2.5 bg-[#F5F3EE] rounded-xl border border-[#E8E5DC] focus:outline-none focus:border-[#0B0F14] text-xs font-mono font-medium text-[#0B0F14]"
                     />
                     <span className="text-[10px] text-[#8A8F98] mt-1 block">
-                      Enter 11-digit mobile number linked with your JazzCash account.
+                      Apna JazzCash number jahan se paise send kiye.
                     </span>
                   </div>
 
                   <div>
                     <label className="block font-semibold text-[#0B0F14] mb-1">
-                      CNIC Last 6 Digits (Verification)
+                      Transaction ID (TID / Trx ID) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
-                      value={walletCnic}
-                      onChange={(e) => setWalletCnic(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                      placeholder="e.g. 892014"
-                      maxLength={6}
-                      className="w-full px-3.5 py-2.5 bg-[#F5F3EE] rounded-xl border border-[#E8E5DC] focus:outline-none focus:border-[#0B0F14] text-xs font-mono text-center text-[#0B0F14]"
+                      value={walletTid}
+                      onChange={(e) => setWalletTid(e.target.value.trim())}
+                      placeholder="e.g. 028471928374"
+                      className="w-full px-3.5 py-2.5 bg-[#F5F3EE] rounded-xl border border-[#E8E5DC] focus:outline-none focus:border-[#0B0F14] text-xs font-mono font-bold text-[#0B0F14]"
                     />
                     <span className="text-[10px] text-[#8A8F98] mt-1 block">
-                      Required for high-limit transaction authorization.
+                      JazzCash SMS (8558) se mila hua TID number.
                     </span>
                   </div>
                 </div>
@@ -795,39 +739,78 @@ export default function CheckoutPage() {
             {/* CHANNEL CONTENT 3: EasyPaisa Mobile Account Details */}
             {paymentMethod === "EASYPAISA" && (
               <div className="pt-4 border-t border-[#E8E5DC] space-y-4 animate-in fade-in duration-300">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 bg-emerald-600 text-white font-black text-xs rounded">
-                      EasyPaisa
-                    </span>
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-1 bg-emerald-600 text-white font-black text-xs rounded-lg">
+                    EasyPaisa
+                  </span>
+                  <div>
                     <h4 className="text-xs font-bold text-[#0B0F14]">
-                      Mobile Account Checkout
+                      Direct EasyPaisa Mobile Transfer
                     </h4>
+                    <p className="text-[10px] text-[#8A8F98]">
+                      Transfer exact total to official account and enter TID below
+                    </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={fillDemoEasyPaisa}
-                    className="text-[11px] font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 self-start sm:self-auto bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 transition"
-                  >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Auto-Fill Test EasyPaisa</span>
-                  </button>
                 </div>
 
-                <div className="text-xs max-w-md">
-                  <label className="block font-semibold text-[#0B0F14] mb-1">
-                    EasyPaisa Registered Mobile Number <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={walletPhone}
-                    onChange={(e) => setWalletPhone(e.target.value.replace(/\D/g, "").slice(0, 11))}
-                    placeholder="03451234567"
-                    className="w-full px-3.5 py-2.5 bg-[#F5F3EE] rounded-xl border border-[#E8E5DC] focus:outline-none focus:border-[#0B0F14] text-xs font-mono font-medium text-[#0B0F14]"
-                  />
-                  <span className="text-[10px] text-[#8A8F98] mt-1 block">
-                    You will receive an in-app push notification or OTP to authorize payment.
-                  </span>
+                {/* Official Store Recipient Box */}
+                <div className="bg-emerald-50/80 p-4 rounded-2xl border border-emerald-200 text-xs space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-emerald-950 uppercase tracking-wide flex items-center gap-1.5">
+                      <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Official Fayzee EasyPaisa Account</span>
+                    </span>
+                    <span className="text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full">
+                      Verified
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    <div>
+                      <span className="text-[10px] text-emerald-700 block">Account Title:</span>
+                      <span className="font-bold text-[#0B0F14] text-xs">Fayaz Ullah</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-emerald-700 block">Account / Mobile Number:</span>
+                      <span className="font-mono font-black text-emerald-700 text-sm select-all">03306767357</span>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-emerald-900/90 pt-1.5 border-t border-emerald-200 leading-relaxed font-medium">
+                    💡 EasyPaisa App ya *786# se <span className="font-mono font-bold">03306767357</span> par <span className="font-bold">{formatPrice(grandTotal)}</span> send karein. Uske baad 3737 se aane wala Transaction ID (TID) neeche likhein:
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+                  <div>
+                    <label className="block font-semibold text-[#0B0F14] mb-1">
+                      Your Sender Mobile Number <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={walletPhone}
+                      onChange={(e) => setWalletPhone(e.target.value.replace(/\D/g, "").slice(0, 11))}
+                      placeholder="03XXXXXXXXX"
+                      className="w-full px-3.5 py-2.5 bg-[#F5F3EE] rounded-xl border border-[#E8E5DC] focus:outline-none focus:border-[#0B0F14] text-xs font-mono font-medium text-[#0B0F14]"
+                    />
+                    <span className="text-[10px] text-[#8A8F98] mt-1 block">
+                      Apna EasyPaisa number jahan se paise send kiye.
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-[#0B0F14] mb-1">
+                      Transaction ID (TID / Trx ID) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={walletTid}
+                      onChange={(e) => setWalletTid(e.target.value.trim())}
+                      placeholder="e.g. 19283746501"
+                      className="w-full px-3.5 py-2.5 bg-[#F5F3EE] rounded-xl border border-[#E8E5DC] focus:outline-none focus:border-[#0B0F14] text-xs font-mono font-bold text-[#0B0F14]"
+                    />
+                    <span className="text-[10px] text-[#8A8F98] mt-1 block">
+                      EasyPaisa SMS (3737) se mila hua TID number.
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
@@ -961,141 +944,6 @@ export default function CheckoutPage() {
         </div>
       </form>
 
-      {/* 3D Secure / Mobile OTP Authentication Modal */}
-      {isOtpModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#0B0F14]/75 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-[#E8E5DC] animate-in fade-in zoom-in-95 duration-200">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-[#E8E5DC]">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-[#0B0F14] text-[#C8A96B] flex items-center justify-center border border-[#C8A96B]/20">
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-[#0B0F14]">
-                    {paymentMethod === "ONLINE_CARD"
-                      ? "3D Secure Card Verification"
-                      : `${paymentMethod === "JAZZ_CASH" ? "JazzCash" : "EasyPaisa"} Approval`}
-                  </h3>
-                  <p className="text-[11px] text-[#8A8F98]">
-                    Verified by Visa / Mastercard / State Bank of Pakistan
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsOtpModalOpen(false)}
-                className="p-1 text-[#8A8F98] hover:text-[#0B0F14] rounded-lg transition"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Merchant & Transaction Summary */}
-            <div className="bg-[#F5F3EE] p-3.5 rounded-2xl border border-[#E8E5DC] text-xs space-y-1.5">
-              <div className="flex justify-between text-[#8A8F98]">
-                <span>Merchant:</span>
-                <span className="font-bold text-[#0B0F14]">Fayzee Marketplace Store</span>
-              </div>
-              <div className="flex justify-between text-[#8A8F98]">
-                <span>Amount:</span>
-                <span className="font-black text-[#0B0F14] text-sm">{formatPrice(grandTotal)}</span>
-              </div>
-              <div className="flex justify-between text-[#8A8F98]">
-                <span>Payment Channel:</span>
-                <span className="font-medium text-[#0B0F14]">
-                  {paymentMethod === "ONLINE_CARD"
-                    ? `${detectedBrand} (ending in ${cardNumber.slice(-4)})`
-                    : `${paymentMethod === "JAZZ_CASH" ? "JazzCash" : "EasyPaisa"} (${walletPhone})`}
-                </span>
-              </div>
-            </div>
-
-            {/* OTP Code Simulation & Input */}
-            <div className="space-y-3">
-              <div className="p-3 bg-[#0B0F14] rounded-xl border border-[#C8A96B]/30 text-xs text-white flex items-center justify-between">
-                <div>
-                  <span className="font-medium text-[#8A8F98] block text-[10px]">Simulated Security Code (SMS OTP):</span>
-                  <span className="font-mono text-base font-black text-[#C8A96B] tracking-widest">
-                    {demoOtp}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setOtpCode(demoOtp)}
-                  className="px-2.5 py-1 bg-[#C8A96B] hover:bg-[#B89858] text-[#0B0F14] rounded-lg text-[10px] font-black transition shadow-xs"
-                >
-                  Auto-Fill OTP
-                </button>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-[#0B0F14] mb-1">
-                  Enter One-Time Password (OTP)
-                </label>
-                <input
-                  type="text"
-                  value={otpCode}
-                  onChange={(e) => {
-                    setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6));
-                    setOtpError("");
-                  }}
-                  placeholder="Enter 6-digit code"
-                  maxLength={6}
-                  className="w-full px-4 py-3 bg-[#F5F3EE] rounded-xl border border-[#E8E5DC] text-center font-mono font-black text-lg tracking-widest focus:outline-none focus:border-[#0B0F14] text-[#0B0F14]"
-                />
-                {otpError && (
-                  <p className="text-[11px] text-red-600 mt-1 font-medium">{otpError}</p>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between text-[11px] text-[#8A8F98]">
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-[#8A8F98]" />
-                  <span>Expires in: {Math.floor(otpSecondsLeft / 60)}:{("0" + (otpSecondsLeft % 60)).slice(-2)}</span>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-                    setDemoOtp(newOtp);
-                    setOtpSecondsLeft(120);
-                  }}
-                  className="text-[#0B0F14] hover:text-[#C8A96B] hover:underline font-bold transition"
-                >
-                  Resend Code
-                </button>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex justify-end gap-2 pt-2 border-t border-[#E8E5DC]">
-              <button
-                type="button"
-                onClick={() => setIsOtpModalOpen(false)}
-                className="px-4 py-2.5 bg-[#F5F3EE] hover:bg-[#E8E5DC] text-[#0B0F14] rounded-xl text-xs font-bold transition"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={otpVerifying || submitting}
-                onClick={handleVerifyOtpAndPay}
-                className="px-5 py-2.5 bg-[#0B0F14] hover:bg-[#1A222C] text-white border border-[#0B0F14] rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 active:scale-98 disabled:opacity-50"
-              >
-                {otpVerifying || submitting ? (
-                  <span>Authorizing with Bank...</span>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4 text-[#C8A96B]" />
-                    <span>Authorize & Pay {formatPrice(grandTotal)}</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

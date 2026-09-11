@@ -25,6 +25,8 @@ export interface PaymentDetailsPayload {
   // Mobile Wallets (JazzCash / EasyPaisa)
   walletPhone?: string;
   walletCnicLast6?: string;
+  transactionId?: string;
+  tid?: string;
   // 3D Secure / OTP Authorization
   otpCode?: string;
   authCode?: string;
