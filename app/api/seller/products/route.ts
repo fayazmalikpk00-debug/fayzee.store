@@ -14,7 +14,10 @@ export async function GET() {
     }
 
     const products = await prisma.product.findMany({
-      where: { sellerId: user.sellerProfile.id },
+      where: {
+        sellerId: user.sellerProfile.id,
+        status: { not: "ARCHIVED" },
+      },
       include: {
         category: true,
         subcategory: true,
@@ -423,7 +426,36 @@ export async function DELETE(req: Request) {
       );
     }
 
-    // Clean up associated Cloudinary images if any
+    // Check if product or any of its variants are referenced in customer orders
+    const [orderItemCount, variantOrderItemCount] = await Promise.all([
+      prisma.orderItem.count({ where: { productId } }),
+      prisma.orderItem.count({ where: { variant: { productId } } }),
+    ]);
+
+    const hasOrders = orderItemCount > 0 || variantOrderItemCount > 0;
+
+    if (hasOrders) {
+      // Soft-delete / Archive: Preserve customer order history and financial invoices
+      await Promise.all([
+        prisma.cartItem.deleteMany({ where: { productId } }),
+        prisma.wishlistItem.deleteMany({ where: { productId } }),
+        prisma.flashSaleItem.deleteMany({ where: { productId } }),
+        prisma.product.update({
+          where: { id: productId },
+          data: {
+            status: "ARCHIVED",
+            stockQuantity: 0,
+          },
+        }),
+      ]);
+
+      return NextResponse.json({
+        message: "Product has associated customer order history and has been removed from your active store.",
+        archived: true,
+      });
+    }
+
+    // If no orders exist, permanently clean up Cloudinary images and product record
     if (product.images && product.images.length > 0) {
       for (const img of product.images) {
         const publicId = extractCloudinaryPublicId(img.url);
@@ -435,8 +467,9 @@ export async function DELETE(req: Request) {
 
     await prisma.product.delete({ where: { id: productId } });
 
-    return NextResponse.json({ message: "Product deleted successfully." });
+    return NextResponse.json({ message: "Product deleted successfully.", deleted: true });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Error deleting/archiving product:", error);
+    return NextResponse.json({ error: error.message || "Failed to delete product." }, { status: 500 });
   }
 }

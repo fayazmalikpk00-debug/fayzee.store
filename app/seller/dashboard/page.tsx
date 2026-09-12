@@ -129,6 +129,7 @@ export default function SellerDashboardPage() {
   const [formError, setFormError] = useState("");
   const [addingProduct, setAddingProduct] = useState(false);
   const [successToast, setSuccessToast] = useState("");
+  const [errorToast, setErrorToast] = useState("");
 
   // Shipping Modal & Fulfillment Actions State
   const [shippingModalItem, setShippingModalItem] = useState<any | null>(null);
@@ -819,11 +820,19 @@ ${paymentLine}${noteLine}
     if (!confirm("Are you sure you want to delete this listing from your store?")) return;
     try {
       const res = await fetch(`/api/seller/products?id=${id}`, { method: "DELETE" });
+      const data = await res.json();
       if (res.ok) {
         setProducts((prev) => prev.filter((p) => p.id !== id));
+        setSuccessToast(data.message || "Product listing removed successfully.");
+        setTimeout(() => setSuccessToast(""), 5000);
+      } else {
+        setErrorToast(data.error || "Failed to remove product listing.");
+        setTimeout(() => setErrorToast(""), 6000);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error("Error deleting product:", e);
+      setErrorToast("Network error. Could not delete product.");
+      setTimeout(() => setErrorToast(""), 6000);
     }
   };
 
@@ -962,6 +971,15 @@ ${paymentLine}${noteLine}
           <CheckCircle2 className="w-5 h-5 text-emerald-200 shrink-0" />
           <span className="text-xs font-bold">{successToast}</span>
           <button onClick={() => setSuccessToast("")} className="text-white/80 hover:text-white ml-2">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+      {errorToast && (
+        <div className="fixed top-20 right-4 sm:right-8 z-50 bg-[#DC2626] text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
+          <AlertCircle className="w-5 h-5 text-red-200 shrink-0" />
+          <span className="text-xs font-bold">{errorToast}</span>
+          <button onClick={() => setErrorToast("")} className="text-white/80 hover:text-white ml-2">
             <X className="w-4 h-4" />
           </button>
         </div>

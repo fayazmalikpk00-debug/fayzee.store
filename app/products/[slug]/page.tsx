@@ -10,7 +10,9 @@ export async function generateMetadata(props: {
 }): Promise<Metadata> {
   const { slug } = await props.params;
   const product = await getProductBySlug(slug);
-  if (!product) return { title: "Product Not Found — Fayzee" };
+  if (!product || product.status !== "ACTIVE") {
+    return { title: "Product Not Found — Fayzee", robots: { index: false, follow: false } };
+  }
 
   // Clean raw product text: strip HTML and normalize whitespace
   const rawText = (product.shortDescription || product.description || "")
@@ -103,7 +105,7 @@ export default async function ProductDetailPage(props: {
   const { slug } = await props.params;
   const product = await getProductBySlug(slug);
 
-  if (!product) {
+  if (!product || product.status !== "ACTIVE") {
     notFound();
   }
 
