@@ -4,6 +4,9 @@ import Link from "next/link";
 export const metadata = {
   title: "Terms and Conditions | Fayzee Store",
   description: "Official Terms of Service and Conditions of Use for Fayzee Store.",
+  alternates: {
+    canonical: "https://www.fayzee.store/terms-and-conditions",
+  },
 };
 
 export default function TermsAndConditionsPage() {

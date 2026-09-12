@@ -2,7 +2,30 @@ import { ProductCard } from "@/components/marketplace/ProductCard";
 import { SellerStoreHeaderActions } from "@/components/marketplace/SellerStoreHeaderActions";
 import prisma from "@/lib/db";
 import { ShieldCheck, Star, Store } from "lucide-react";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const seller = await prisma.sellerProfile.findUnique({
+    where: { storeSlug: slug },
+    select: { storeName: true, description: true },
+  });
+
+  if (!seller) return { title: "Seller Store | Fayzee" };
+
+  return {
+    title: `${seller.storeName} — Official Store | Fayzee`,
+    description: seller.description || `Shop authentic products from ${seller.storeName} on Fayzee Store.`,
+    alternates: {
+      canonical: `https://www.fayzee.store/sellers/${slug}`,
+    },
+  };
+}
 
 export default async function SellerStorePage({
   params,

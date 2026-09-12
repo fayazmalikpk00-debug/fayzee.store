@@ -2,8 +2,104 @@ import { ProductCard } from "@/components/marketplace/ProductCard";
 import prisma from "@/lib/db";
 import { getProducts } from "@/services/productService";
 import { ChevronRight, Filter, Layers, PackageOpen } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+
+export async function generateMetadata(props: {
+  params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+}): Promise<Metadata> {
+  const { slug } = await props.params;
+  const searchParams = (await props.searchParams) || {};
+  const subcategorySlug =
+    typeof searchParams.subcategory === "string"
+      ? searchParams.subcategory
+      : undefined;
+  const productTypeSlug =
+    typeof searchParams.productType === "string"
+      ? searchParams.productType
+      : undefined;
+  const rawPage = searchParams.page ? Number(searchParams.page) : 1;
+  const page = !isNaN(rawPage) && rawPage > 1 ? rawPage : 1;
+
+  const category = await prisma.category.findUnique({
+    where: { slug },
+    select: {
+      name: true,
+      description: true,
+      subcategories: {
+        where: { isActive: true },
+        select: {
+          slug: true,
+          name: true,
+          productTypes: {
+            where: { isActive: true },
+            select: { slug: true, name: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!category) {
+    return { title: "Category Not Found — Fayzee" };
+  }
+
+  const activeSubcategory = subcategorySlug
+    ? category.subcategories.find((s) => s.slug === subcategorySlug)
+    : null;
+
+  const activeProductType =
+    activeSubcategory && productTypeSlug
+      ? activeSubcategory.productTypes.find((pt) => pt.slug === productTypeSlug)
+      : null;
+
+  // Build canonical URL:
+  // - Clean category: https://www.fayzee.store/category/<slug>
+  // - With subcategory: https://www.fayzee.store/category/<slug>?subcategory=<subSlug>
+  // - With productType: https://www.fayzee.store/category/<slug>?subcategory=<subSlug>&productType=<ptSlug>
+  // - Preserve page if page > 1; strip page=1, sort, brand, rating, inStock
+  const query = new URLSearchParams();
+  if (activeSubcategory) {
+    query.set("subcategory", activeSubcategory.slug);
+    if (activeProductType) {
+      query.set("productType", activeProductType.slug);
+    }
+  }
+
+  if (page > 1) {
+    query.set("page", String(page));
+  }
+
+  const queryString = query.toString();
+  const canonicalUrl = `https://www.fayzee.store/category/${slug}${queryString ? `?${queryString}` : ""}`;
+
+  let title = `${category.name} | Buy Online on Fayzee`;
+  let description =
+    category.description ||
+    `Browse authentic ${category.name} products from verified sellers on Fayzee Store.`;
+
+  if (activeSubcategory) {
+    if (activeProductType) {
+      title = `${activeProductType.name} — ${activeSubcategory.name} | Fayzee`;
+    } else {
+      title = `${activeSubcategory.name} — ${category.name} | Fayzee`;
+    }
+  }
+
+  if (page > 1) {
+    title += ` (Page ${page})`;
+  }
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+  };
+}
 
 export default async function CategoryPage(props: {
   params: Promise<{ slug: string }>;

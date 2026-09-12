@@ -19,6 +19,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.fayzee.store"),
   title: "FAYZEE — Shop More. Live Better | Pakistan's Premier Multi-Vendor Marketplace",
   description:
     "Discover, compare, and purchase 100% authentic tech, fashion, and lifestyle products from verified sellers with 24/7 AI shopping assistance.",

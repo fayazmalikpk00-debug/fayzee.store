@@ -22,6 +22,9 @@ export const metadata: Metadata = {
     url: "https://www.fayzee.store/categories",
     siteName: "Fayzee Store",
   },
+  alternates: {
+    canonical: "https://www.fayzee.store/categories",
+  },
 };
 
 export const revalidate = 300; // Cache for 5 minutes

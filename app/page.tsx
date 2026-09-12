@@ -18,11 +18,18 @@ import {
   Tag,
   Zap,
 } from "lucide-react";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "https://www.fayzee.store",
+  },
+};
 
 export default async function HomePage() {
   const [

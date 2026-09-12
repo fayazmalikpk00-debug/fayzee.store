@@ -2,9 +2,18 @@ import { FlashCountdown } from "@/components/marketplace/FlashCountdown";
 import { ProductCard } from "@/components/marketplace/ProductCard";
 import { getFlashSaleProducts } from "@/services/productService";
 import { Flame } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Flash Sale — Exclusive Deals | Fayzee",
+  description: "Limited stock curated deals up to 35% off on flagship tech and lifestyle brands on Fayzee.",
+  alternates: {
+    canonical: "https://www.fayzee.store/flash-sale",
+  },
+};
 
 export default async function FlashSalePage() {
   const flashSale = await getFlashSaleProducts();

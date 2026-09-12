@@ -3,7 +3,88 @@ import { ProductCard } from "@/components/marketplace/ProductCard";
 import prisma from "@/lib/db";
 import { getBrands, getCategories, getProducts } from "@/services/productService";
 import { Filter, SlidersHorizontal } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export async function generateMetadata(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}): Promise<Metadata> {
+  const searchParams = (await props.searchParams) || {};
+  const categorySlug = typeof searchParams.category === "string" ? searchParams.category : undefined;
+  const subcategorySlug = typeof searchParams.subcategory === "string" ? searchParams.subcategory : undefined;
+  const productTypeSlug = typeof searchParams.productType === "string" ? searchParams.productType : undefined;
+  const searchQuery = typeof searchParams.q === "string" ? searchParams.q : undefined;
+  const rawPage = searchParams.page ? Number(searchParams.page) : 1;
+  const page = !isNaN(rawPage) && rawPage > 1 ? rawPage : 1;
+
+  // 1. Robots: Search queries should use noindex, follow
+  const isSearch = Boolean(searchQuery && searchQuery.trim().length > 0);
+  const robots = isSearch ? { index: false, follow: true } : undefined;
+
+  // 2. Canonical URL construction:
+  // - If category exists, canonicalize to /category/<categorySlug>
+  // - If category + subcategory exists: /category/<categorySlug>?subcategory=<subcategorySlug>
+  // - If productType exists: /category/<categorySlug>?subcategory=<subcategorySlug>&productType=<productTypeSlug>
+  // - If no category exists: canonicalize to /products
+  // - Strip sort, brand, inStock, minPrice, maxPrice, rating
+  // - Strip page=1; only preserve page if page > 1
+  let canonicalPath = "/products";
+  const query = new URLSearchParams();
+
+  if (categorySlug) {
+    canonicalPath = `/category/${categorySlug}`;
+    if (subcategorySlug) {
+      query.set("subcategory", subcategorySlug);
+      if (productTypeSlug) {
+        query.set("productType", productTypeSlug);
+      }
+    }
+  }
+
+  if (page > 1) {
+    query.set("page", String(page));
+  }
+
+  const queryString = query.toString();
+  const canonicalUrl = `https://www.fayzee.store${canonicalPath}${queryString ? `?${queryString}` : ""}`;
+
+  let title = "All Products Catalog — Shop Authentic Products | Fayzee";
+  let description = "Discover, compare, and purchase authentic products from verified sellers across Pakistan on Fayzee.";
+
+  if (isSearch) {
+    title = `Search Results for "${searchQuery}" | Fayzee`;
+    description = `Browse products matching "${searchQuery}" on Fayzee Store.`;
+  } else if (categorySlug) {
+    const formattedCat = categorySlug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    if (subcategorySlug) {
+      const formattedSub = subcategorySlug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+      if (productTypeSlug) {
+        const formattedPt = productTypeSlug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+        title = `${formattedPt} — ${formattedSub} | Fayzee`;
+        description = `Shop authentic ${formattedPt} in ${formattedSub} on Fayzee Store.`;
+      } else {
+        title = `${formattedSub} — ${formattedCat} | Fayzee`;
+        description = `Shop authentic ${formattedSub} products in ${formattedCat} on Fayzee Store.`;
+      }
+    } else {
+      title = `${formattedCat} Products — Buy Online | Fayzee`;
+      description = `Discover top deals on ${formattedCat} products from verified sellers on Fayzee.`;
+    }
+  }
+
+  if (page > 1) {
+    title += ` (Page ${page})`;
+  }
+
+  return {
+    title,
+    description,
+    robots,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+  };
+}
 
 export default async function ProductsPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;

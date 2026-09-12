@@ -4,6 +4,9 @@ import Link from "next/link";
 export const metadata = {
   title: "Privacy Policy | Fayzee Store",
   description: "Official Privacy Policy of Fayzee Store. Learn how we collect, protect, and handle your data.",
+  alternates: {
+    canonical: "https://www.fayzee.store/privacy-policy",
+  },
 };
 
 export default function PrivacyPolicyPage() {
