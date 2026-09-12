@@ -3,7 +3,8 @@ import Link from "next/link";
 
 export const metadata = {
   title: "Ownership Statement | Fayzee Store",
-  description: "Official Ownership and Governance Statement for Fayzee Store.",
+  description:
+    "Official Ownership and Governance Statement for Fayzee Store. Learn about our marketplace ownership, business operations, and official platform management.",
   alternates: {
     canonical: "https://www.fayzee.store/ownership-statement",
   },

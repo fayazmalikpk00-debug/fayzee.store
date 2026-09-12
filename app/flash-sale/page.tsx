@@ -9,7 +9,8 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Flash Sale — Exclusive Deals | Fayzee",
-  description: "Limited stock curated deals up to 35% off on flagship tech and lifestyle brands on Fayzee.",
+  description:
+    "Shop limited-time flash sale deals on Fayzee Store. Explore curated discounts up to 35% off on select tech and lifestyle products from marketplace sellers.",
   alternates: {
     canonical: "https://www.fayzee.store/flash-sale",
   },

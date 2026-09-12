@@ -12,12 +12,69 @@ export async function generateMetadata(props: {
   const product = await getProductBySlug(slug);
   if (!product) return { title: "Product Not Found — Fayzee" };
 
+  // Clean raw product text: strip HTML and normalize whitespace
+  const rawText = (product.shortDescription || product.description || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  let description: string;
+
+  if (rawText.length >= 110) {
+    if (rawText.length <= 160) {
+      description = rawText;
+    } else {
+      const sub = rawText.slice(0, 160);
+      const sentenceEndMatches = Array.from(sub.matchAll(/[.!?](?=\s|$)/g));
+      if (sentenceEndMatches.length > 0) {
+        const lastMatch = sentenceEndMatches[sentenceEndMatches.length - 1];
+        const endPos = (lastMatch.index ?? 0) + 1;
+        if (endPos >= 110) {
+          description = sub.slice(0, endPos).trim();
+        } else {
+          const lastSpace = sub.lastIndexOf(" ");
+          description = (lastSpace > 110 ? sub.slice(0, lastSpace) : sub).replace(/[.,;:\s]+$/, "") + ".";
+        }
+      } else {
+        const lastSpace = sub.lastIndexOf(" ");
+        description = (lastSpace > 110 ? sub.slice(0, lastSpace) : sub).replace(/[.,;:\s]+$/, "") + ".";
+      }
+    }
+  } else {
+    // If description is thin, augment with real verified fields (title, category, seller)
+    const catPart = product.category?.name ? `in ${product.category.name} ` : "";
+    const sellerPart = product.seller?.storeName ? `from ${product.seller.storeName} ` : "";
+    const textPart = rawText && rawText.length >= 20 ? `${rawText.replace(/\.+$/, "")}. ` : "";
+
+    const combined = `Buy ${product.title} ${catPart}online on Fayzee Store. ${textPart}Explore available marketplace options, product details, and listings ${sellerPart}in Pakistan.`.replace(/\s+/g, " ").trim();
+
+    if (combined.length <= 160) {
+      description = combined;
+    } else {
+      const sub = combined.slice(0, 160);
+      const sentenceEndMatches = Array.from(sub.matchAll(/[.!?](?=\s|$)/g));
+      if (sentenceEndMatches.length > 0) {
+        const lastMatch = sentenceEndMatches[sentenceEndMatches.length - 1];
+        const endPos = (lastMatch.index ?? 0) + 1;
+        if (endPos >= 110) {
+          description = sub.slice(0, endPos).trim();
+        } else {
+          const lastSpace = sub.lastIndexOf(" ");
+          description = (lastSpace > 110 ? sub.slice(0, lastSpace) : sub).replace(/[.,;:\s]+$/, "") + ".";
+        }
+      } else {
+        const lastSpace = sub.lastIndexOf(" ");
+        description = (lastSpace > 110 ? sub.slice(0, lastSpace) : sub).replace(/[.,;:\s]+$/, "") + ".";
+      }
+    }
+  }
+
   return {
     title: `${product.title} — Buy Online on Fayzee`,
-    description: product.shortDescription || product.description.slice(0, 160),
+    description,
     openGraph: {
       title: product.title,
-      description: product.shortDescription || product.description.slice(0, 160),
+      description,
       images: product.images[0] ? [{ url: product.images[0].url }] : [],
     },
     alternates: {

@@ -3,7 +3,8 @@ import Link from "next/link";
 
 export const metadata = {
   title: "Cancellation, Return & Refund Policy | Fayzee Store",
-  description: "Official Return, Refund, and Cancellation Policy for orders placed on Fayzee Store.",
+  description:
+    "Review the official Return and Refund Policy for Fayzee Store. Learn about eligible return conditions, cancellation rules, timeframes, and the refund process.",
   alternates: {
     canonical: "https://www.fayzee.store/return-refund-policy",
   },

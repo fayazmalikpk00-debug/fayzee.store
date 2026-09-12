@@ -3,7 +3,8 @@ import Link from "next/link";
 
 export const metadata = {
   title: "Privacy Policy | Fayzee Store",
-  description: "Official Privacy Policy of Fayzee Store. Learn how we collect, protect, and handle your data.",
+  description:
+    "Read the official Privacy Policy of Fayzee Store. Learn how we collect, use, and protect your personal information, account data, and customer privacy rights.",
   alternates: {
     canonical: "https://www.fayzee.store/privacy-policy",
   },

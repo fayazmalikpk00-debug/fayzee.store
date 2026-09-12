@@ -26,6 +26,7 @@ export async function generateMetadata(props: {
   const category = await prisma.category.findUnique({
     where: { slug },
     select: {
+      slug: true,
       name: true,
       description: true,
       subcategories: {
@@ -33,9 +34,10 @@ export async function generateMetadata(props: {
         select: {
           slug: true,
           name: true,
+          description: true,
           productTypes: {
             where: { isActive: true },
-            select: { slug: true, name: true },
+            select: { slug: true, name: true, description: true },
           },
         },
       },
@@ -76,15 +78,45 @@ export async function generateMetadata(props: {
   const canonicalUrl = `https://www.fayzee.store/category/${slug}${queryString ? `?${queryString}` : ""}`;
 
   let title = `${category.name} | Buy Online on Fayzee`;
-  let description =
-    category.description ||
-    `Browse authentic ${category.name} products from verified sellers on Fayzee Store.`;
+  const baseCatDesc = category.description ? `${category.description.trim().replace(/\.+$/, "")}. ` : "";
+  let rawDescription: string;
 
   if (activeSubcategory) {
+    const baseSubDesc = activeSubcategory.description
+      ? `${activeSubcategory.description.trim().replace(/\.+$/, "")}. `
+      : "";
+
     if (activeProductType) {
       title = `${activeProductType.name} — ${activeSubcategory.name} | Fayzee`;
+      rawDescription = `Shop ${activeProductType.name} under ${activeSubcategory.name} in ${category.name} on Fayzee Store. Explore available listings and choices from sellers in Pakistan.`;
     } else {
       title = `${activeSubcategory.name} — ${category.name} | Fayzee`;
+      rawDescription = `Shop ${activeSubcategory.name} in ${category.name} on Fayzee Store. ${baseSubDesc}Buy online in Pakistan.`;
+    }
+  } else {
+    rawDescription =
+      category.slug === "other"
+        ? `Explore Other on Fayzee Store. ${baseCatDesc}Shop online from marketplace sellers in Pakistan.`
+        : `Explore ${category.name} on Fayzee Store. ${baseCatDesc}Shop online from sellers in Pakistan.`;
+  }
+
+  // Format description cleanly within 120–160 character boundary
+  let description = rawDescription.replace(/\s+/g, " ").trim();
+  if (description.length > 160) {
+    const sub = description.slice(0, 160);
+    const sentenceEndMatches = Array.from(sub.matchAll(/[.!?](?=\s|$)/g));
+    if (sentenceEndMatches.length > 0) {
+      const lastMatch = sentenceEndMatches[sentenceEndMatches.length - 1];
+      const endPos = (lastMatch.index ?? 0) + 1;
+      if (endPos >= 110) {
+        description = sub.slice(0, endPos).trim();
+      } else {
+        const lastSpace = sub.lastIndexOf(" ");
+        description = (lastSpace > 110 ? sub.slice(0, lastSpace) : sub).replace(/[.,;:\s]+$/, "") + ".";
+      }
+    } else {
+      const lastSpace = sub.lastIndexOf(" ");
+      description = (lastSpace > 110 ? sub.slice(0, lastSpace) : sub).replace(/[.,;:\s]+$/, "") + ".";
     }
   }
 

@@ -5,7 +5,7 @@ import { Metadata } from "next";
 export const metadata: Metadata = {
   title: "All Categories & Departments | Fayzee Store Pakistan",
   description:
-    "Explore all 18 official shopping departments on Fayzee Store. Shop Smartphones, Electronics, Men's & Women's Fashion, Home & Kitchen, Groceries, Beauty and more from verified Pakistani sellers.",
+    "Explore all 18 shopping departments and subcategories on Fayzee Store. Browse electronics, fashion, groceries, and home products from sellers across Pakistan.",
   keywords: [
     "Fayzee Categories",
     "Shop by Category Pakistan",

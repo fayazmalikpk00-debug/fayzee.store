@@ -49,11 +49,12 @@ export async function generateMetadata(props: {
   const canonicalUrl = `https://www.fayzee.store${canonicalPath}${queryString ? `?${queryString}` : ""}`;
 
   let title = "All Products Catalog — Shop Authentic Products | Fayzee";
-  let description = "Discover, compare, and purchase authentic products from verified sellers across Pakistan on Fayzee.";
+  let description =
+    "Discover and compare products on Fayzee Store. Browse tech, fashion, and lifestyle items from marketplace sellers with nationwide delivery across Pakistan.";
 
   if (isSearch) {
     title = `Search Results for "${searchQuery}" | Fayzee`;
-    description = `Browse products matching "${searchQuery}" on Fayzee Store.`;
+    description = `Browse products matching "${searchQuery}" on Fayzee Store. Explore available marketplace listings and product choices from online sellers in Pakistan.`;
   } else if (categorySlug) {
     const formattedCat = categorySlug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
     if (subcategorySlug) {
@@ -61,15 +62,23 @@ export async function generateMetadata(props: {
       if (productTypeSlug) {
         const formattedPt = productTypeSlug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
         title = `${formattedPt} — ${formattedSub} | Fayzee`;
-        description = `Shop authentic ${formattedPt} in ${formattedSub} on Fayzee Store.`;
+        description = `Browse ${formattedPt} under ${formattedSub} on Fayzee Store. Explore available marketplace listings and compare choices from online sellers in Pakistan.`;
       } else {
         title = `${formattedSub} — ${formattedCat} | Fayzee`;
-        description = `Shop authentic ${formattedSub} products in ${formattedCat} on Fayzee Store.`;
+        description = `Shop ${formattedSub} in ${formattedCat} on Fayzee Store. Browse available product listings, compare items, and order from marketplace sellers in Pakistan.`;
       }
     } else {
       title = `${formattedCat} Products — Buy Online | Fayzee`;
-      description = `Discover top deals on ${formattedCat} products from verified sellers on Fayzee.`;
+      description = `Explore ${formattedCat} products on Fayzee Store. Browse available selections, compare prices, and shop online from marketplace sellers across Pakistan.`;
     }
+  }
+
+  // Format description cleanly within 120–160 character boundary
+  let finalDescription = description.replace(/\s+/g, " ").trim();
+  if (finalDescription.length > 160) {
+    const sub = finalDescription.slice(0, 160);
+    const lastSpace = sub.lastIndexOf(" ");
+    finalDescription = (lastSpace > 110 ? sub.slice(0, lastSpace) : sub).replace(/[.,;:\s]+$/, "") + ".";
   }
 
   if (page > 1) {
@@ -78,7 +87,7 @@ export async function generateMetadata(props: {
 
   return {
     title,
-    description,
+    description: finalDescription,
     robots,
     alternates: {
       canonical: canonicalUrl,

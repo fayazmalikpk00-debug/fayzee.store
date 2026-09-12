@@ -18,9 +18,45 @@ export async function generateMetadata({
 
   if (!seller) return { title: "Seller Store | Fayzee" };
 
+  const rawDesc = (seller.description || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  let description: string;
+
+  if (rawDesc.length >= 110) {
+    if (rawDesc.length <= 160) {
+      description = rawDesc;
+    } else {
+      const sub = rawDesc.slice(0, 160);
+      const sentenceEndMatches = Array.from(sub.matchAll(/[.!?](?=\s|$)/g));
+      if (sentenceEndMatches.length > 0) {
+        const lastMatch = sentenceEndMatches[sentenceEndMatches.length - 1];
+        const endPos = (lastMatch.index ?? 0) + 1;
+        if (endPos >= 110) {
+          description = sub.slice(0, endPos).trim();
+        } else {
+          const lastSpace = sub.lastIndexOf(" ");
+          description = (lastSpace > 110 ? sub.slice(0, lastSpace) : sub).replace(/[.,;:\s]+$/, "") + ".";
+        }
+      } else {
+        const lastSpace = sub.lastIndexOf(" ");
+        description = (lastSpace > 110 ? sub.slice(0, lastSpace) : sub).replace(/[.,;:\s]+$/, "") + ".";
+      }
+    }
+  } else {
+    const descSnippet = rawDesc && rawDesc.length >= 20 ? `${rawDesc.replace(/\.+$/, "")}. ` : "";
+    const combined = `Browse products from ${seller.storeName} on Fayzee Store. ${descSnippet}Explore this seller's available marketplace listings and product categories in Pakistan.`.replace(/\s+/g, " ").trim();
+
+    if (combined.length <= 160) {
+      description = combined;
+    } else {
+      const sub = combined.slice(0, 160);
+      const lastSpace = sub.lastIndexOf(" ");
+      description = (lastSpace > 110 ? sub.slice(0, lastSpace) : sub).replace(/[.,;:\s]+$/, "") + ".";
+    }
+  }
+
   return {
     title: `${seller.storeName} — Official Store | Fayzee`,
-    description: seller.description || `Shop authentic products from ${seller.storeName} on Fayzee Store.`,
+    description,
     alternates: {
       canonical: `https://www.fayzee.store/sellers/${slug}`,
     },
