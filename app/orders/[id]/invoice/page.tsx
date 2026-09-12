@@ -22,6 +22,10 @@ import InvoiceActions from "./InvoiceActions";
 export const metadata = {
   title: "Commercial Tax Invoice | Fayzee Store",
   description: "Official Client Tax Invoice and Sales Receipt for your order.",
+  robots: {
+    index: false,
+    follow: true,
+  },
 };
 
 // Helper function to convert PKR number to English words for commercial invoices

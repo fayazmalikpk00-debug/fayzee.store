@@ -70,7 +70,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // 2. Fetch active products, categories, and approved sellers dynamically
   let productRoutes: MetadataRoute.Sitemap = [];
-  let categoryRoutes: MetadataRoute.Sitemap = [];
+  let taxonomyRoutes: MetadataRoute.Sitemap = [];
   let sellerRoutes: MetadataRoute.Sitemap = [];
 
   try {
@@ -81,7 +81,35 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }),
       prisma.category.findMany({
         where: { isActive: true },
-        select: { slug: true, updatedAt: true },
+        select: {
+          slug: true,
+          updatedAt: true,
+          subcategories: {
+            where: {
+              isActive: true,
+              products: {
+                some: {
+                  status: "ACTIVE",
+                },
+              },
+            },
+            select: {
+              slug: true,
+              updatedAt: true,
+              productTypes: {
+                where: {
+                  isActive: true,
+                  products: {
+                    some: {
+                      status: "ACTIVE",
+                    },
+                  },
+                },
+                select: { slug: true, updatedAt: true },
+              },
+            },
+          },
+        },
       }),
       prisma.sellerProfile.findMany({
         where: { status: "APPROVED" },
@@ -89,12 +117,34 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }),
     ]);
 
-    categoryRoutes = categories.map((cat) => ({
-      url: `${baseUrl}/category/${cat.slug}`,
-      lastModified: cat.updatedAt,
-      changeFrequency: "daily",
-      priority: 0.8,
-    }));
+    taxonomyRoutes = [];
+
+    for (const cat of categories) {
+      taxonomyRoutes.push({
+        url: `${baseUrl}/category/${cat.slug}`,
+        lastModified: cat.updatedAt,
+        changeFrequency: "daily",
+        priority: 0.8,
+      });
+
+      for (const sub of cat.subcategories) {
+        taxonomyRoutes.push({
+          url: `${baseUrl}/category/${cat.slug}?subcategory=${sub.slug}`,
+          lastModified: sub.updatedAt,
+          changeFrequency: "daily",
+          priority: 0.7,
+        });
+
+        for (const pt of sub.productTypes) {
+          taxonomyRoutes.push({
+            url: `${baseUrl}/category/${cat.slug}?subcategory=${sub.slug}&productType=${pt.slug}`,
+            lastModified: pt.updatedAt,
+            changeFrequency: "weekly",
+            priority: 0.6,
+          });
+        }
+      }
+    }
 
     productRoutes = products.map((prod) => ({
       url: `${baseUrl}/products/${prod.slug}`,
@@ -115,7 +165,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...staticRoutes,
-    ...categoryRoutes,
+    ...taxonomyRoutes,
     ...productRoutes,
     ...sellerRoutes,
   ];
