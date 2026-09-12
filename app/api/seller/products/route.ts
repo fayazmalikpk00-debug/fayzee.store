@@ -16,7 +16,6 @@ export async function GET() {
     const products = await prisma.product.findMany({
       where: {
         sellerId: user.sellerProfile.id,
-        status: { not: "ARCHIVED" },
       },
       include: {
         category: true,
@@ -471,5 +470,52 @@ export async function DELETE(req: Request) {
   } catch (error: any) {
     console.error("Error deleting/archiving product:", error);
     return NextResponse.json({ error: error.message || "Failed to delete product." }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: Request) {
+  try {
+    const user = await getSessionUser();
+    if (!user || user.role !== "SELLER" || !user.sellerProfile) {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 403 });
+    }
+
+    const body = await req.json();
+    const { id, action } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: "Product ID is required." }, { status: 400 });
+    }
+
+    const product = await prisma.product.findUnique({
+      where: { id },
+    });
+
+    if (!product || product.sellerId !== user.sellerProfile.id) {
+      return NextResponse.json(
+        { error: "Product not found or permission denied." },
+        { status: 403 }
+      );
+    }
+
+    if (action === "RESTORE") {
+      const updated = await prisma.product.update({
+        where: { id },
+        data: { status: "ACTIVE" },
+      });
+
+      return NextResponse.json({
+        message: `Product "${updated.title}" has been restored to active store listings.`,
+        product: updated,
+      });
+    }
+
+    return NextResponse.json({ error: "Invalid action." }, { status: 400 });
+  } catch (error: any) {
+    console.error("Error restoring product:", error);
+    return NextResponse.json(
+      { error: error.message || "Failed to update product." },
+      { status: 500 }
+    );
   }
 }
