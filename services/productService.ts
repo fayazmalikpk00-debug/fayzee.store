@@ -204,6 +204,9 @@ export async function getCategories() {
           productTypes: {
             where: { isActive: true },
             orderBy: { sortOrder: "asc" },
+            include: {
+              _count: { select: { products: true } },
+            },
           },
           _count: { select: { products: true } },
         },

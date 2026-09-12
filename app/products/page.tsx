@@ -169,7 +169,7 @@ export default async function ProductsPage(props: {
                         }`}
                       >
                         <span className="truncate">{cat.name}</span>
-                        <span className="text-[10px] opacity-70">({cat._count.products})</span>
+                        <span className="text-[10px] opacity-70">({cat._count?.products ?? 0})</span>
                       </Link>
 
                       {/* Cascading Subcategories if this category is selected */}
@@ -199,7 +199,7 @@ export default async function ProductsPage(props: {
                                   }`}
                                 >
                                   <span className="truncate">{sub.name}</span>
-                                  <span className="text-[9px] opacity-80">({sub._count.products})</span>
+                                  <span className="text-[9px] opacity-80">({sub._count?.products ?? 0})</span>
                                 </Link>
 
                                 {/* Cascading Product Types if this subcategory is selected */}
@@ -227,7 +227,7 @@ export default async function ProductsPage(props: {
                                         >
                                           <span className="truncate">{pt.name}</span>
                                           <span className="text-[9px] opacity-70">
-                                            ({pt._count.products})
+                                            ({pt._count?.products ?? 0})
                                           </span>
                                         </Link>
                                       );
