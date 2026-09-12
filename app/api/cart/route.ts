@@ -1,4 +1,5 @@
 import { getSessionUser } from "@/lib/auth";
+import prisma from "@/lib/db";
 import {
   addToCart,
   clearCart,
@@ -78,12 +79,26 @@ export async function PATCH(req: Request) {
       );
     }
 
-    await updateCartItemQuantity(cartItemId, quantity);
     const user = await getSessionUser();
     const sessionToken = user ? undefined : getSessionToken();
     const cart = await getOrCreateCart(user?.id, sessionToken);
 
-    return NextResponse.json({ message: "Cart updated.", cart });
+    // Verify ownership: ensure cart item belongs to caller's cart
+    const item = await prisma.cartItem.findUnique({
+      where: { id: cartItemId },
+    });
+
+    if (!item || item.cartId !== cart.id) {
+      return NextResponse.json(
+        { error: "Cart item not found or unauthorized access." },
+        { status: 403 }
+      );
+    }
+
+    await updateCartItemQuantity(cartItemId, quantity);
+    const updatedCart = await getOrCreateCart(user?.id, sessionToken);
+
+    return NextResponse.json({ message: "Cart updated.", cart: updatedCart });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
@@ -102,6 +117,18 @@ export async function DELETE(req: Request) {
     if (isClearAll) {
       await clearCart(cart.id);
     } else if (cartItemId) {
+      // Verify ownership: ensure cart item belongs to caller's cart
+      const item = await prisma.cartItem.findUnique({
+        where: { id: cartItemId },
+      });
+
+      if (!item || item.cartId !== cart.id) {
+        return NextResponse.json(
+          { error: "Cart item not found or unauthorized access." },
+          { status: 403 }
+        );
+      }
+
       await removeFromCart(cartItemId);
     }
 

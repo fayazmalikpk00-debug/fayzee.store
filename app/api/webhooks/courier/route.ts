@@ -1,8 +1,57 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import crypto from "crypto";
+
+function safeCompare(a: string, b: string): boolean {
+  try {
+    const bufA = Buffer.from(a);
+    const bufB = Buffer.from(b);
+    if (bufA.length !== bufB.length) return false;
+    return crypto.timingSafeEqual(bufA, bufB);
+  } catch {
+    return false;
+  }
+}
 
 export async function POST(req: Request) {
   try {
+    // 1. Verify Webhook Authentication
+    const expectedSecret =
+      process.env.COURIER_WEBHOOK_SECRET || process.env.PAYMENT_WEBHOOK_SECRET;
+
+    const authHeader = req.headers.get("authorization") || "";
+    const bearerToken = authHeader.toLowerCase().startsWith("bearer ")
+      ? authHeader.slice(7).trim()
+      : "";
+    const headerSecret =
+      req.headers.get("x-courier-secret") ||
+      req.headers.get("x-webhook-secret") ||
+      req.headers.get("x-api-key") ||
+      bearerToken;
+
+    const url = new URL(req.url);
+    const querySecret = url.searchParams.get("secret") || url.searchParams.get("token") || "";
+
+    const providedSecret = headerSecret || querySecret;
+
+    if (expectedSecret) {
+      if (!providedSecret || !safeCompare(providedSecret, expectedSecret)) {
+        console.warn("⚠️ Unauthorized courier webhook request rejected: Secret mismatch or missing.");
+        return NextResponse.json(
+          { error: "Unauthorized: Invalid or missing webhook secret." },
+          { status: 401 }
+        );
+      }
+    } else if (process.env.NODE_ENV === "production") {
+      console.error("🚨 CRITICAL: Courier webhook rejected in production because COURIER_WEBHOOK_SECRET is not configured.");
+      return NextResponse.json(
+        { error: "Courier webhook secret is not configured on the server." },
+        { status: 401 }
+      );
+    } else {
+      console.warn("⚠️ Courier webhook: Running in development mode without COURIER_WEBHOOK_SECRET set.");
+    }
+
     const body = await req.json();
 
     // Support multiple courier webhook formats:

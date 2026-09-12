@@ -126,8 +126,12 @@ export class SafepayProvider implements PaymentProvider {
    */
   verifyWebhookSignature(rawBody: string, signature: string): boolean {
     if (!this.config.webhookSecret) {
-      // In sandbox mode without webhook secret, allow payload verification
-      return this.config.isSandbox;
+      console.warn("⚠️ Safepay webhook signature validation failed: SAFEPAY_WEBHOOK_SECRET is not configured.");
+      return false;
+    }
+
+    if (!signature) {
+      return false;
     }
 
     try {

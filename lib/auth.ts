@@ -3,7 +3,21 @@ import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import prisma from "./db";
 
-const JWT_SECRET = process.env.JWT_SECRET || "fayzee-fallback-secret-2026-make-sure-to-set-env";
+const FALLBACK_SECRET = "fayzee-fallback-secret-2026-make-sure-to-set-env";
+
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret === FALLBACK_SECRET) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "CRITICAL SECURITY ERROR: JWT_SECRET environment variable is missing or insecure in production. You MUST configure a strong JWT_SECRET in your .env or hosting environment variables."
+      );
+    }
+    return FALLBACK_SECRET;
+  }
+  return secret;
+}
+
 const AUTH_COOKIE_NAME = "fayzee_auth_token";
 
 export interface TokenPayload {
@@ -23,12 +37,12 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 export function signToken(payload: TokenPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: "7d" });
 }
 
 export function verifyToken(token: string): TokenPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as TokenPayload;
+    return jwt.verify(token, getJwtSecret()) as TokenPayload;
   } catch (error) {
     return null;
   }

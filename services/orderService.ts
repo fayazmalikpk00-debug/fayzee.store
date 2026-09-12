@@ -1,6 +1,7 @@
 import prisma from "@/lib/db";
 import { PaymentService } from "@/lib/payment";
 import { PaymentDetailsPayload } from "@/lib/payment/types";
+import { calculateOrderShipping } from "@/lib/shipping";
 
 export interface CreateOrderInput {
   userId: string;
@@ -74,7 +75,7 @@ export async function createOrder(input: CreateOrderInput) {
     const lineTotal = itemPrice * quantity;
 
     subtotal += lineTotal;
-    totalShipping += (product.shippingFee || 0);
+    totalShipping += product.shippingFee || 0;
 
     itemsToCreate.push({
       productId: product.id,
@@ -126,6 +127,21 @@ export async function createOrder(input: CreateOrderInput) {
       }
     }
   }
+
+  const siteSettings = await prisma.siteSetting.findUnique({
+    where: { id: "default" },
+    select: {
+      standardShippingFee: true,
+      freeShippingThreshold: true,
+    },
+  });
+
+  totalShipping = calculateOrderShipping({
+    itemShippingTotal: totalShipping,
+    subtotal,
+    standardShippingFee: siteSettings?.standardShippingFee,
+    freeShippingThreshold: siteSettings?.freeShippingThreshold,
+  });
 
   const grandTotal = Math.max(0, subtotal - discountTotal + totalShipping);
 
@@ -237,11 +253,19 @@ export async function createOrder(input: CreateOrderInput) {
     });
 
     // G. Create in-app Notification for customer
+    const isPaid = paymentResult.status === "PAID";
+    const notificationTitle = isPaid
+      ? "Order Placed & Paid Successfully! 🎉"
+      : "Order Placed Successfully! 🎉";
+    const notificationMsg = isPaid
+      ? `Your order #${order.orderNumber} for Rs. ${Math.round(grandTotal).toLocaleString()} has been confirmed and paid.`
+      : `Your order #${order.orderNumber} for Rs. ${Math.round(grandTotal).toLocaleString()} has been placed (${paymentMethod === "COD" ? "Cash on Delivery" : "Payment Under Verification"}).`;
+
     await tx.notification.create({
       data: {
         userId,
-        title: "Order Placed Successfully! 🎉",
-        message: `Your order #${order.orderNumber} for Rs. ${Math.round(grandTotal).toLocaleString()} has been confirmed.`,
+        title: notificationTitle,
+        message: notificationMsg,
         type: "ORDER",
         link: `/orders/${order.id}`,
       },

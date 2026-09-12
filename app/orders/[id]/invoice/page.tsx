@@ -15,7 +15,8 @@ import {
   Truck,
 } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { getSessionUser } from "@/lib/auth";
 import InvoiceActions from "./InvoiceActions";
 
 export const metadata = {
@@ -93,9 +94,25 @@ export default async function OrderInvoicePage({
 }: {
   params: { id: string };
 }) {
+  const sessionUser = await getSessionUser();
+  if (!sessionUser) {
+    redirect(`/login?redirect=/orders/${params.id}/invoice`);
+  }
+
   const order = await getOrderById(params.id);
 
   if (!order) {
+    notFound();
+  }
+
+  const isOwner = order.userId === sessionUser.id;
+  const isAdmin = sessionUser.role === "ADMIN" || sessionUser.role === "SUPER_ADMIN";
+  const isSeller = Boolean(
+    sessionUser.sellerProfile?.id &&
+      order.items?.some((item: any) => item.sellerId === sessionUser.sellerProfile?.id)
+  );
+
+  if (!isOwner && !isAdmin && !isSeller) {
     notFound();
   }
 

@@ -19,7 +19,8 @@ import {
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { getSessionUser } from "@/lib/auth";
 
 export default async function OrderDetailPage({
   params,
@@ -28,9 +29,25 @@ export default async function OrderDetailPage({
   params: { id: string };
   searchParams: { success?: string };
 }) {
+  const sessionUser = await getSessionUser();
+  if (!sessionUser) {
+    redirect(`/login?redirect=/orders/${params.id}`);
+  }
+
   const order = await getOrderById(params.id);
 
   if (!order) {
+    notFound();
+  }
+
+  const isOwner = order.userId === sessionUser.id;
+  const isAdmin = sessionUser.role === "ADMIN" || sessionUser.role === "SUPER_ADMIN";
+  const isSeller = Boolean(
+    sessionUser.sellerProfile?.id &&
+      order.items?.some((item: any) => item.sellerId === sessionUser.sellerProfile?.id)
+  );
+
+  if (!isOwner && !isAdmin && !isSeller) {
     notFound();
   }
 

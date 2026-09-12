@@ -4,6 +4,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { useCart } from "@/components/providers/CartProvider";
 import { formatPrice } from "@/lib/utils";
 import { detectCardBrand, isValidLuhn } from "@/lib/payment/utils";
+import { calculateOrderShipping } from "@/lib/shipping";
 import {
   AlertCircle,
   ArrowRight,
@@ -89,14 +90,15 @@ export default function CheckoutPage() {
     }
   }, [user]);
 
-  // Shipping calculation with platform free delivery threshold
+  // Shipping calculation with platform free delivery threshold (must match orderService)
   const calculatedItemsShipping =
     cart?.items?.reduce((acc, item) => acc + (item.product?.shippingFee || 0), 0) || 0;
-  const isFreeDeliveryQualified =
-    cartSubtotal >= (siteSettings?.freeShippingThreshold || 3000) && cartSubtotal > 0;
-  const shippingTotal = isFreeDeliveryQualified
-    ? 0
-    : (calculatedItemsShipping > 0 ? calculatedItemsShipping : (siteSettings?.standardShippingFee ?? 200));
+  const shippingTotal = calculateOrderShipping({
+    itemShippingTotal: calculatedItemsShipping,
+    subtotal: cartSubtotal,
+    standardShippingFee: siteSettings?.standardShippingFee,
+    freeShippingThreshold: siteSettings?.freeShippingThreshold,
+  });
   const discountAmount = couponApplied ? couponApplied.discount : 0;
   const grandTotal = Math.max(0, cartSubtotal - discountAmount + shippingTotal);
 

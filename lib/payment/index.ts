@@ -52,6 +52,17 @@ export class CardPaymentProvider implements PaymentProvider {
   async processPayment(request: PaymentInitiationRequest): Promise<PaymentInitiationResult> {
     const details = request.paymentDetails;
     const rawCardNumber = details?.cardNumber || "";
+    // In production, direct simulated card entries must be rejected to prevent fraud
+    if (process.env.NODE_ENV === "production") {
+      return {
+        success: false,
+        transactionId: "",
+        status: "FAILED",
+        error:
+          "Direct card simulation is disabled in live production. Please configure an authorized payment gateway (Safepay / PayFast) or choose Cash on Delivery.",
+      };
+    }
+
     const cleanNumber = rawCardNumber.replace(/\s+/g, "");
 
     // 1. Validation checks
@@ -158,9 +169,9 @@ export class JazzCashProvider implements PaymentProvider {
     return {
       success: true,
       transactionId,
-      status: "PAID",
-      redirectUrl: `/orders/${request.orderId}?paymentSuccess=true&txn=${transactionId}`,
-      paymentInstructions: `Payment submitted via JazzCash Mobile Account (${formattedPhone}). Ref/TID: ${transactionId}`,
+      status: "PENDING",
+      redirectUrl: `/orders/${request.orderId}?paymentSuccess=true&txn=${transactionId}&status=pending_verification`,
+      paymentInstructions: `Payment submitted via JazzCash Mobile Account (${formattedPhone}). Ref/TID: ${transactionId}. Status: Under Admin Verification. Your order will be processed once payment is confirmed in our account.`,
       gatewayDetails: {
         paymentMethod: "JAZZ_CASH",
         channel: "JazzCash Mobile Account",
@@ -179,7 +190,7 @@ export class JazzCashProvider implements PaymentProvider {
       success: true,
       orderId: payload?.orderId || "",
       transactionId,
-      status: "PAID",
+      status: payload?.status || "PENDING",
       amountPaid: payload?.amount || 0,
     };
   }
@@ -215,9 +226,9 @@ export class EasyPaisaProvider implements PaymentProvider {
     return {
       success: true,
       transactionId,
-      status: "PAID",
-      redirectUrl: `/orders/${request.orderId}?paymentSuccess=true&txn=${transactionId}`,
-      paymentInstructions: `Payment submitted via EasyPaisa Mobile Account (${formattedPhone}). Ref/TID: ${transactionId}`,
+      status: "PENDING",
+      redirectUrl: `/orders/${request.orderId}?paymentSuccess=true&txn=${transactionId}&status=pending_verification`,
+      paymentInstructions: `Payment submitted via EasyPaisa Mobile Account (${formattedPhone}). Ref/TID: ${transactionId}. Status: Under Admin Verification. Your order will be processed once payment is confirmed in our account.`,
       gatewayDetails: {
         paymentMethod: "EASYPAISA",
         channel: "EasyPaisa Mobile Account",
@@ -236,7 +247,7 @@ export class EasyPaisaProvider implements PaymentProvider {
       success: true,
       orderId: payload?.orderId || "",
       transactionId,
-      status: "PAID",
+      status: payload?.status || "PENDING",
       amountPaid: payload?.amount || 0,
     };
   }
