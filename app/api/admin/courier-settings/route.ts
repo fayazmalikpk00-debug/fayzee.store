@@ -5,7 +5,7 @@ import { CourierService } from "@/services/courierService";
 export async function GET() {
   try {
     const user = await getSessionUser();
-    if (!user || user.role !== "ADMIN") {
+    if (!user || (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) {
       return NextResponse.json({ error: "Unauthorized. Admin access required." }, { status: 403 });
     }
 
@@ -28,7 +28,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const user = await getSessionUser();
-    if (!user || user.role !== "ADMIN") {
+    if (!user || (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) {
       return NextResponse.json({ error: "Unauthorized. Admin access required." }, { status: 403 });
     }
 
@@ -62,9 +62,17 @@ export async function POST(req: Request) {
       defaultPickupCity: body.defaultPickupCity || "Karachi",
     });
 
+    // Mask sensitive tokens in response as well
+    const safeUpdated = {
+      ...updated,
+      postexApiToken: updated.postexApiToken ? `${updated.postexApiToken.slice(0, 8)}...` : "",
+      traxApiKey: updated.traxApiKey ? `${updated.traxApiKey.slice(0, 8)}...` : "",
+      tcsPassword: updated.tcsPassword ? "********" : "",
+    };
+
     return NextResponse.json({
       message: "Courier configuration updated successfully.",
-      config: updated,
+      config: safeUpdated,
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

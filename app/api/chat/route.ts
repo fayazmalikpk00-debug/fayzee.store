@@ -98,9 +98,9 @@ export async function POST(req: Request) {
         content: currentMessageText,
       });
     } else if (Array.isArray(body.messages) && body.messages.length > 0) {
-      // Array of messages format
+      // Array of messages format - strictly allow only "user" or "assistant" turns from client
       for (const item of body.messages) {
-        if (item && typeof item.content === "string" && (item.role === "user" || item.role === "assistant" || item.role === "system")) {
+        if (item && typeof item.content === "string" && (item.role === "user" || item.role === "assistant")) {
           chatMessages.push({
             role: item.role,
             content: item.content.slice(0, 1000),

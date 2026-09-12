@@ -5,6 +5,26 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
+// In-memory rate limiting to protect Cloudinary bandwidth and storage: userId -> { count, resetTime }
+const uploadRateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
+function checkUploadRateLimit(userId: string, maxUploads = 25, windowMs = 15 * 60 * 1000): boolean {
+  const now = Date.now();
+  const record = uploadRateLimitMap.get(userId);
+
+  if (!record || now > record.resetTime) {
+    uploadRateLimitMap.set(userId, { count: 1, resetTime: now + windowMs });
+    return true;
+  }
+
+  if (record.count >= maxUploads) {
+    return false;
+  }
+
+  record.count += 1;
+  return true;
+}
+
 export async function POST(req: Request) {
   try {
     // 1. Authenticate user session
@@ -15,6 +35,14 @@ export async function POST(req: Request) {
           error: "Unauthorized: You must be logged in to upload images or documents.",
         },
         { status: 401 }
+      );
+    }
+
+    // Rate limit check
+    if (!checkUploadRateLimit(user.id)) {
+      return NextResponse.json(
+        { error: "Upload rate limit exceeded (max 25 uploads per 15 minutes). Please try again shortly." },
+        { status: 429 }
       );
     }
 

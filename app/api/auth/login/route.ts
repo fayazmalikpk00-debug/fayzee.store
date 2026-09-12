@@ -3,6 +3,42 @@ import prisma from "@/lib/db";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
+// In-memory brute-force protection map: identifier -> { attempts, resetTime }
+const loginAttemptsMap = new Map<string, { attempts: number; resetTime: number }>();
+
+function checkLoginRateLimit(
+  key: string,
+  maxAttempts = 5,
+  windowMs = 15 * 60 * 1000
+): { allowed: boolean; remainingAttempts: number } {
+  const now = Date.now();
+  const record = loginAttemptsMap.get(key);
+
+  if (!record || now > record.resetTime) {
+    return { allowed: true, remainingAttempts: maxAttempts };
+  }
+
+  if (record.attempts >= maxAttempts) {
+    return { allowed: false, remainingAttempts: 0 };
+  }
+
+  return { allowed: true, remainingAttempts: maxAttempts - record.attempts };
+}
+
+function recordFailedLoginAttempt(key: string, windowMs = 15 * 60 * 1000) {
+  const now = Date.now();
+  const record = loginAttemptsMap.get(key);
+  if (!record || now > record.resetTime) {
+    loginAttemptsMap.set(key, { attempts: 1, resetTime: now + windowMs });
+  } else {
+    record.attempts += 1;
+  }
+}
+
+function clearLoginAttempts(key: string) {
+  loginAttemptsMap.delete(key);
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -16,6 +52,20 @@ export async function POST(req: Request) {
     }
 
     const normalizedEmail = email.toLowerCase().trim();
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown-ip";
+    const ipKey = `ip:${ip}`;
+    const emailKey = `email:${normalizedEmail}`;
+
+    // Rate limit check: Max 10 attempts per IP, Max 5 per email in 15 minutes
+    const ipCheck = checkLoginRateLimit(ipKey, 10, 15 * 60 * 1000);
+    const emailCheck = checkLoginRateLimit(emailKey, 5, 15 * 60 * 1000);
+
+    if (!ipCheck.allowed || !emailCheck.allowed) {
+      return NextResponse.json(
+        { error: "Too many failed login attempts. For security reasons, please try again after 15 minutes." },
+        { status: 429 }
+      );
+    }
 
     const user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
@@ -32,6 +82,8 @@ export async function POST(req: Request) {
     });
 
     if (!user) {
+      recordFailedLoginAttempt(ipKey);
+      recordFailedLoginAttempt(emailKey);
       return NextResponse.json(
         { error: "Invalid email or password." },
         { status: 401 }
@@ -47,11 +99,17 @@ export async function POST(req: Request) {
 
     const isValid = await verifyPassword(password, user.passwordHash);
     if (!isValid) {
+      recordFailedLoginAttempt(ipKey);
+      recordFailedLoginAttempt(emailKey);
       return NextResponse.json(
         { error: "Invalid email or password." },
         { status: 401 }
       );
     }
+
+    // Clear failed attempts on successful login
+    clearLoginAttempts(ipKey);
+    clearLoginAttempts(emailKey);
 
     const token = signToken({
       userId: user.id,

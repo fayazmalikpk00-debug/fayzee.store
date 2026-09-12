@@ -151,6 +151,15 @@ export async function POST(req: NextRequest) {
       },
     });
     const isVerifiedPurchase = !!orderedItem;
+    const isAdmin = sessionUser.role === "ADMIN" || sessionUser.role === "SUPER_ADMIN";
+
+    // Enforce verified purchase to prevent fake and competitor review spam
+    if (!isVerifiedPurchase && !isAdmin) {
+      return NextResponse.json(
+        { error: "Only verified buyers who have purchased this product can leave a review." },
+        { status: 403 }
+      );
+    }
 
     // Check if the user already reviewed this product
     const existingReview = await prisma.review.findFirst({

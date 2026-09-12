@@ -2,14 +2,14 @@
  * FAYZEE Image Validation Utility
  * 
  * Provides server-side validation for product images:
- * - Exact limit: 60MB per image file
+ * - Exact limit: 10MB per image file
  * - Exact limit: 8 images max per product
  * - Real magic bytes / binary signature inspection
  * - Support for JPG, JPEG, PNG, WebP, HEIC, HEIF, AVIF, GIF, BMP, TIFF
  * - Strict rejection of non-image formats (PDF, ZIP, MP4, EXE, etc.)
  */
 
-export const MAX_IMAGE_SIZE_BYTES = 60 * 1024 * 1024; // 60MB in bytes = 62,914,560
+export const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB in bytes = 10,485,760
 export const MAX_PRODUCT_IMAGES = 8;
 
 export interface ImageValidationResult {
@@ -49,7 +49,7 @@ export function validateImageBuffer(buffer: Buffer, fileName = "image", explicit
     const sizeMb = (effectiveSize / (1024 * 1024)).toFixed(1);
     return {
       valid: false,
-      error: `File "${fileName}" exceeds the 60MB limit (${sizeMb}MB). Maximum allowed size is 60MB per image.`,
+      error: `File "${fileName}" exceeds the 10MB limit (${sizeMb}MB). Maximum allowed size is 10MB per image.`,
     };
   }
 

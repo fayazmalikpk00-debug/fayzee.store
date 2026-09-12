@@ -15,6 +15,23 @@ export async function POST(req: Request) {
       );
     }
 
+    // Password strength enforcement
+    if (typeof password !== "string" || password.length < 8) {
+      return NextResponse.json(
+        { error: "Password must be at least 8 characters long." },
+        { status: 400 }
+      );
+    }
+
+    const hasLetter = /[a-zA-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    if (!hasLetter || !hasNumber) {
+      return NextResponse.json(
+        { error: "Password must contain at least one letter and one number." },
+        { status: 400 }
+      );
+    }
+
     const normalizedEmail = email.toLowerCase().trim();
 
     // Check if user exists
