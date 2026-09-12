@@ -13,7 +13,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const seller = await prisma.sellerProfile.findUnique({
     where: { storeSlug: slug },
-    select: { storeName: true, description: true },
+    select: { storeName: true, description: true, bannerUrl: true, logoUrl: true },
   });
 
   if (!seller) return { title: "Seller Store | Fayzee" };
@@ -54,11 +54,29 @@ export async function generateMetadata({
     }
   }
 
+  const pageTitle = `${seller.storeName} — Official Store | Fayzee`;
+  const canonicalUrl = `https://www.fayzee.store/sellers/${slug}`;
+  const ogImageUrl = seller.bannerUrl || seller.logoUrl || "https://www.fayzee.store/logo.png";
+
   return {
-    title: `${seller.storeName} — Official Store | Fayzee`,
+    title: pageTitle,
     description,
+    openGraph: {
+      title: pageTitle,
+      description,
+      url: canonicalUrl,
+      type: "website",
+      siteName: "FAYZEE",
+      locale: "en_PK",
+      images: [
+        {
+          url: ogImageUrl,
+          alt: seller.storeName,
+        },
+      ],
+    },
     alternates: {
-      canonical: `https://www.fayzee.store/sellers/${slug}`,
+      canonical: canonicalUrl,
     },
   };
 }

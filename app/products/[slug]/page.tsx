@@ -69,16 +69,30 @@ export async function generateMetadata(props: {
     }
   }
 
+  const pageTitle = `${product.title} — Buy Online on Fayzee`;
+  const canonicalUrl = `https://www.fayzee.store/products/${slug}`;
+  const ogImageUrl = product.images[0]?.url || "https://www.fayzee.store/logo.png";
+  const ogImageAlt = product.images[0]?.alt || product.title;
+
   return {
-    title: `${product.title} — Buy Online on Fayzee`,
+    title: pageTitle,
     description,
     openGraph: {
-      title: product.title,
+      title: pageTitle,
       description,
-      images: product.images[0] ? [{ url: product.images[0].url }] : [],
+      url: canonicalUrl,
+      type: "website",
+      siteName: "FAYZEE",
+      locale: "en_PK",
+      images: [
+        {
+          url: ogImageUrl,
+          alt: ogImageAlt,
+        },
+      ],
     },
     alternates: {
-      canonical: `https://www.fayzee.store/products/${slug}`,
+      canonical: canonicalUrl,
     },
   };
 }

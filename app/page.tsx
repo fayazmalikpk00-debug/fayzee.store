@@ -26,8 +26,28 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export const metadata: Metadata = {
+  title: "FAYZEE — Online Shopping in Pakistan | Multi-Vendor Marketplace",
+  description:
+    "Shop online on Fayzee Store. Discover electronics, fashion, home essentials, groceries, and lifestyle products from marketplace sellers across Pakistan.",
   alternates: {
     canonical: "https://www.fayzee.store",
+  },
+  openGraph: {
+    title: "FAYZEE — Online Shopping in Pakistan | Multi-Vendor Marketplace",
+    description:
+      "Shop online on Fayzee Store. Discover electronics, fashion, home essentials, groceries, and lifestyle products from marketplace sellers across Pakistan.",
+    url: "https://www.fayzee.store",
+    siteName: "FAYZEE",
+    type: "website",
+    locale: "en_PK",
+    images: [
+      {
+        url: "https://www.fayzee.store/logo.png",
+        width: 800,
+        height: 800,
+        alt: "FAYZEE Official Logo",
+      },
+    ],
   },
 };
 

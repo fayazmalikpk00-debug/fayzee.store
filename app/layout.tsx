@@ -32,6 +32,8 @@ export const metadata: Metadata = {
     title: "FAYZEE — Shop More. Live Better",
     description: "Multi-vendor marketplace with verified authentic sellers and Fayzee AI assistant.",
     siteName: "FAYZEE",
+    type: "website",
+    locale: "en_PK",
     images: [
       {
         url: "/logo.png",

@@ -16,11 +16,21 @@ export const metadata: Metadata = {
     "Beauty and Personal Care",
   ],
   openGraph: {
-    title: "All Categories & Departments | Fayzee Store",
+    title: "All Categories & Departments | Fayzee Store Pakistan",
     description:
-      "Explore 18 official departments and 150+ subcategories with verified sellers across Pakistan.",
+      "Explore all 18 shopping departments and subcategories on Fayzee Store. Browse electronics, fashion, groceries, and home products from sellers across Pakistan.",
     url: "https://www.fayzee.store/categories",
-    siteName: "Fayzee Store",
+    siteName: "FAYZEE",
+    type: "website",
+    locale: "en_PK",
+    images: [
+      {
+        url: "https://www.fayzee.store/logo.png",
+        width: 800,
+        height: 800,
+        alt: "FAYZEE Official Logo",
+      },
+    ],
   },
   alternates: {
     canonical: "https://www.fayzee.store/categories",

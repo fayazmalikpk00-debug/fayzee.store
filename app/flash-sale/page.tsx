@@ -14,6 +14,23 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://www.fayzee.store/flash-sale",
   },
+  openGraph: {
+    title: "Flash Sale — Exclusive Deals | Fayzee",
+    description:
+      "Shop limited-time flash sale deals on Fayzee Store. Explore curated discounts up to 35% off on select tech and lifestyle products from marketplace sellers.",
+    url: "https://www.fayzee.store/flash-sale",
+    siteName: "FAYZEE",
+    type: "website",
+    locale: "en_PK",
+    images: [
+      {
+        url: "https://www.fayzee.store/logo.png",
+        width: 800,
+        height: 800,
+        alt: "FAYZEE Flash Sale",
+      },
+    ],
+  },
 };
 
 export default async function FlashSalePage() {

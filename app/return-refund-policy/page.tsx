@@ -8,6 +8,23 @@ export const metadata = {
   alternates: {
     canonical: "https://www.fayzee.store/return-refund-policy",
   },
+  openGraph: {
+    title: "Cancellation, Return & Refund Policy | Fayzee Store",
+    description:
+      "Review the official Return and Refund Policy for Fayzee Store. Learn about eligible return conditions, cancellation rules, timeframes, and the refund process.",
+    url: "https://www.fayzee.store/return-refund-policy",
+    siteName: "FAYZEE",
+    type: "website",
+    locale: "en_PK",
+    images: [
+      {
+        url: "https://www.fayzee.store/logo.png",
+        width: 800,
+        height: 800,
+        alt: "FAYZEE Official Logo",
+      },
+    ],
+  },
 };
 
 export default function ReturnRefundPolicyPage() {

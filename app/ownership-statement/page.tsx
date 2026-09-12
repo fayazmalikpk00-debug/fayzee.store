@@ -8,6 +8,23 @@ export const metadata = {
   alternates: {
     canonical: "https://www.fayzee.store/ownership-statement",
   },
+  openGraph: {
+    title: "Ownership Statement | Fayzee Store",
+    description:
+      "Official Ownership and Governance Statement for Fayzee Store. Learn about our marketplace ownership, business operations, and official platform management.",
+    url: "https://www.fayzee.store/ownership-statement",
+    siteName: "FAYZEE",
+    type: "website",
+    locale: "en_PK",
+    images: [
+      {
+        url: "https://www.fayzee.store/logo.png",
+        width: 800,
+        height: 800,
+        alt: "FAYZEE Official Logo",
+      },
+    ],
+  },
 };
 
 export default function OwnershipStatementPage() {

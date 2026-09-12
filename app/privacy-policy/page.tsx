@@ -8,6 +8,23 @@ export const metadata = {
   alternates: {
     canonical: "https://www.fayzee.store/privacy-policy",
   },
+  openGraph: {
+    title: "Privacy Policy | Fayzee Store",
+    description:
+      "Read the official Privacy Policy of Fayzee Store. Learn how we collect, use, and protect your personal information, account data, and customer privacy rights.",
+    url: "https://www.fayzee.store/privacy-policy",
+    siteName: "FAYZEE",
+    type: "website",
+    locale: "en_PK",
+    images: [
+      {
+        url: "https://www.fayzee.store/logo.png",
+        width: 800,
+        height: 800,
+        alt: "FAYZEE Official Logo",
+      },
+    ],
+  },
 };
 
 export default function PrivacyPolicyPage() {

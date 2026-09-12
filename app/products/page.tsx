@@ -89,6 +89,22 @@ export async function generateMetadata(props: {
     title,
     description: finalDescription,
     robots,
+    openGraph: {
+      title,
+      description: finalDescription,
+      url: canonicalUrl,
+      type: "website",
+      siteName: "FAYZEE",
+      locale: "en_PK",
+      images: [
+        {
+          url: "https://www.fayzee.store/logo.png",
+          width: 800,
+          height: 800,
+          alt: "FAYZEE Official Logo",
+        },
+      ],
+    },
     alternates: {
       canonical: canonicalUrl,
     },

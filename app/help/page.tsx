@@ -19,6 +19,23 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://www.fayzee.store/help",
   },
+  openGraph: {
+    title: "Customer Help & Support Center | Fayzee Store Pakistan",
+    description:
+      "Contact Fayzee customer care, find answers to common questions about orders, payments, returns, seller registration, or reach us via email at itsfayzeepk00@gmail.com.",
+    url: "https://www.fayzee.store/help",
+    siteName: "FAYZEE",
+    type: "website",
+    locale: "en_PK",
+    images: [
+      {
+        url: "https://www.fayzee.store/logo.png",
+        width: 800,
+        height: 800,
+        alt: "FAYZEE Customer Care",
+      },
+    ],
+  },
 };
 
 export default function HelpPage() {

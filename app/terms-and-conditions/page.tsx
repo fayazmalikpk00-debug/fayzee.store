@@ -8,6 +8,23 @@ export const metadata = {
   alternates: {
     canonical: "https://www.fayzee.store/terms-and-conditions",
   },
+  openGraph: {
+    title: "Terms and Conditions | Fayzee Store",
+    description:
+      "Read the official Terms and Conditions for Fayzee Store. Review our user agreement, buyer and seller policies, order terms, and marketplace procedures.",
+    url: "https://www.fayzee.store/terms-and-conditions",
+    siteName: "FAYZEE",
+    type: "website",
+    locale: "en_PK",
+    images: [
+      {
+        url: "https://www.fayzee.store/logo.png",
+        width: 800,
+        height: 800,
+        alt: "FAYZEE Official Logo",
+      },
+    ],
+  },
 };
 
 export default function TermsAndConditionsPage() {

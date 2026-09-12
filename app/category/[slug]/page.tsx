@@ -29,12 +29,14 @@ export async function generateMetadata(props: {
       slug: true,
       name: true,
       description: true,
+      image: true,
       subcategories: {
         where: { isActive: true },
         select: {
           slug: true,
           name: true,
           description: true,
+          image: true,
           productTypes: {
             where: { isActive: true },
             select: { slug: true, name: true, description: true },
@@ -124,9 +126,27 @@ export async function generateMetadata(props: {
     title += ` (Page ${page})`;
   }
 
+  const ogImageUrl =
+    (activeSubcategory && activeSubcategory.image) || category.image || "https://www.fayzee.store/logo.png";
+  const ogImageAlt = activeProductType?.name || activeSubcategory?.name || category.name;
+
   return {
     title,
     description,
+    openGraph: {
+      title,
+      description,
+      url: canonicalUrl,
+      type: "website",
+      siteName: "FAYZEE",
+      locale: "en_PK",
+      images: [
+        {
+          url: ogImageUrl,
+          alt: ogImageAlt,
+        },
+      ],
+    },
     alternates: {
       canonical: canonicalUrl,
     },
