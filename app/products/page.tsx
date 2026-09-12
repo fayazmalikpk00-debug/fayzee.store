@@ -5,11 +5,10 @@ import { getBrands, getCategories, getProducts } from "@/services/productService
 import { Filter, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 
-export default async function ProductsPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
+export default async function ProductsPage(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const searchParams = (await props.searchParams) || {};
   const categorySlug = typeof searchParams.category === "string" ? searchParams.category : undefined;
   const subcategorySlug = typeof searchParams.subcategory === "string" ? searchParams.subcategory : undefined;
   const productTypeSlug = typeof searchParams.productType === "string" ? searchParams.productType : undefined;

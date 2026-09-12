@@ -7,10 +7,11 @@ import { notFound } from "next/navigation";
 export default async function SellerStorePage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
+  const { slug } = await params;
   const seller = await prisma.sellerProfile.findUnique({
-    where: { storeSlug: params.slug },
+    where: { storeSlug: slug },
     include: {
       _count: {
         select: { followers: true },

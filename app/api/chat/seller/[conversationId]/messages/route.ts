@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(
   req: Request,
-  { params }: { params: { conversationId: string } }
+  { params }: { params: Promise<{ conversationId: string }> }
 ) {
   try {
     const sessionUser = await getSessionUser();
@@ -14,7 +14,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { conversationId } = params;
+    const { conversationId } = await params;
 
     const conversation = await prisma.sellerChatConversation.findUnique({
       where: { id: conversationId },
@@ -90,7 +90,7 @@ export async function GET(
 
 export async function POST(
   req: Request,
-  { params }: { params: { conversationId: string } }
+  { params }: { params: Promise<{ conversationId: string }> }
 ) {
   try {
     const sessionUser = await getSessionUser();
@@ -98,7 +98,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { conversationId } = params;
+    const { conversationId } = await params;
 
     const conversation = await prisma.sellerChatConversation.findUnique({
       where: { id: conversationId },

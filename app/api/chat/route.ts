@@ -8,9 +8,9 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-function getOrSetSessionToken(): string {
+async function getOrSetSessionToken(): Promise<string> {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     let token = cookieStore.get("fayzee_cart_session")?.value;
     if (!token) {
       token = `anon_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
 
     // Rate Limiting Check
     const user = await getSessionUser();
-    const sessionToken = user ? undefined : getOrSetSessionToken();
+    const sessionToken = user ? undefined : await getOrSetSessionToken();
     const clientId = getClientIdentifier(req, sessionToken || user?.id);
 
     const rateLimit = chatRateLimiter.check(clientId);

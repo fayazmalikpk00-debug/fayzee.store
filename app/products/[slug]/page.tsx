@@ -5,12 +5,11 @@ import { getProductBySlug } from "@/services/productService";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string };
+export async function generateMetadata(props: {
+  params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const product = await getProductBySlug(params.slug);
+  const { slug } = await props.params;
+  const product = await getProductBySlug(slug);
   if (!product) return { title: "Product Not Found — Fayzee" };
 
   return {
@@ -24,12 +23,11 @@ export async function generateMetadata({
   };
 }
 
-export default async function ProductDetailPage({
-  params,
-}: {
-  params: { slug: string };
+export default async function ProductDetailPage(props: {
+  params: Promise<{ slug: string }>;
 }) {
-  const product = await getProductBySlug(params.slug);
+  const { slug } = await props.params;
+  const product = await getProductBySlug(slug);
 
   if (!product) {
     notFound();

@@ -115,7 +115,8 @@ export async function POST(req: Request) {
     });
 
     // 10. Clear any active session cookie to force fresh login with new password
-    cookies().set(AUTH_COOKIE_NAME, "", {
+    const cookieStore = await cookies();
+    cookieStore.set(AUTH_COOKIE_NAME, "", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

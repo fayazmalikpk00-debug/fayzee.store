@@ -6,10 +6,10 @@ export const dynamic = "force-dynamic";
 
 export async function GET(
   req: Request,
-  { params }: { params: { sellerId: string } }
+  { params }: { params: Promise<{ sellerId: string }> }
 ) {
   try {
-    const { sellerId } = params;
+    const { sellerId } = await params;
 
     // Find seller by id or storeSlug
     const seller = await prisma.sellerProfile.findFirst({
@@ -57,7 +57,7 @@ export async function GET(
 
 export async function POST(
   req: Request,
-  { params }: { params: { sellerId: string } }
+  { params }: { params: Promise<{ sellerId: string }> }
 ) {
   try {
     const sessionUser = await getSessionUser();
@@ -68,7 +68,7 @@ export async function POST(
       );
     }
 
-    const { sellerId } = params;
+    const { sellerId } = await params;
 
     // Find seller by id or storeSlug
     const seller = await prisma.sellerProfile.findFirst({

@@ -5,15 +5,15 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-function getSessionToken() {
-  const cookieStore = cookies();
+async function getSessionToken() {
+  const cookieStore = await cookies();
   return cookieStore.get("fayzee_cart_session")?.value;
 }
 
 export async function GET() {
   try {
     const user = await getSessionUser();
-    const sessionToken = user ? undefined : getSessionToken();
+    const sessionToken = user ? undefined : await getSessionToken();
 
     if (!user && !sessionToken) {
       return NextResponse.json({
@@ -74,7 +74,7 @@ export async function GET() {
 export async function DELETE() {
   try {
     const user = await getSessionUser();
-    const sessionToken = user ? undefined : getSessionToken();
+    const sessionToken = user ? undefined : await getSessionToken();
 
     if (!user && !sessionToken) {
       return NextResponse.json({ success: true, message: "No active session to clear." });

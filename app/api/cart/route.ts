@@ -12,12 +12,12 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-function getSessionToken() {
-  const cookieStore = cookies();
+async function getSessionToken() {
+  const cookieStore = await cookies();
   let token = cookieStore.get("fayzee_cart_session")?.value;
   if (!token) {
     token = `anon_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    cookies().set("fayzee_cart_session", token, {
+    cookieStore.set("fayzee_cart_session", token, {
       httpOnly: true,
       sameSite: "lax",
       maxAge: 30 * 24 * 60 * 60,
@@ -30,7 +30,7 @@ function getSessionToken() {
 export async function GET() {
   try {
     const user = await getSessionUser();
-    const sessionToken = user ? undefined : getSessionToken();
+    const sessionToken = user ? undefined : await getSessionToken();
 
     const cart = await getOrCreateCart(user?.id, sessionToken);
     return NextResponse.json({ cart });
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
     }
 
     const user = await getSessionUser();
-    const sessionToken = user ? undefined : getSessionToken();
+    const sessionToken = user ? undefined : await getSessionToken();
 
     const item = await addToCart({
       userId: user?.id,
@@ -80,7 +80,7 @@ export async function PATCH(req: Request) {
     }
 
     const user = await getSessionUser();
-    const sessionToken = user ? undefined : getSessionToken();
+    const sessionToken = user ? undefined : await getSessionToken();
     const cart = await getOrCreateCart(user?.id, sessionToken);
 
     // Verify ownership: ensure cart item belongs to caller's cart
@@ -111,7 +111,7 @@ export async function DELETE(req: Request) {
     const isClearAll = searchParams.get("clear") === "true";
 
     const user = await getSessionUser();
-    const sessionToken = user ? undefined : getSessionToken();
+    const sessionToken = user ? undefined : await getSessionToken();
     const cart = await getOrCreateCart(user?.id, sessionToken);
 
     if (isClearAll) {

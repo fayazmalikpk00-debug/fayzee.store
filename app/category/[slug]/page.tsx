@@ -5,30 +5,30 @@ import { ChevronRight, Filter, Layers, PackageOpen } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-export default async function CategoryPage({
-  params,
-  searchParams,
-}: {
-  params: { slug: string };
-  searchParams?: { [key: string]: string | string[] | undefined };
+export default async function CategoryPage(props: {
+  params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const { slug } = await props.params;
+  const searchParams = (await props.searchParams) || {};
+
   const subcategorySlug =
-    typeof searchParams?.subcategory === "string"
+    typeof searchParams.subcategory === "string"
       ? searchParams.subcategory
       : undefined;
   const productTypeSlug =
-    typeof searchParams?.productType === "string"
+    typeof searchParams.productType === "string"
       ? searchParams.productType
       : undefined;
   const sortBy =
-    typeof searchParams?.sort === "string"
+    typeof searchParams.sort === "string"
       ? (searchParams.sort as any)
       : "newest";
-  const page = searchParams?.page ? Number(searchParams.page) : 1;
+  const page = searchParams.page ? Number(searchParams.page) : 1;
 
   // 1. Lookup Category with active subcategories & product types
   const category = await prisma.category.findUnique({
-    where: { slug: params.slug },
+    where: { slug },
     include: {
       subcategories: {
         where: { isActive: true },

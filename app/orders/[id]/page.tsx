@@ -22,19 +22,19 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth";
 
-export default async function OrderDetailPage({
-  params,
-  searchParams,
-}: {
-  params: { id: string };
-  searchParams: { success?: string };
+export default async function OrderDetailPage(props: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ success?: string }>;
 }) {
+  const { id } = await props.params;
+  const searchParams = (await props.searchParams) || {};
+
   const sessionUser = await getSessionUser();
   if (!sessionUser) {
-    redirect(`/login?redirect=/orders/${params.id}`);
+    redirect(`/login?redirect=/orders/${id}`);
   }
 
-  const order = await getOrderById(params.id);
+  const order = await getOrderById(id);
 
   if (!order) {
     notFound();

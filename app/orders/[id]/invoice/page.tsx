@@ -89,17 +89,16 @@ function amountToWords(amount: number): string {
   return `Pakistani Rupees ${words.trim()} Only`;
 }
 
-export default async function OrderInvoicePage({
-  params,
-}: {
-  params: { id: string };
+export default async function OrderInvoicePage(props: {
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await props.params;
   const sessionUser = await getSessionUser();
   if (!sessionUser) {
-    redirect(`/login?redirect=/orders/${params.id}/invoice`);
+    redirect(`/login?redirect=/orders/${id}/invoice`);
   }
 
-  const order = await getOrderById(params.id);
+  const order = await getOrderById(id);
 
   if (!order) {
     notFound();
