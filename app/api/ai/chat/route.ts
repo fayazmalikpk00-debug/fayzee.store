@@ -1,11 +1,8 @@
-/**
- * Backward-compatible endpoint for /api/ai/chat.
- * Seamlessly delegates to the primary /api/chat handler.
- */
-import { POST as chatPOST } from "../../chat/route";
+import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
-  return chatPOST(req);
+  const url = new URL("/api/chat", req.url);
+  return NextResponse.rewrite(url);
 }
