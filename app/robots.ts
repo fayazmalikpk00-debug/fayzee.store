@@ -14,6 +14,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/api/", "/admin/", "/account/", "/checkout/"],
       },
     ],
+    sitemap: "https://www.fayzee.store/sitemap.xml",
     host: "https://www.fayzee.store",
   };
 }
