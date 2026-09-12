@@ -40,6 +40,11 @@ export const metadata: Metadata = {
       },
     ],
   },
+  verification: {
+    other: {
+      "ahrefs-site-verification": "27def411f54df5a315f25ef05949f9efd676c117cbf200bd997d2b7c320ef421",
+    },
+  },
 };
 
 export default function RootLayout({
