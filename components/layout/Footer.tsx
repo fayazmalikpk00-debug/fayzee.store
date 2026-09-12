@@ -85,10 +85,10 @@ export function Footer() {
         <div>
           <h4 className="text-sm font-bold uppercase tracking-wider text-white mb-3.5">Explore Categories</h4>
           <ul className="space-y-2.5 text-sm">
-            <li><Link href="/category/smartphones-tablets" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Smartphones & Tablets</Link></li>
-            <li><Link href="/category/laptops-computers" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Laptops & Computers</Link></li>
-            <li><Link href="/category/audio-headphones" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Audio & Headphones</Link></li>
-            <li><Link href="/category/mens-footwear" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Footwear & Sneakers</Link></li>
+            <li><Link href="/category/electronics?subcategory=smartphones-tablets" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Smartphones & Tablets</Link></li>
+            <li><Link href="/category/electronics?subcategory=laptops-computers" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Laptops & Computers</Link></li>
+            <li><Link href="/category/electronics?subcategory=audio" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Audio & Headphones</Link></li>
+            <li><Link href="/category/mens-fashion?subcategory=mens-footwear" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Footwear & Sneakers</Link></li>
             <li><Link href="/category/home-appliances" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Home & Kitchen</Link></li>
             <li><Link href="/categories" className="text-[#C8A96B] font-bold hover:underline transition">View All 18 Categories &rarr;</Link></li>
           </ul>
