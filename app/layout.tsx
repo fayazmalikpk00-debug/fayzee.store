@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import { FayzeeAIAssistant } from "@/components/ai/FayzeeAIAssistant";
 import { Footer } from "@/components/layout/Footer";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
@@ -70,6 +71,7 @@ export default function RootLayout({
             <MobileBottomNav />
           </CartProvider>
         </AuthProvider>
+        <Analytics />
       </body>
     </html>
   );
