@@ -58,6 +58,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="h-full">
+      <head>
+        <script
+          src="https://analytics.ahrefs.com/analytics.js"
+          data-key="ApwRKCvpT1MrIYvvvwwFIg"
+          async
+        />
+      </head>
       <body className="flex flex-col min-h-full antialiased font-sans bg-[#F5F3EE] text-[#0B0F14] selection:bg-[#0B0F14] selection:text-[#C8A96B]">
         <TopProgressBar />
         <AuthProvider>
