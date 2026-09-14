@@ -1,3 +1,4 @@
+import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { FayzeeAIAssistant } from "@/components/ai/FayzeeAIAssistant";
 import { Footer } from "@/components/layout/Footer";
@@ -59,10 +60,18 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <head>
-        <script
-          src="https://analytics.ahrefs.com/analytics.js"
-          data-key="ApwRKCvpT1MrIYvvvwwFIg"
-          async
+        <Script
+          id="ahrefs-analytics"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              var ahrefs_analytics_script = document.createElement('script');
+              ahrefs_analytics_script.async = true;
+              ahrefs_analytics_script.src = 'https://analytics.ahrefs.com/analytics.js';
+              ahrefs_analytics_script.setAttribute('data-key', 'ApwRKCvpT1MrIYvvvwwFIg');
+              document.getElementsByTagName('head')[0].appendChild(ahrefs_analytics_script);
+            `,
+          }}
         />
       </head>
       <body className="flex flex-col min-h-full antialiased font-sans bg-[#F5F3EE] text-[#0B0F14] selection:bg-[#0B0F14] selection:text-[#C8A96B]">
