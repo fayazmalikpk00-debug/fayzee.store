@@ -174,7 +174,7 @@ export function Navbar() {
           )}
           <Link
             href="/seller/register"
-            className="hover:text-white transition flex items-center gap-1.5 text-[#8A8F98] hover:text-[#C8A96B] font-medium"
+            className="px-2 py-0.5 rounded-md hover:text-[#C8A96B] hover:bg-white/5 transition flex items-center gap-1.5 text-[#8A8F98] font-medium"
           >
             <Store className="w-3.5 h-3.5 text-[#C8A96B] shrink-0" />
             <span>Become a Seller</span>
@@ -182,7 +182,7 @@ export function Navbar() {
           <span className="text-slate-700">|</span>
           <Link
             href="/help"
-            className="hover:text-white transition text-[#8A8F98] hover:text-[#C8A96B] font-medium"
+            className="px-2 py-0.5 -mr-1.5 rounded-md hover:text-[#C8A96B] hover:bg-white/5 transition text-[#8A8F98] font-medium"
           >
             Help
           </Link>
@@ -290,7 +290,7 @@ export function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-2 rounded-full border border-white/20 hover:border-[#C8A96B] hover:bg-white/10 transition focus:outline-none bg-white/5"
+                  className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-2 rounded-full text-white hover:text-[#C8A96B] hover:bg-white/10 transition focus:outline-none"
                   title="Profile / Account"
                 >
                   <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#161F2B] text-[#C8A96B] border border-[#C8A96B]/30 flex items-center justify-center text-xs sm:text-sm font-bold uppercase overflow-hidden shrink-0">
@@ -462,10 +462,10 @@ export function Navbar() {
               <Link
                 href="/categories"
                 onClick={() => setMegaMenuOpen(false)}
-                className={`flex items-center gap-2 px-4 py-1.5 rounded-full font-bold text-sm transition cursor-pointer ${
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full font-bold text-sm transition cursor-pointer ${
                   pathname === "/categories" || megaMenuOpen
-                    ? "bg-[#C8A96B] text-[#0B0F14] shadow-md ring-2 ring-[#C8A96B]/50"
-                    : "bg-white/10 text-white hover:bg-white/20 hover:text-[#C8A96B]"
+                    ? "bg-[#C8A96B] text-[#0B0F14] shadow-sm"
+                    : "text-white hover:bg-white/10 hover:text-[#C8A96B]"
                 }`}
                 title="Browse All 18 Categories & Departments"
               >
@@ -607,7 +607,11 @@ export function Navbar() {
             {/* All Products Link */}
             <Link
               href="/products"
-              className="hover:text-[#C8A96B] font-bold text-white shrink-0 px-4 py-1.5 rounded-full hover:bg-white/10 transition text-sm flex items-center gap-1.5"
+              className={`font-bold shrink-0 px-3.5 py-1.5 rounded-full transition text-sm flex items-center gap-1.5 ${
+                pathname === "/products"
+                  ? "bg-[#C8A96B] text-[#0B0F14] shadow-sm"
+                  : "text-white hover:bg-white/10 hover:text-[#C8A96B]"
+              }`}
             >
               <ShoppingBag className="w-4 h-4 text-[#C8A96B]" />
               <span>All Products</span>

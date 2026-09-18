@@ -95,7 +95,7 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="text-sm font-bold tracking-wide text-white mb-3">Customer Care & Policies</h4>
+          <h4 className="text-sm font-bold tracking-wide text-white mb-3">Customer Care</h4>
           <ul className="space-y-2.5 text-sm">
             <li><Link href="/help" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Help Center & FAQ</Link></li>
             <li><Link href="/orders" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Track Your Order</Link></li>
@@ -122,13 +122,13 @@ export function Footer() {
         <div className="flex flex-wrap items-center justify-center md:justify-end gap-x-3 gap-y-1 text-xs text-[#8A8F98]">
           <Link href="/privacy-policy" className="hover:text-[#C8A96B] transition">Privacy Policy</Link>
           <span>•</span>
-          <Link href="/terms-and-conditions" className="hover:text-[#C8A96B] transition">Terms</Link>
+          <Link href="/terms-and-conditions" className="hover:text-[#C8A96B] transition">Terms & Conditions</Link>
           <span>•</span>
-          <Link href="/return-refund-policy" className="hover:text-[#C8A96B] transition">Refund Policy</Link>
+          <Link href="/return-refund-policy" className="hover:text-[#C8A96B] transition">Returns & Refunds</Link>
           <span>•</span>
-          <Link href="/ownership-statement" className="hover:text-[#C8A96B] transition">Ownership</Link>
+          <Link href="/ownership-statement" className="hover:text-[#C8A96B] transition">Ownership Statement</Link>
           <span>•</span>
-          <Link href="/seller/dashboard" className="hover:text-[#C8A96B] transition">Seller Center</Link>
+          <Link href="/seller/dashboard" className="hover:text-[#C8A96B] transition">Seller Dashboard</Link>
           <span>•</span>
           <Link href="/admin/login" className="hover:text-[#C8A96B] transition">Admin Portal</Link>
         </div>

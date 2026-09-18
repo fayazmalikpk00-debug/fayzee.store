@@ -239,24 +239,24 @@ export default async function HomePage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         {/* 2. Trending Products (Top of Homepage) */}
-        <section className="space-y-4 pt-2">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0B0F14] text-xs font-bold text-[#C8A96B] border border-[#C8A96B]/30 mb-2">
-                <Flame className="w-3.5 h-3.5 text-[#C8A96B]" />
-                <span>Featured Collection</span>
+        {trendingProducts.length > 0 && (
+          <section className="space-y-4 pt-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0B0F14] text-xs font-bold text-[#C8A96B] border border-[#C8A96B]/30 mb-2">
+                  <Flame className="w-3.5 h-3.5 text-[#C8A96B]" aria-hidden="true" />
+                  <span>Featured Collection</span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black text-[#0B0F14] flex items-center gap-2">
+                  <span>Trending Marketplace Picks</span>
+                </h2>
+                <p className="text-sm text-[#8A8F98]">High-demand products with top customer ratings and seller guarantee</p>
               </div>
-              <h2 className="text-xl sm:text-2xl font-black text-[#0B0F14] flex items-center gap-2">
-                <span>Trending Marketplace Picks</span>
-              </h2>
-              <p className="text-sm text-[#8A8F98]">High-demand products with top customer ratings and seller guarantee</p>
+              <Link href="/products" className="text-sm font-bold text-[#0B0F14] hover:text-[#C8A96B] hover:underline transition">
+                See All
+              </Link>
             </div>
-            <Link href="/products" className="text-sm font-bold text-[#0B0F14] hover:text-[#C8A96B] hover:underline transition">
-              See All
-            </Link>
-          </div>
 
-          {trendingProducts.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {trendingProducts.map((product) => (
                 <ProductCard
@@ -277,26 +277,8 @@ export default async function HomePage() {
                 />
               ))}
             </div>
-          ) : (
-            <div className="bg-white rounded-3xl p-8 sm:p-12 text-center border border-[#E8E5DC] space-y-3 shadow-2xs">
-              <div className="w-12 h-12 rounded-2xl bg-[#0B0F14] text-[#C8A96B] flex items-center justify-center mx-auto border border-[#C8A96B]/30">
-                <Flame className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-bold text-[#0B0F14]">No Products in Featured Collection</h3>
-              <p className="text-sm text-[#8A8F98] max-w-md mx-auto">
-                Admin can select products from the Admin Dashboard (&quot;Featured &amp; Trending&quot; tab) to spotlight them here.
-              </p>
-              <div className="pt-2">
-                <Link
-                  href="/products"
-                  className="inline-block px-5 py-2.5 bg-[#0B0F14] hover:bg-[#1A222C] text-white text-sm font-bold rounded-xl transition shadow-xs border border-[#0B0F14]"
-                >
-                  Explore All Products
-                </Link>
-              </div>
-            </div>
-          )}
-        </section>
+          </section>
+        )}
 
         {/* 3. Flash Sale Section with Real Countdown */}
         {flashSale && flashSale.items.length > 0 && (
@@ -400,12 +382,14 @@ export default async function HomePage() {
               </h2>
               <p className="text-sm text-[#8A8F98] mt-0.5">Shop directly from verified brand distributors</p>
             </div>
-            <Link
-              href="/seller/register"
-              className="text-sm font-bold text-[#C8A96B] hover:underline self-start sm:self-auto"
-            >
-              Apply to Sell on Fayzee →
-            </Link>
+            {topSellers.length > 0 && (
+              <Link
+                href="/seller/register"
+                className="text-sm font-bold text-[#C8A96B] hover:underline self-start sm:self-auto"
+              >
+                Apply to Sell on Fayzee →
+              </Link>
+            )}
           </div>
 
           {topSellers.length > 0 ? (
