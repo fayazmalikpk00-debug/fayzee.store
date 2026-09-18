@@ -290,10 +290,26 @@ export default function SellerDashboardPage() {
   useEffect(() => {
     if (activeChatId && activeTab === "messages") {
       fetchActiveChatMessages(activeChatId);
+
+      // Optimized polling: every 15s and only when tab is visible
       const interval = setInterval(() => {
-        fetchActiveChatMessages(activeChatId);
-      }, 4000);
-      return () => clearInterval(interval);
+        if (typeof document !== "undefined" && !document.hidden) {
+          fetchActiveChatMessages(activeChatId);
+        }
+      }, 15000);
+
+      // Re-fetch immediately when seller focuses back on this tab
+      const handleVisibilityChange = () => {
+        if (typeof document !== "undefined" && !document.hidden) {
+          fetchActiveChatMessages(activeChatId);
+        }
+      };
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+
+      return () => {
+        clearInterval(interval);
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+      };
     }
   }, [activeChatId, activeTab]);
 

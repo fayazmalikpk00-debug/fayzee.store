@@ -135,7 +135,7 @@ export function Navbar() {
     <header className="sticky top-0 z-40 bg-[#0B0F14] border-b border-[#1A222C] shadow-subtle w-full max-w-full">
       {/* 0. Live Top Announcement Bar (Controlled via Super Admin) */}
       {siteSettings?.announcementEnabled && siteSettings?.announcementText && (
-        <div className="bg-[#0B0F14] text-[#C8A96B] text-[11px] sm:text-xs py-1.5 px-3 sm:px-6 lg:px-8 border-b border-[#1E293B]">
+        <div className="bg-[#0B0F14] text-[#C8A96B] text-xs sm:text-sm py-2 px-3 sm:px-6 lg:px-8 border-b border-[#1E293B]">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
             <Link
               href={siteSettings.announcementLink || "/products"}
@@ -149,7 +149,7 @@ export function Navbar() {
                 href={`https://wa.me/${siteSettings.whatsappNumber.replace(/[^0-9]/g, "")}?text=Hello%20Fayzee%20Store%2C%20I%20have%20an%20inquiry.`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden md:flex items-center gap-1 text-[#25D366] hover:text-emerald-400 font-bold text-[11px] shrink-0"
+                className="hidden md:flex items-center gap-1.5 text-[#25D366] hover:text-emerald-400 font-semibold text-xs sm:text-sm shrink-0"
                 title="Direct WhatsApp Helpline"
               >
                 <span>WhatsApp: {siteSettings.whatsappNumber}</span>
@@ -205,7 +205,7 @@ export function Navbar() {
             <span className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white group-hover:text-[#C8A96B] transition-colors leading-none">
               FAYZEE
             </span>
-            <span className="text-[9px] sm:text-[11px] md:text-xs font-bold tracking-wider text-[#C8A96B] uppercase mt-0.5 sm:mt-1 whitespace-nowrap">
+            <span className="text-[10px] sm:text-xs font-semibold tracking-normal text-[#C8A96B] mt-0.5 sm:mt-1 whitespace-nowrap">
               Shop More • Live Better
             </span>
           </div>

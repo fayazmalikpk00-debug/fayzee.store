@@ -168,17 +168,19 @@ export function HomeProductsFeed({
   return (
     <section className="space-y-6" id="all-products">
       {/* 1. Section Header with Live Title & On-Demand Categories Button */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2 border-b border-[#E8E5DC]">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-3 border-b border-[#E8E5DC]">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0B0F14] text-xs font-bold text-[#C8A96B] border border-[#C8A96B]/30 mb-2">
-            <Sparkles className="w-3.5 h-3.5 text-[#C8A96B]" />
+            <Sparkles className="w-3.5 h-3.5 text-[#C8A96B]" aria-hidden="true" />
             <span>Marketplace Catalog</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-[#0B0F14] flex items-center gap-2.5">
+          <h2 className="text-2xl sm:text-3xl font-black text-[#0B0F14] flex flex-wrap items-center gap-2 sm:gap-3">
             <span>All Products</span>
-            <span className="text-xs sm:text-sm font-bold px-2.5 py-0.5 rounded-full bg-[#F5F3EE] text-[#0B0F14] border border-[#E8E5DC]">
-              {selectedCategory === "all" ? `${totalCount} items` : `${products.length} items`}
-            </span>
+            {(totalCount > 0 || products.length > 0) && (
+              <span className="text-xs sm:text-sm font-semibold px-2.5 py-0.5 rounded-full bg-[#F5F3EE] text-[#0B0F14] border border-[#E8E5DC]">
+                {selectedCategory === "all" ? `${totalCount} items` : `${products.length} items`}
+              </span>
+            )}
           </h2>
           <p className="text-sm text-[#8A8F98] mt-1">
             Browse authentic electronics, fashion, appliances, and footwear directly from verified sellers
@@ -186,7 +188,7 @@ export function HomeProductsFeed({
         </div>
 
         {/* Action Controls: Toggle Categories & View All Catalog */}
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex items-center gap-2.5 flex-wrap self-start lg:self-auto shrink-0">
           <button
             type="button"
             onClick={() => setShowCategoriesGrid((prev) => !prev)}
@@ -196,21 +198,21 @@ export function HomeProductsFeed({
                 : "bg-white text-[#0B0F14] border border-[#E8E5DC] hover:border-[#0B0F14]"
             }`}
           >
-            <Grid className="w-4 h-4 text-[#C8A96B]" />
+            <Grid className="w-4 h-4 text-[#C8A96B]" aria-hidden="true" />
             <span>{showCategoriesGrid ? "Hide Categories" : `Browse Categories (${categories.length})`}</span>
             {showCategoriesGrid ? (
-              <ChevronUp className="w-4 h-4 text-[#C8A96B]" />
+              <ChevronUp className="w-4 h-4 text-[#C8A96B]" aria-hidden="true" />
             ) : (
-              <ChevronDown className="w-4 h-4 text-[#8A8F98]" />
+              <ChevronDown className="w-4 h-4 text-[#8A8F98]" aria-hidden="true" />
             )}
           </button>
 
           <Link
             href="/products"
-            className="px-4 py-2.5 bg-[#0B0F14] hover:bg-[#1A222C] text-white text-xs sm:text-sm font-bold rounded-xl transition flex items-center gap-1.5 shadow-xs border border-[#0B0F14]"
+            className="px-4 py-2.5 bg-[#0B0F14] hover:bg-[#1A222C] text-white text-xs sm:text-sm font-bold rounded-xl transition flex items-center gap-1.5 shadow-xs border border-[#0B0F14] active:scale-95"
           >
             <span>Full Catalog</span>
-            <ArrowRight className="w-4 h-4 text-[#C8A96B]" />
+            <ArrowRight className="w-4 h-4 text-[#C8A96B]" aria-hidden="true" />
           </Link>
         </div>
       </div>
@@ -304,30 +306,35 @@ export function HomeProductsFeed({
           <button
             type="button"
             onClick={() => handleCategorySelect("all")}
+            aria-label={totalCount > 0 ? `All Products, ${totalCount} items` : "All Products"}
             className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all shadow-2xs flex items-center gap-1.5 shrink-0 ${
               selectedCategory === "all"
                 ? "bg-[#0B0F14] text-white shadow-md border border-[#0B0F14]"
                 : "bg-white text-[#0B0F14] border border-[#E8E5DC] hover:border-[#0B0F14]"
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5 text-[#C8A96B]" />
+            <Sparkles className="w-3.5 h-3.5 text-[#C8A96B]" aria-hidden="true" />
             <span>All Products</span>
-            <span
-              className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                selectedCategory === "all" ? "bg-white/20 text-[#C8A96B]" : "bg-[#F5F3EE] text-[#0B0F14]"
-              }`}
-            >
-              {totalCount}
-            </span>
+            {totalCount > 0 && (
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                  selectedCategory === "all" ? "bg-white/20 text-[#C8A96B]" : "bg-[#F5F3EE] text-[#0B0F14]"
+                }`}
+              >
+                {totalCount}
+              </span>
+            )}
           </button>
 
           {categories.map((cat) => {
             const isSelected = selectedCategory === cat.slug;
+            const count = cat._count?.products ?? 0;
             return (
               <button
                 key={cat.id}
                 type="button"
                 onClick={() => handleCategorySelect(cat.slug)}
+                aria-label={count > 0 ? `${cat.name}, ${count} items` : cat.name}
                 className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all shadow-2xs flex items-center gap-1.5 shrink-0 ${
                   isSelected
                     ? "bg-[#0B0F14] text-[#C8A96B] shadow-md font-bold border border-[#0B0F14]"
@@ -335,13 +342,13 @@ export function HomeProductsFeed({
                 }`}
               >
                 <span>{cat.name}</span>
-                {cat._count?.products !== undefined && (
+                {count > 0 && (
                   <span
                     className={`text-[10px] px-1.5 py-0.5 rounded-full ${
                       isSelected ? "bg-white/10 text-[#C8A96B]" : "bg-[#F5F3EE] text-[#8A8F98]"
                     }`}
                   >
-                    {cat._count.products}
+                    {count}
                   </span>
                 )}
               </button>
@@ -468,10 +475,10 @@ export function HomeProductsFeed({
       <div className="pt-4 flex justify-center">
         <Link
           href="/products"
-          className="px-8 py-3.5 bg-white hover:bg-[#F5F3EE] text-[#0B0F14] border-2 border-[#E8E5DC] hover:border-[#0B0F14] font-extrabold text-sm sm:text-base rounded-2xl transition-all shadow-xs flex items-center gap-2 group"
+          className="btn-secondary px-7 py-3 text-sm sm:text-base group"
         >
-          <span>Explore All {totalCount} Marketplace Products</span>
-          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition duration-200 text-[#C8A96B]" />
+          <span>{totalCount > 0 ? `Explore All ${totalCount} Marketplace Products` : "Browse Full Marketplace Catalog"}</span>
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform text-[#C8A96B]" aria-hidden="true" />
         </Link>
       </div>
     </section>

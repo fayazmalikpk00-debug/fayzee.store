@@ -129,13 +129,27 @@ export function SellerChatDrawer({
   useEffect(() => {
     if (!conversationId || !isOpen) return;
 
-    // Poll every 3.5 seconds for new seller replies
+    // Initial fetch on open
+    fetchMessages(conversationId);
+
+    // Optimized polling: every 15 seconds, and ONLY if tab is active/visible
     pollingRef.current = setInterval(() => {
-      fetchMessages(conversationId);
-    }, 3500);
+      if (typeof document !== "undefined" && !document.hidden) {
+        fetchMessages(conversationId);
+      }
+    }, 15000);
+
+    // Re-fetch immediately when user switches back to this tab
+    const handleVisibilityChange = () => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        fetchMessages(conversationId);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [conversationId, isOpen]);
 

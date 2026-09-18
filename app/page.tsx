@@ -466,13 +466,17 @@ export default async function HomePage() {
         </section>
 
         {/* 6. Active Coupons Banner */}
-        <section className="bg-[#0B0F14] border border-[#C8A96B]/30 text-white p-6 sm:p-8 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-6 shadow-card">
+        <section
+          id="voucher-promo"
+          aria-labelledby="voucher-heading"
+          className="bg-[#0B0F14] border border-[#C8A96B]/30 text-white p-6 sm:p-8 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-6 shadow-card"
+        >
           <div className="space-y-2 text-center sm:text-left">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#161F2B] border border-[#C8A96B]/30 text-xs sm:text-sm font-bold text-[#C8A96B]">
-              <Tag className="w-4 h-4 text-[#C8A96B]" />
+              <Tag className="w-4 h-4 text-[#C8A96B]" aria-hidden="true" />
               <span>Special Voucher Codes</span>
             </div>
-            <h3 className="text-2xl sm:text-3xl font-black text-white">
+            <h3 id="voucher-heading" className="text-2xl sm:text-3xl font-black text-white">
               Save Up to 10% Extra at Checkout!
             </h3>
             <p className="text-sm sm:text-base text-[#8A8F98] leading-relaxed">
@@ -482,7 +486,7 @@ export default async function HomePage() {
 
           <Link
             href="/products"
-            className="px-7 py-3.5 bg-[#C8A96B] hover:bg-[#B89858] text-[#0B0F14] font-black text-sm sm:text-base rounded-full shadow-md transition shrink-0 active:scale-98"
+            className="btn-accent px-6 py-3 text-sm sm:text-base shrink-0"
           >
             Redeem at Checkout
           </Link>

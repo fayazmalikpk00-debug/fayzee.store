@@ -64,7 +64,7 @@ export function Footer() {
               <span className="text-2xl font-black text-white tracking-tight block leading-none">
                 FAYZEE
               </span>
-              <span className="text-xs font-bold text-[#C8A96B] tracking-wider uppercase mt-1 block">
+              <span className="text-xs font-semibold text-[#C8A96B] tracking-normal mt-1 block">
                 Shop More • Live Better
               </span>
             </div>
@@ -83,7 +83,7 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="text-sm font-bold uppercase tracking-wider text-white mb-3.5">Explore Categories</h4>
+          <h4 className="text-sm font-bold tracking-wide text-white mb-3">Explore Categories</h4>
           <ul className="space-y-2.5 text-sm">
             <li><Link href="/category/electronics?subcategory=smartphones-tablets" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Smartphones & Tablets</Link></li>
             <li><Link href="/category/electronics?subcategory=laptops-computers" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Laptops & Computers</Link></li>
@@ -95,7 +95,7 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="text-sm font-bold uppercase tracking-wider text-white mb-3.5">Customer Care & Policies</h4>
+          <h4 className="text-sm font-bold tracking-wide text-white mb-3">Customer Care & Policies</h4>
           <ul className="space-y-2.5 text-sm">
             <li><Link href="/help" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Help Center & FAQ</Link></li>
             <li><Link href="/orders" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Track Your Order</Link></li>
@@ -107,7 +107,7 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="text-sm font-bold uppercase tracking-wider text-white mb-3.5">Sell on Fayzee</h4>
+          <h4 className="text-sm font-bold tracking-wide text-white mb-3">Sell on Fayzee</h4>
           <ul className="space-y-2.5 text-sm">
             <li><Link href="/seller/register" className="text-[#C8A96B] font-bold hover:text-[#DFBE6E] hover:underline">Register Store</Link></li>
             <li><Link href="/seller/dashboard" className="text-[#E8EDF2]/90 hover:text-[#C8A96B] transition">Seller Center Login</Link></li>
