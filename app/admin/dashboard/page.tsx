@@ -73,6 +73,14 @@ export default function AdminDashboardPage() {
   const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
   const [updatingTicketStatus, setUpdatingTicketStatus] = useState<string | null>(null);
 
+  // Ticket Reply State
+  const [replyOpen, setReplyOpen] = useState(false);
+  const [replyText, setReplyText] = useState("");
+  const [replyMarkResolved, setReplyMarkResolved] = useState(true);
+  const [replySending, setReplySending] = useState(false);
+  const [replyFeedback, setReplyFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [copiedEmail, setCopiedEmail] = useState(false);
+
   // Logistics & Courier API State
   const [courierSettings, setCourierSettings] = useState({
     activeProvider: "POSTEX",
@@ -439,6 +447,82 @@ export default function AdminDashboardPage() {
       console.error(err);
     } finally {
       setUpdatingTicketStatus(null);
+    }
+  };
+
+  const handleOpenTicket = (ticket: any, startReply = false) => {
+    setSelectedTicket(ticket);
+    setReplyOpen(startReply);
+    setReplyText(startReply ? `Dear ${ticket.name},\n\nThank you for reaching out to FAYZEE Store Support.\n\n` : "");
+    setReplyFeedback(null);
+  };
+
+  const handleCopyEmail = (email: string) => {
+    if (!email) return;
+    navigator.clipboard.writeText(email);
+    setCopiedEmail(true);
+    setTimeout(() => setCopiedEmail(false), 2500);
+  };
+
+  const handleOpenGmail = (ticket: any, customMessage?: string) => {
+    if (!ticket) return;
+    const bodyContent =
+      customMessage && customMessage.trim()
+        ? customMessage.trim()
+        : `Dear ${ticket.name},\n\nThank you for contacting FAYZEE Store Support regarding your ticket #${ticket.ticketId} (${ticket.subject}).\n\n\n\nBest regards,\nFAYZEE Store Support Team\nhttps://fayzee.store`;
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+      ticket.email
+    )}&su=${encodeURIComponent(`Re: [${ticket.ticketId}] ${ticket.subject}`)}&body=${encodeURIComponent(
+      bodyContent
+    )}`;
+    window.open(gmailUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const handleSendTicketReply = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!selectedTicket || !replyText.trim()) return;
+
+    setReplySending(true);
+    setReplyFeedback(null);
+
+    try {
+      const res = await fetch("/api/admin/support/reply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ticketId: selectedTicket.ticketId,
+          replyMessage: replyText.trim(),
+          markResolved: replyMarkResolved,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setReplyFeedback({
+          type: "success",
+          text: data.message || `Reply dispatched successfully to ${selectedTicket.email}!`,
+        });
+        setReplyText("");
+
+        if (data.ticket) {
+          setSupportTickets((prev) =>
+            prev.map((t) => (t.ticketId === data.ticket.ticketId ? data.ticket : t))
+          );
+          setSelectedTicket(data.ticket);
+        }
+      } else {
+        setReplyFeedback({
+          type: "error",
+          text: data.error || "Failed to dispatch email reply.",
+        });
+      }
+    } catch (err: any) {
+      setReplyFeedback({
+        type: "error",
+        text: err.message || "Network error while sending reply.",
+      });
+    } finally {
+      setReplySending(false);
     }
   };
 
@@ -3949,19 +4033,19 @@ export default function AdminDashboardPage() {
                           <td className="py-3 px-3 text-right whitespace-nowrap">
                             <div className="inline-flex items-center gap-1.5">
                               <button
-                                onClick={() => setSelectedTicket(ticket)}
+                                onClick={() => handleOpenTicket(ticket, false)}
                                 className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer"
                                 title="Read Message & Details"
                               >
                                 <Eye className="w-3.5 h-3.5" />
                               </button>
-                              <a
-                                href={`mailto:${ticket.email}?subject=Re: [${ticket.ticketId}] ${ticket.subject}&body=Dear ${ticket.name},%0D%0A%0D%0AThank you for reaching out to Fayzee Store Support.`}
-                                className="p-1.5 rounded-lg bg-[#0B0F14] hover:bg-[#161F2B] text-[#C8A96B] transition"
+                              <button
+                                onClick={() => handleOpenTicket(ticket, true)}
+                                className="p-1.5 rounded-lg bg-[#0B0F14] hover:bg-[#161F2B] text-[#C8A96B] transition cursor-pointer"
                                 title="Reply via Email"
                               >
                                 <Mail className="w-3.5 h-3.5" />
-                              </a>
+                              </button>
                               {ticket.phone && (
                                 <a
                                   href={`https://wa.me/${ticket.phone.replace(/[^0-9]/g, "")}?text=Assalam-o-Alaikum ${encodeURIComponent(ticket.name)}, regarding your Fayzee support ticket ${ticket.ticketId}:`}
@@ -4992,60 +5076,288 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* Ticket Details Inspection Modal */}
+      {/* Ticket Details Inspection & Reply Modal */}
       {selectedTicket && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-5 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-7 space-y-5 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150 max-h-[92vh] overflow-y-auto">
+            {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div>
-                <span className="text-[10px] font-black uppercase text-slate-400">
-                  Customer Support Ticket
+              <div className="flex items-center gap-3">
+                <div>
+                  <span className="text-[10px] font-black uppercase text-slate-400">
+                    Customer Support Ticket
+                  </span>
+                  <h3 className="font-mono font-black text-base text-[#0B0F14]">
+                    {selectedTicket.ticketId}
+                  </h3>
+                </div>
+                <span
+                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    selectedTicket.status === "RESOLVED"
+                      ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                      : selectedTicket.status === "IN_PROGRESS"
+                      ? "bg-blue-100 text-blue-800 border border-blue-200"
+                      : "bg-amber-100 text-amber-800 border border-amber-200"
+                  }`}
+                >
+                  {selectedTicket.status}
                 </span>
-                <h3 className="font-mono font-black text-base text-[#0B0F14]">
-                  {selectedTicket.ticketId}
-                </h3>
               </div>
               <button
-                onClick={() => setSelectedTicket(null)}
-                className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-black transition cursor-pointer"
+                onClick={() => {
+                  setSelectedTicket(null);
+                  setReplyOpen(false);
+                  setReplyFeedback(null);
+                }}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-black transition cursor-pointer font-bold"
               >
                 ✕
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-xs bg-[#F5F3EE] p-4 rounded-2xl">
+            {/* Customer Information Grid */}
+            <div className="grid grid-cols-2 gap-3 text-xs bg-[#F5F3EE] p-4 rounded-2xl border border-slate-200/60">
               <div>
                 <span className="text-[10px] font-bold text-slate-400 block uppercase">Customer</span>
-                <span className="font-bold text-slate-900">{selectedTicket.name}</span>
-                <span className="text-slate-500 block">{selectedTicket.email}</span>
+                <span className="font-bold text-slate-900 block">{selectedTicket.name}</span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="text-slate-600 font-mono text-[11px] truncate max-w-[150px] sm:max-w-[200px]">
+                    {selectedTicket.email}
+                  </span>
+                  <button
+                    onClick={() => handleCopyEmail(selectedTicket.email)}
+                    className="p-1 rounded hover:bg-slate-200/70 text-slate-500 transition cursor-pointer inline-flex items-center gap-0.5 text-[10px]"
+                    title="Copy Email Address"
+                  >
+                    {copiedEmail ? (
+                      <span className="text-emerald-600 font-bold flex items-center gap-0.5">
+                        <Check className="w-3 h-3" /> Copied
+                      </span>
+                    ) : (
+                      <Copy className="w-3 h-3" />
+                    )}
+                  </button>
+                </div>
               </div>
+
               <div>
                 <span className="text-[10px] font-bold text-slate-400 block uppercase">Phone / WA</span>
-                <span className="font-bold text-slate-900">{selectedTicket.phone || "Not Provided"}</span>
+                {selectedTicket.phone ? (
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="font-bold text-slate-900 font-mono">{selectedTicket.phone}</span>
+                    <a
+                      href={`https://wa.me/${selectedTicket.phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
+                        `Assalam-o-Alaikum ${selectedTicket.name}, regarding your FAYZEE support ticket #${selectedTicket.ticketId} (${selectedTicket.subject}):`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2 py-0.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold inline-flex items-center gap-1 transition"
+                      title="Chat on WhatsApp"
+                    >
+                      <MessageSquare className="w-3 h-3" /> WhatsApp
+                    </a>
+                  </div>
+                ) : (
+                  <span className="text-slate-400 italic">Not Provided</span>
+                )}
               </div>
+
               <div>
                 <span className="text-[10px] font-bold text-slate-400 block uppercase">Department</span>
                 <span className="font-bold text-slate-900">{selectedTicket.category}</span>
               </div>
+
               <div>
                 <span className="text-[10px] font-bold text-slate-400 block uppercase">Order Reference</span>
-                <span className="font-bold text-[#C8A96B] font-mono">{selectedTicket.orderNumber || "None"}</span>
+                {selectedTicket.orderNumber ? (
+                  <span className="font-bold text-[#C8A96B] font-mono bg-[#0B0F14] px-2 py-0.5 rounded">
+                    {selectedTicket.orderNumber}
+                  </span>
+                ) : (
+                  <span className="text-slate-400 italic">None</span>
+                )}
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <span className="text-[10px] font-bold text-slate-400 uppercase">Subject</span>
+            {/* Subject */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Subject</span>
               <p className="font-bold text-sm text-slate-900">{selectedTicket.subject}</p>
             </div>
 
+            {/* Customer Original Message */}
             <div className="space-y-1.5">
-              <span className="text-[10px] font-bold text-slate-400 uppercase">Full Message</span>
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-xs text-slate-800 leading-relaxed max-h-52 overflow-y-auto whitespace-pre-line font-sans">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Customer Message</span>
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs text-slate-800 leading-relaxed max-h-40 overflow-y-auto whitespace-pre-line font-sans">
                 {selectedTicket.message}
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+            {/* Previous Replies / Ticket History (if any) */}
+            {selectedTicket.adminNotes && (
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
+                  <FileText className="w-3 h-3 text-[#C8A96B]" /> Previous Replies & Staff Notes
+                </span>
+                <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-xs text-slate-800 leading-relaxed max-h-36 overflow-y-auto whitespace-pre-line font-mono text-[11px]">
+                  {selectedTicket.adminNotes}
+                </div>
+              </div>
+            )}
+
+            {/* Feedback Alerts */}
+            {replyFeedback && (
+              <div
+                className={`p-3.5 rounded-2xl text-xs flex items-center justify-between gap-3 ${
+                  replyFeedback.type === "success"
+                    ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                    : "bg-rose-50 text-rose-800 border border-rose-200"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  {replyFeedback.type === "success" ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                  )}
+                  <span>{replyFeedback.text}</span>
+                </div>
+                {replyFeedback.type === "error" && (
+                  <button
+                    onClick={() => handleOpenGmail(selectedTicket, replyText)}
+                    className="px-2.5 py-1 rounded-lg bg-[#0B0F14] text-[#C8A96B] font-bold text-[11px] hover:bg-[#161F2B] transition whitespace-nowrap"
+                  >
+                    Open in Gmail Web
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Reply Composer Section */}
+            {replyOpen ? (
+              <div className="p-4 rounded-2xl bg-[#0B0F14] text-white space-y-3.5 border border-slate-800">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-[#C8A96B]" />
+                    <span className="text-xs font-bold text-[#C8A96B]">Compose Official Reply</span>
+                    <span className="text-[10px] text-slate-400">→ {selectedTicket.email}</span>
+                  </div>
+                  <button
+                    onClick={() => setReplyOpen(false)}
+                    className="text-[11px] text-slate-400 hover:text-white transition cursor-pointer"
+                  >
+                    Hide Box
+                  </button>
+                </div>
+
+                {/* Quick Response Templates */}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase mr-1">Quick Templates:</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setReplyText(
+                        `Dear ${selectedTicket.name},\n\nThank you for reaching out to FAYZEE Customer Support. We have received your inquiry regarding "${selectedTicket.subject}" and our team is actively investigating this issue.\n\nWe will update you as soon as possible. Thank you for your patience.`
+                      )
+                    }
+                    className="px-2 py-0.5 rounded-full text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-200 transition cursor-pointer border border-slate-700"
+                  >
+                    🔍 Under Review
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReplyText(
+                        `Dear ${selectedTicket.name},\n\nWe are pleased to inform you that your reported issue regarding "${selectedTicket.subject}" has been fully resolved.\n\nPlease check on your end and let us know if you need any further assistance.\n\nBest regards,\nFAYZEE Store Support`
+                      );
+                      setReplyMarkResolved(true);
+                    }}
+                    className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 transition cursor-pointer border border-emerald-800"
+                  >
+                    ✅ Issue Resolved
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReplyText(
+                        `Dear ${selectedTicket.name},\n\nYour refund request regarding ticket #${selectedTicket.ticketId} has been approved and processed. The amount should reflect in your original payment method / bank account within 2-4 business days.\n\nThank you for shopping with FAYZEE.`
+                      );
+                      setReplyMarkResolved(true);
+                    }}
+                    className="px-2 py-0.5 rounded-full text-[10px] bg-amber-950/80 hover:bg-amber-900 text-amber-300 transition cursor-pointer border border-amber-800"
+                  >
+                    💰 Refund Approved
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setReplyText(
+                        `Dear ${selectedTicket.name},\n\nWe have checked your order details ${selectedTicket.orderNumber ? `(${selectedTicket.orderNumber})` : ""}. Your parcel is currently dispatched and en route with our courier partner. You will receive a tracking update via SMS shortly.`
+                      )
+                    }
+                    className="px-2 py-0.5 rounded-full text-[10px] bg-blue-950/80 hover:bg-blue-900 text-blue-300 transition cursor-pointer border border-blue-800"
+                  >
+                    📦 Order Update
+                  </button>
+                </div>
+
+                {/* Reply Message Textarea */}
+                <textarea
+                  rows={4}
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  placeholder={`Write your official reply to ${selectedTicket.name}...`}
+                  className="w-full bg-[#161F2B] border border-slate-700 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#C8A96B] font-sans leading-relaxed"
+                />
+
+                {/* Bottom Actions Bar inside composer */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                  <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={replyMarkResolved}
+                      onChange={(e) => setReplyMarkResolved(e.target.checked)}
+                      className="rounded accent-[#C8A96B] w-3.5 h-3.5"
+                    />
+                    <span>Mark ticket as RESOLVED after sending</span>
+                  </label>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenGmail(selectedTicket, replyText)}
+                      className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                      title="Open and send using Gmail webmail in browser"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5 text-red-400" />
+                      Gmail Web
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={replySending || !replyText.trim()}
+                      onClick={handleSendTicketReply}
+                      className="px-4 py-2 rounded-xl bg-[#C8A96B] hover:bg-[#d6b97d] text-[#0B0F14] text-xs font-extrabold transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                    >
+                      {replySending ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          Sending Email...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-3.5 h-3.5" />
+                          Send Email
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {/* Modal Bottom Action Controls */}
+            <div className="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-slate-100">
               <button
                 onClick={() =>
                   handleUpdateTicketStatus(
@@ -5053,22 +5365,44 @@ export default function AdminDashboardPage() {
                     selectedTicket.status === "OPEN" ? "RESOLVED" : "OPEN"
                   )
                 }
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                disabled={updatingTicketStatus === selectedTicket.ticketId}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer disabled:opacity-50 ${
                   selectedTicket.status === "RESOLVED"
                     ? "bg-amber-100 text-amber-800 hover:bg-amber-200"
                     : "bg-emerald-600 text-white hover:bg-emerald-700"
                 }`}
               >
-                {selectedTicket.status === "RESOLVED" ? "Re-open Ticket" : "Mark as Resolved"}
+                {updatingTicketStatus === selectedTicket.ticketId
+                  ? "Updating..."
+                  : selectedTicket.status === "RESOLVED"
+                  ? "Re-open Ticket"
+                  : "Mark as Resolved"}
               </button>
 
-              <div className="flex items-center gap-2">
-                <a
-                  href={`mailto:${selectedTicket.email}?subject=Re: [${selectedTicket.ticketId}] ${selectedTicket.subject}`}
-                  className="px-4 py-2 rounded-xl bg-[#0B0F14] text-[#C8A96B] text-xs font-bold hover:bg-[#161F2B] transition flex items-center gap-1.5"
+              <div className="flex flex-wrap items-center gap-2">
+                {/* 1-Click Gmail Web Compose Button (Always works on all browsers without desktop mail client) */}
+                <button
+                  onClick={() => handleOpenGmail(selectedTicket)}
+                  className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                  title="Open in Gmail Webmail directly in new browser tab"
                 >
-                  <Mail className="w-3.5 h-3.5" /> Reply Email
-                </a>
+                  <ExternalLink className="w-3.5 h-3.5 text-red-500" /> Open in Gmail
+                </button>
+
+                {/* Reply Email button that opens the in-dashboard composer */}
+                <button
+                  onClick={() => {
+                    setReplyOpen(!replyOpen);
+                    if (!replyOpen && !replyText) {
+                      setReplyText(`Dear ${selectedTicket.name},\n\nThank you for reaching out to FAYZEE Store Support.\n\n`);
+                    }
+                    setReplyFeedback(null);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-[#0B0F14] text-[#C8A96B] text-xs font-bold hover:bg-[#161F2B] transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  {replyOpen ? "Close Reply Box" : "Reply Email"}
+                </button>
               </div>
             </div>
           </div>

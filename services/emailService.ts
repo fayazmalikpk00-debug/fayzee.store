@@ -453,3 +453,113 @@ export async function sendSupportInquiryEmail({
   }
 }
 
+export interface SendSupportTicketReplyParams {
+  toEmail: string;
+  customerName: string;
+  ticketId: string;
+  subject: string;
+  replyMessage: string;
+  originalMessage?: string;
+  department?: string;
+}
+
+/**
+ * Dispatches an official support ticket response email to the customer.
+ */
+export async function sendSupportTicketReplyEmail({
+  toEmail,
+  customerName,
+  ticketId,
+  subject,
+  replyMessage,
+  originalMessage,
+  department = "Customer Support",
+}: SendSupportTicketReplyParams): Promise<EmailResult> {
+  const resendApiKey = process.env.RESEND_API_KEY?.trim().replace(/^["']|["']$/g, "");
+  const fromEmail =
+    process.env.EMAIL_FROM?.trim().replace(/^["']|["']$/g, "") ||
+    "FAYZEE Support <onboarding@resend.dev>";
+  const baseUrl = getAppBaseUrl();
+
+  console.log(`📨 [FAYZEE SUPPORT REPLY] Replying to ticket [${ticketId}] for ${customerName} (${toEmail})`);
+
+  if (!resendApiKey) {
+    console.warn(
+      `⚠️ [FAYZEE SUPPORT SIMULATION] RESEND_API_KEY not configured in .env. Simulated reply to [${toEmail}] for ticket [${ticketId}]`
+    );
+    return {
+      success: true,
+      isSimulated: true,
+      messageId: `sim_reply_${ticketId}_${Date.now()}`,
+    };
+  }
+
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: fromEmail,
+        to: [toEmail],
+        reply_to: process.env.ADMIN_SUPPORT_EMAIL?.trim() || "support@fayzee.store",
+        subject: `Update on Ticket [${ticketId}]: ${subject}`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #E2E8F0; border-radius: 16px; background-color: #ffffff;">
+            <div style="background-color: #0B0F14; padding: 20px 24px; border-radius: 12px; margin-bottom: 24px;">
+              <h1 style="color: #C8A96B; margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 0.5px;">FAYZEE STORE</h1>
+              <p style="color: #94A3B8; margin: 6px 0 0 0; font-size: 13px;">Customer Support Assistance</p>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <div style="display: inline-block; background-color: #F1F5F9; color: #475569; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; margin-bottom: 12px;">
+                TICKET REF: ${ticketId}
+              </div>
+              <h2 style="color: #0F172A; font-size: 16px; font-weight: 700; margin: 0 0 8px 0;">${subject}</h2>
+              <p style="color: #334155; font-size: 14px; margin: 0;">Dear <strong>${customerName}</strong>,</p>
+            </div>
+
+            <div style="background-color: #F8FAFC; border-left: 4px solid #C8A96B; padding: 16px 20px; border-radius: 8px; margin-bottom: 24px;">
+              <p style="margin: 0 0 8px 0; font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Support Team Response:</p>
+              <div style="color: #0F172A; font-size: 14px; line-height: 1.65; white-space: pre-line;">${replyMessage}</div>
+            </div>
+
+            ${
+              originalMessage
+                ? `
+            <div style="background-color: #FFFFFF; border: 1px solid #E2E8F0; padding: 14px 16px; border-radius: 8px; margin-bottom: 24px;">
+              <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase;">Your Original Message:</p>
+              <p style="margin: 0; font-size: 12px; color: #64748B; line-height: 1.5; white-space: pre-line;">${originalMessage}</p>
+            </div>
+            `
+                : ""
+            }
+
+            <div style="border-top: 1px solid #E2E8F0; padding-top: 20px; text-align: center; color: #94A3B8; font-size: 12px;">
+              <p style="margin: 0 0 6px 0;">Thank you for reaching out to <strong>FAYZEE</strong>.</p>
+              <p style="margin: 0;">Need more help? Simply reply to this email or visit <a href="${baseUrl}" style="color: #C8A96B; text-decoration: none; font-weight: 600;">fayzee.store</a>.</p>
+            </div>
+          </div>
+        `,
+        text: `FAYZEE Support Update [Ticket: ${ticketId}]\n\nDear ${customerName},\n\nSupport Team Response:\n${replyMessage}\n\n${
+          originalMessage ? `--- Your Original Message ---\n${originalMessage}\n\n` : ""
+        }Thank you for contacting FAYZEE Store Support.\nWebsite: ${baseUrl}`,
+      }),
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      console.error("❌ [RESEND SUPPORT REPLY ERROR]:", errData);
+      return { success: false, error: errData.message || "Failed to dispatch email via Resend." };
+    }
+
+    const data = await response.json();
+    return { success: true, messageId: data.id };
+  } catch (err: any) {
+    console.error("❌ [SUPPORT REPLY EXCEPTION]:", err);
+    return { success: false, error: err.message || "Error dispatching support email." };
+  }
+}
+
