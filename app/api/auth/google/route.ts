@@ -3,7 +3,10 @@ import { NextResponse } from "next/server";
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const origin = url.origin;
-  const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
+  const clientId =
+    process.env.GOOGLE_CLIENT_ID?.trim() ||
+    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ||
+    "204528773506-pn0mi563muah1ccqgqs1ioi2h2av00ds.apps.googleusercontent.com";
 
   if (!clientId) {
     return NextResponse.redirect(`${origin}/register?error=google_not_configured`);

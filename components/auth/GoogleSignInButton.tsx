@@ -18,6 +18,10 @@ interface GoogleSignInButtonProps {
   className?: string;
 }
 
+const DEFAULT_GOOGLE_CLIENT_ID =
+  process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+  "204528773506-pn0mi563muah1ccqgqs1ioi2h2av00ds.apps.googleusercontent.com";
+
 export function GoogleSignInButton({
   onSuccessRedirect = "/",
   onError,
@@ -26,12 +30,17 @@ export function GoogleSignInButton({
   const router = useRouter();
   const { refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [googleClientId, setGoogleClientId] = useState<string | null>(null);
+  const [googleClientId, setGoogleClientId] = useState<string | null>(DEFAULT_GOOGLE_CLIENT_ID);
   const [showSetupModal, setShowSetupModal] = useState(false);
   const hiddenBtnRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // 1. Fetch public Google Client ID configuration
+    // 1. Immediately load script with default/env client ID
+    if (DEFAULT_GOOGLE_CLIENT_ID) {
+      loadGoogleGsiScript(DEFAULT_GOOGLE_CLIENT_ID);
+    }
+
+    // 2. Fetch public Google Client ID configuration
     fetch("/api/auth/google/config")
       .then((res) => res.json())
       .then((data) => {
@@ -42,6 +51,7 @@ export function GoogleSignInButton({
       })
       .catch((err) => console.error("Error fetching Google config:", err));
   }, []);
+
 
   const loadGoogleGsiScript = (clientId: string) => {
     if (typeof window === "undefined") return;
