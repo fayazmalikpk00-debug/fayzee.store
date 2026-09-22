@@ -1,6 +1,6 @@
 "use client";
 
-import { GoogleIcon } from "@/components/icons/GoogleIcon";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { AlertCircle, ArrowRight, Lock, Mail } from "lucide-react";
 import Link from "next/link";
@@ -131,16 +131,8 @@ function LoginForm() {
         </div>
 
         {/* Continue with Google */}
-        <button
-          type="button"
-          onClick={() => {
-            window.location.href = "/api/auth/google";
-          }}
-          className="w-full py-2.5 px-4 bg-white hover:bg-slate-50 text-[#0B0F14] border border-[#E8E5DC] font-bold text-xs rounded-2xl shadow-xs transition flex items-center justify-center gap-2.5 active:scale-98 cursor-pointer hover:border-slate-300"
-        >
-          <GoogleIcon className="w-4 h-4 shrink-0" />
-          <span>Continue with Google</span>
-        </button>
+        <GoogleSignInButton onError={(msg) => setErrorMsg(msg)} />
+
 
         <div className="text-center pt-2 text-xs text-[#8A8F98]">
           Don't have an account yet?{" "}
