@@ -1,5 +1,6 @@
 "use client";
 
+import { GoogleIcon } from "@/components/icons/GoogleIcon";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { AlertCircle, ArrowRight, Lock, Mail } from "lucide-react";
 import Link from "next/link";
@@ -113,10 +114,32 @@ function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] border border-[#C8A96B]/40 disabled:opacity-50 font-bold text-xs rounded-2xl shadow-card transition flex items-center justify-center gap-1.5 active:scale-98"
+          className="w-full py-3 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] border border-[#C8A96B]/40 disabled:opacity-50 font-bold text-xs rounded-2xl shadow-card transition flex items-center justify-center gap-1.5 active:scale-98 cursor-pointer"
         >
           {loading ? <span>Authenticating...</span> : <span>Sign In to Account</span>}
           <ArrowRight className="w-4 h-4" />
+        </button>
+
+        {/* Or Divider */}
+        <div className="relative my-3">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-[#E8E5DC]" />
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-white px-3 text-[#8A8F98] font-medium">or</span>
+          </div>
+        </div>
+
+        {/* Continue with Google */}
+        <button
+          type="button"
+          onClick={() => {
+            window.location.href = "/api/auth/google";
+          }}
+          className="w-full py-2.5 px-4 bg-white hover:bg-slate-50 text-[#0B0F14] border border-[#E8E5DC] font-bold text-xs rounded-2xl shadow-xs transition flex items-center justify-center gap-2.5 active:scale-98 cursor-pointer hover:border-slate-300"
+        >
+          <GoogleIcon className="w-4 h-4 shrink-0" />
+          <span>Continue with Google</span>
         </button>
 
         <div className="text-center pt-2 text-xs text-[#8A8F98]">
@@ -126,6 +149,7 @@ function LoginForm() {
           </Link>
         </div>
       </form>
+
     </div>
   );
 }

@@ -1,22 +1,36 @@
 "use client";
 
+import { GoogleIcon } from "@/components/icons/GoogleIcon";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { AlertCircle, ArrowRight, Lock, Mail, Phone, Store, User } from "lucide-react";
+import { AlertCircle, ArrowRight, Lock, Mail, Store, User } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { refreshUser } = useAuth();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"CUSTOMER" | "SELLER">("CUSTOMER");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    const errorParam = searchParams.get("error");
+    if (errorParam === "google_not_configured") {
+      setErrorMsg(
+        "Google Sign-In is not configured yet. Please add GOOGLE_CLIENT_ID & GOOGLE_CLIENT_SECRET to your environment variables. You can register using email and password below."
+      );
+    } else if (errorParam === "google_auth_failed") {
+      setErrorMsg("Google authentication was cancelled or failed. Please try again or register with email.");
+    } else if (errorParam === "google_token_failed" || errorParam === "google_user_failed") {
+      setErrorMsg("Could not verify your Google account details. Please try again.");
+    }
+  }, [searchParams]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +41,7 @@ export default function RegisterPage() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, phone, password, role }),
+        body: JSON.stringify({ name, email, password, role }),
       });
 
       const data = await res.json();
@@ -47,6 +61,10 @@ export default function RegisterPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleSignIn = () => {
+    window.location.href = "/api/auth/google";
   };
 
   return (
@@ -96,7 +114,7 @@ export default function RegisterPage() {
           <button
             type="button"
             onClick={() => setRole("CUSTOMER")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition flex items-center justify-center gap-2 ${
+            className={`p-3 rounded-2xl border text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
               role === "CUSTOMER"
                 ? "bg-[#0B0F14] border-[#0B0F14] text-[#C8A96B] shadow-xs"
                 : "border-[#E8E5DC] text-[#0B0F14] hover:bg-[#F5F3EE]"
@@ -108,7 +126,7 @@ export default function RegisterPage() {
           <button
             type="button"
             onClick={() => setRole("SELLER")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition flex items-center justify-center gap-2 ${
+            className={`p-3 rounded-2xl border text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
               role === "SELLER"
                 ? "bg-[#0B0F14] border-[#0B0F14] text-[#C8A96B] shadow-xs"
                 : "border-[#E8E5DC] text-[#0B0F14] hover:bg-[#F5F3EE]"
@@ -150,21 +168,6 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-[#0B0F14] mb-1">Phone Number</label>
-          <div className="relative">
-            <input
-              type="text"
-              required
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+92 300 1234567"
-              className="w-full pl-10 pr-3.5 py-2.5 bg-[#F5F3EE] text-xs text-[#0B0F14] placeholder:text-[#8A8F98] rounded-xl border border-[#E8E5DC] focus:outline-none focus:border-[#C8A96B] focus:bg-white transition"
-            />
-            <Phone className="w-4 h-4 text-[#8A8F98] absolute left-3 top-1/2 -translate-y-1/2" />
-          </div>
-        </div>
-
-        <div>
           <label className="block text-xs font-bold text-[#0B0F14] mb-1">Password</label>
           <div className="relative">
             <input
@@ -183,10 +186,30 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] border border-[#C8A96B]/40 disabled:opacity-50 font-bold text-xs rounded-2xl shadow-card transition flex items-center justify-center gap-1.5 active:scale-98"
+          className="w-full py-3 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] border border-[#C8A96B]/40 disabled:opacity-50 font-bold text-xs rounded-2xl shadow-card transition flex items-center justify-center gap-1.5 active:scale-98 cursor-pointer"
         >
           {loading ? <span>Creating account...</span> : <span>Complete Registration</span>}
           <ArrowRight className="w-4 h-4" />
+        </button>
+
+        {/* Or Divider */}
+        <div className="relative my-3">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-[#E8E5DC]" />
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-white px-3 text-[#8A8F98] font-medium">or</span>
+          </div>
+        </div>
+
+        {/* Continue with Google */}
+        <button
+          type="button"
+          onClick={handleGoogleSignIn}
+          className="w-full py-2.5 px-4 bg-white hover:bg-slate-50 text-[#0B0F14] border border-[#E8E5DC] font-bold text-xs rounded-2xl shadow-xs transition flex items-center justify-center gap-2.5 active:scale-98 cursor-pointer hover:border-slate-300"
+        >
+          <GoogleIcon className="w-4 h-4 shrink-0" />
+          <span>Continue with Google</span>
         </button>
 
         <div className="text-center pt-2 text-xs text-[#8A8F98]">
@@ -197,5 +220,13 @@ export default function RegisterPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="text-center text-xs text-slate-500 py-16">Loading registration...</div>}>
+      <RegisterForm />
+    </Suspense>
   );
 }
