@@ -998,6 +998,25 @@ ${paymentLine}${noteLine}
     );
   }
 
+  if (!user.sellerProfile) {
+    return (
+      <div className="max-w-md mx-auto py-16 px-4 text-center">
+        <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-200">
+          <Store className="w-8 h-8 text-amber-600" />
+        </div>
+        <h2 className="text-xl font-bold text-slate-900">Complete Store Setup</h2>
+        <p className="text-xs text-slate-500 mt-2 mb-6">
+          Aapka seller store profile database mein mojood nahi hai. Baraye meherbani store registration form complete karein taakay approval ke liye submit ho sake.
+        </p>
+        <div className="flex justify-center gap-3">
+          <Link href="/seller/register" className="px-5 py-2.5 bg-[#0B0F14] hover:bg-[#1A222C] text-[#C8A96B] rounded-xl text-xs font-bold transition border border-[#C8A96B]/30 shadow-sm">
+            Register Store Details
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   // Calculate seller revenue and statistics
   const totalRevenue = orderItems.reduce(
     (acc, curr) => (curr.fulfillmentStatus !== "CANCELLED" ? acc + curr.total : acc),

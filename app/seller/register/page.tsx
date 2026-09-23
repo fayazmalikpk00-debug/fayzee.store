@@ -267,7 +267,7 @@ export default function SellerRegisterPage() {
     }
   };
 
-  if (user?.role === "SELLER") {
+  if (user?.role === "SELLER" && user.sellerProfile) {
     return (
       <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-6 animate-in fade-in">
         <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-3xl flex items-center justify-center mx-auto border border-amber-200 shadow-sm">

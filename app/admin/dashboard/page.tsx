@@ -1325,7 +1325,18 @@ export default function AdminDashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {sellers.map((s) => (
+                {sellers.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-12 text-center text-slate-400">
+                      <div className="max-w-sm mx-auto space-y-2">
+                        <Store className="w-8 h-8 mx-auto text-slate-300" />
+                        <p className="font-bold text-slate-700 text-xs">No Seller Applications Found</p>
+                        <p className="text-[11px] text-slate-400">Database mein filhal koi seller applications ya stores register nahi hain.</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  sellers.map((s) => (
                   <tr key={s.id} className="hover:bg-slate-50/60 transition">
                     <td className="py-3 px-4">
                       <p className="font-bold text-slate-900">{s.storeName}</p>
@@ -1481,7 +1492,8 @@ export default function AdminDashboardPage() {
                       )}
                     </td>
                   </tr>
-                ))}
+                ))
+              )}
               </tbody>
             </table>
           </div>
