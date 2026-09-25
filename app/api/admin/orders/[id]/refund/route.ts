@@ -3,6 +3,8 @@ import { getSessionUser } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { PaymentService } from "@/lib/payment";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }

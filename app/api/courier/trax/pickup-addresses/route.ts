@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { CourierService } from "@/services/courierService";
 
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/courier/trax/pickup-addresses
  * Fetch all registered pickup locations from Trax API
