@@ -20,6 +20,7 @@ export async function GET() {
                 paymentStatus: true,
                 paymentMethod: true,
                 createdAt: true,
+                updatedAt: true,
               },
             },
           },
@@ -35,6 +36,8 @@ export async function GET() {
     }
 
     const commissionRate = seller.commissionRate || 10.0;
+    const ESCROW_HOLD_DAYS = 7;
+    const nowTime = Date.now();
 
     // Filter valid (non-cancelled) items
     const nonCancelledItems = seller.orderItems.filter(
@@ -47,7 +50,7 @@ export async function GET() {
     // Platform commission across all sales
     const totalCommission = (totalSales * commissionRate) / 100;
 
-    // Items delivered (cleared funds)
+    // Items delivered
     const deliveredItems = nonCancelledItems.filter(
       (item) => item.fulfillmentStatus === "DELIVERED" || item.order.status === "DELIVERED"
     );
@@ -55,7 +58,30 @@ export async function GET() {
     const deliveredCommission = (deliveredGross * commissionRate) / 100;
     const netDeliveredEarnings = deliveredGross - deliveredCommission;
 
-    // Items in progress (pending, processing, shipped)
+    // 7-Day Escrow Split:
+    // Items delivered >= 7 days ago are fully CLEARED and withdrawable.
+    // Items delivered < 7 days ago are held in ESCROW to protect buyer returns.
+    const clearedItems = deliveredItems.filter((item) => {
+      const deliveryTime = new Date(item.updatedAt || item.order.updatedAt).getTime();
+      const daysPassed = (nowTime - deliveryTime) / (1000 * 60 * 60 * 24);
+      return daysPassed >= ESCROW_HOLD_DAYS;
+    });
+
+    const escrowItems = deliveredItems.filter((item) => {
+      const deliveryTime = new Date(item.updatedAt || item.order.updatedAt).getTime();
+      const daysPassed = (nowTime - deliveryTime) / (1000 * 60 * 60 * 24);
+      return daysPassed < ESCROW_HOLD_DAYS;
+    });
+
+    const clearedGross = clearedItems.reduce((acc, item) => acc + item.total, 0);
+    const clearedCommission = (clearedGross * commissionRate) / 100;
+    const clearedEarnings = clearedGross - clearedCommission;
+
+    const escrowGross = escrowItems.reduce((acc, item) => acc + item.total, 0);
+    const escrowCommission = (escrowGross * commissionRate) / 100;
+    const escrowEarnings = escrowGross - escrowCommission;
+
+    // Items in progress (pending, processing, shipped, in-transit)
     const pendingItems = nonCancelledItems.filter(
       (item) => item.fulfillmentStatus !== "DELIVERED" && item.order.status !== "DELIVERED"
     );
@@ -72,8 +98,8 @@ export async function GET() {
       .filter((p) => p.status === "PENDING")
       .reduce((acc, p) => acc + p.amount, 0);
 
-    // Available balance = cleared earnings - already transferred - locked in pending payout request
-    const availableBalance = Math.max(0, netDeliveredEarnings - transferredPayouts - pendingPayouts);
+    // Available balance = cleared earnings (delivered > 7 days ago) - already transferred - locked in pending payout request
+    const availableBalance = Math.max(0, clearedEarnings - transferredPayouts - pendingPayouts);
 
     return NextResponse.json({
       summary: {
@@ -81,6 +107,10 @@ export async function GET() {
         commissionRate,
         totalCommission,
         netDeliveredEarnings,
+        clearedEarnings,
+        escrowEarnings,
+        escrowHoldDays: ESCROW_HOLD_DAYS,
+        escrowItemsCount: escrowItems.length,
         pendingEarnings,
         transferredPayouts,
         pendingPayouts,

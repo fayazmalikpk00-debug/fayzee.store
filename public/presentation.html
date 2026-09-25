@@ -1,0 +1,1896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Fayzee — Commercial & Product Showcase Presentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #070d1e;
+      --bg-card: rgba(16, 27, 56, 0.75);
+      --bg-card-border: rgba(0, 180, 216, 0.22);
+      --primary: #00B4D8;
+      --primary-glow: rgba(0, 180, 216, 0.35);
+      --secondary: #FF6B35;
+      --secondary-glow: rgba(255, 107, 53, 0.3);
+      --accent: #7209B7;
+      --text-main: #FFFFFF;
+      --text-muted: #94A3B8;
+      --text-dim: #64748B;
+      --navy-deep: #0B132B;
+      --navy-light: #1C2541;
+      --success: #10B981;
+      --danger: #EF4444;
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    body {
+      background: radial-gradient(circle at 15% 20%, #0d1b3e 0%, var(--bg-dark) 55%, #050814 100%);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      touch-action: pan-y;
+    }
+
+    /* Ambient lighting effects */
+    .ambient-glow-1 {
+      position: absolute;
+      top: -100px;
+      right: -100px;
+      width: clamp(250px, 40vw, 500px);
+      height: clamp(250px, 40vw, 500px);
+      background: radial-gradient(circle, rgba(0, 180, 216, 0.15) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .ambient-glow-2 {
+      position: absolute;
+      bottom: -150px;
+      left: -100px;
+      width: clamp(280px, 45vw, 550px);
+      height: clamp(280px, 45vw, 550px);
+      background: radial-gradient(circle, rgba(255, 107, 53, 0.12) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Progress bar */
+    .progress-track {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.05);
+      z-index: 100;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      box-shadow: 0 0 10px var(--primary);
+      transition: width 0.3s ease;
+    }
+
+    /* Top navigation bar */
+    header {
+      position: relative;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: clamp(8px, 1.5vh, 14px) clamp(12px, 3vw, 32px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+      background: rgba(11, 19, 43, 0.75);
+      flex-shrink: 0;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: clamp(13px, 1.8vw, 15px);
+      letter-spacing: 0.5px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 15px var(--primary-glow);
+    }
+
+    .brand-tagline {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+      display: inline-block;
+    }
+
+    .controls-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-ctrl {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      min-height: 36px;
+    }
+
+    .btn-ctrl:hover, .btn-ctrl:active {
+      background: rgba(0, 180, 216, 0.18);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .btn-ctrl.active {
+      background: var(--primary);
+      color: var(--navy-deep);
+      border-color: var(--primary);
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .slide-indicator {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--primary);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* Main presentation viewport stage */
+    main#viewport {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: clamp(8px, 2vh, 24px) clamp(8px, 2.5vw, 36px);
+      z-index: 10;
+    }
+
+    .slide {
+      position: absolute;
+      width: 100%;
+      max-width: 1320px;
+      height: 100%;
+      max-height: 840px;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.97) translateY(16px);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: clamp(14px, 2vw, 24px);
+      padding: clamp(16px, 3.5vw, 44px) clamp(16px, 4vw, 52px);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .slide::-webkit-scrollbar {
+      width: 5px;
+    }
+    .slide::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1) translateY(0);
+      z-index: 10;
+    }
+
+    /* Slide headers */
+    .slide-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: clamp(10px, 1.8vh, 18px);
+      margin-bottom: clamp(14px, 2.2vh, 24px);
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .slide-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(0, 180, 216, 0.15);
+      color: var(--primary);
+      border: 1px solid rgba(0, 180, 216, 0.3);
+      margin-bottom: 6px;
+    }
+
+    .slide-title {
+      font-size: clamp(20px, 3.2vw, 32px);
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+      background: linear-gradient(135deg, #FFFFFF 30%, #CFE9F7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .slide-subtitle {
+      font-size: clamp(12.5px, 1.6vw, 15px);
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    .slide-tag {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--secondary);
+      background: rgba(255, 107, 53, 0.1);
+      border: 1px solid rgba(255, 107, 53, 0.25);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .slide-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(12px, 1.8vh, 20px);
+    }
+
+    /* Grids (Fluid and responsive across all devices) */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: clamp(12px, 2vw, 22px);
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: clamp(10px, 1.8vw, 18px);
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: clamp(10px, 1.5vw, 16px);
+    }
+
+    /* Feature card */
+    .card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: clamp(12px, 1.5vw, 16px);
+      padding: clamp(14px, 2vw, 22px);
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      border-color: rgba(0, 180, 216, 0.4);
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateY(-2px);
+    }
+
+    .card-icon {
+      font-size: clamp(22px, 2.5vw, 28px);
+      margin-bottom: 8px;
+      display: inline-block;
+    }
+
+    .card-title {
+      font-size: clamp(15px, 1.8vw, 18px);
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      line-height: 1.3;
+    }
+
+    .card-desc {
+      font-size: clamp(12px, 1.4vw, 13.5px);
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    .card-highlight {
+      border-left: 3px solid var(--primary);
+    }
+
+    .card-coral {
+      border-left: 3px solid var(--secondary);
+    }
+
+    /* Badges */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      font-weight: 600;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+
+    .pill-cyan {
+      background: rgba(0, 180, 216, 0.15);
+      color: var(--primary);
+      border: 1px solid rgba(0, 180, 216, 0.3);
+    }
+
+    .pill-coral {
+      background: rgba(255, 107, 53, 0.15);
+      color: var(--secondary);
+      border: 1px solid rgba(255, 107, 53, 0.3);
+    }
+
+    .pill-green {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    /* Responsive Table Container */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      margin-top: 6px;
+    }
+
+    .presentation-table {
+      width: 100%;
+      min-width: 580px;
+      border-collapse: collapse;
+      font-size: clamp(12px, 1.4vw, 13.5px);
+    }
+
+    .presentation-table th {
+      background: rgba(0, 180, 216, 0.12);
+      color: var(--primary);
+      text-align: left;
+      padding: 10px 14px;
+      font-weight: 700;
+      border-bottom: 2px solid rgba(0, 180, 216, 0.3);
+      white-space: nowrap;
+    }
+
+    .presentation-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      color: #E2E8F0;
+      line-height: 1.45;
+    }
+
+    .presentation-table tr:hover td {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    /* Code block */
+    pre.code-card {
+      background: #050a16;
+      border: 1px solid rgba(0, 180, 216, 0.25);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-family: var(--font-mono);
+      font-size: clamp(11px, 1.3vw, 12.5px);
+      color: #A5F3FC;
+      line-height: 1.5;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Hero / Cover Slide */
+    .hero-center {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: clamp(10px, 2vh, 20px) 0;
+    }
+
+    .hero-title {
+      font-size: clamp(34px, 7vw, 62px);
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      line-height: 1.05;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #FFFFFF 0%, #00B4D8 50%, #FF6B35 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 10px 30px rgba(0, 180, 216, 0.25);
+    }
+
+    .hero-tagline {
+      font-size: clamp(15px, 2.8vw, 22px);
+      font-weight: 600;
+      color: #CFE9F7;
+      margin-bottom: clamp(12px, 2vh, 20px);
+      letter-spacing: -0.2px;
+    }
+
+    .hero-desc {
+      font-size: clamp(12.5px, 1.8vw, 15.5px);
+      color: var(--text-muted);
+      max-width: 680px;
+      line-height: 1.55;
+      margin-bottom: clamp(16px, 2.5vh, 28px);
+    }
+
+    .hero-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: clamp(10px, 2vw, 24px);
+      background: rgba(255, 255, 255, 0.04);
+      padding: clamp(10px, 1.8vh, 16px) clamp(14px, 2.5vw, 32px);
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      width: 100%;
+      max-width: 820px;
+    }
+
+    .metric-item {
+      text-align: center;
+    }
+
+    .metric-value {
+      font-size: clamp(18px, 3vw, 24px);
+      font-weight: 800;
+      color: var(--primary);
+      font-family: var(--font-mono);
+    }
+
+    .metric-label {
+      font-size: clamp(10px, 1.2vw, 12px);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 2px;
+    }
+
+    /* Speaker Notes Drawer */
+    #notes-drawer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(7, 13, 30, 0.98);
+      border-top: 2px solid var(--secondary);
+      box-shadow: 0 -15px 35px rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(24px);
+      z-index: 60;
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      max-height: clamp(280px, 50vh, 420px);
+      overflow-y: auto;
+      padding: clamp(14px, 2.5vh, 22px) clamp(16px, 3vw, 36px);
+      -webkit-overflow-scrolling: touch;
+    }
+
+    #notes-drawer.open {
+      transform: translateY(0);
+    }
+
+    .notes-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .notes-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .notes-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .note-box {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 14px;
+      border-radius: 10px;
+      border-left: 3px solid var(--primary);
+    }
+
+    .note-box.urdu {
+      border-left-color: var(--secondary);
+    }
+
+    .note-lang {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+
+    .note-text {
+      font-size: clamp(12.5px, 1.5vw, 14px);
+      color: #E2E8F0;
+      line-height: 1.55;
+    }
+
+    /* Thumbnail Overview Modal */
+    #overview-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 8, 20, 0.94);
+      backdrop-filter: blur(24px);
+      z-index: 70;
+      display: none;
+      flex-direction: column;
+      padding: clamp(16px, 3vh, 32px);
+      overflow-y: auto;
+    }
+
+    #overview-modal.open {
+      display: flex;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(clamp(150px, 22vw, 230px), 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .overview-card {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 10px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      height: 120px;
+      justify-content: space-between;
+    }
+
+    .overview-card:hover, .overview-card.active {
+      border-color: var(--primary);
+      transform: translateY(-3px);
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .overview-num {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--secondary);
+      font-weight: 700;
+    }
+
+    .overview-name {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.3;
+    }
+
+    /* Footer Navigation */
+    footer {
+      position: relative;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: clamp(8px, 1.5vh, 12px) clamp(12px, 3vw, 32px);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(11, 19, 43, 0.75);
+      backdrop-filter: blur(16px);
+      flex-shrink: 0;
+    }
+
+    .nav-hints {
+      font-size: 11.5px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .key-badge {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: var(--font-mono);
+      color: #fff;
+      font-size: 10px;
+      margin-right: 3px;
+    }
+
+    /* MOBILE & TABLET MEDIA QUERIES */
+
+    /* Tablet breakpoint (<= 1024px) */
+    @media (max-width: 1024px) {
+      .grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .grid-3 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .slide {
+        max-height: none;
+      }
+    }
+
+    /* Mobile breakpoint (<= 768px) */
+    @media (max-width: 768px) {
+      body {
+        padding: 0;
+      }
+      header {
+        padding: 8px 12px;
+      }
+      .brand-tagline {
+        display: none;
+      }
+      .btn-ctrl span.btn-text {
+        display: none;
+      }
+      .btn-ctrl {
+        padding: 6px 10px;
+        min-height: 34px;
+      }
+      main#viewport {
+        padding: 6px 8px;
+      }
+      .slide {
+        border-radius: 12px;
+        padding: 16px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        height: 100%;
+        max-height: 100%;
+      }
+      .slide-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+        padding-bottom: 10px;
+        margin-bottom: 14px;
+      }
+      .slide-tag {
+        align-self: flex-start;
+      }
+      .grid-4, .grid-3, .grid-2 {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .hero-metrics {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        padding: 12px;
+      }
+      .nav-hints {
+        display: none;
+      }
+      footer {
+        padding: 8px 12px;
+      }
+      .footer-controls {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .footer-controls .btn-ctrl {
+        flex: 1;
+        justify-content: center;
+      }
+      .footer-controls .btn-ctrl.primary-btn {
+        flex: 1.5;
+      }
+      .notes-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      #notes-drawer {
+        max-height: 60vh;
+        padding: 14px;
+      }
+    }
+
+    /* Small Mobile breakpoint (<= 480px) */
+    @media (max-width: 480px) {
+      .slide-title {
+        font-size: 20px;
+      }
+      .hero-title {
+        font-size: 32px;
+      }
+      .hero-metrics {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding: 10px;
+      }
+      .metric-value {
+        font-size: 17px;
+      }
+      .metric-label {
+        font-size: 9.5px;
+      }
+      .card {
+        padding: 12px;
+      }
+    }
+
+    /* Print / PDF Styles (Clean Landscape Export) */
+    @media print {
+      body {
+        background: #fff !important;
+        color: #000 !important;
+        height: auto !important;
+        overflow: visible !important;
+      }
+      header, footer, #notes-drawer, #overview-modal, .ambient-glow-1, .ambient-glow-2, .controls-wrap, .progress-track {
+        display: none !important;
+      }
+      main#viewport {
+        padding: 0 !important;
+        display: block !important;
+      }
+      .slide {
+        position: static !important;
+        opacity: 1 !important;
+        transform: none !important;
+        width: 100% !important;
+        height: 100vh !important;
+        max-height: none !important;
+        page-break-after: always !important;
+        page-break-inside: avoid !important;
+        box-shadow: none !important;
+        border: none !important;
+        background: #fff !important;
+        color: #111 !important;
+        padding: 30px !important;
+      }
+      .slide-title {
+        color: #0B132B !important;
+        -webkit-text-fill-color: #0B132B !important;
+      }
+      .card {
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #1e293b !important;
+      }
+      .card-title {
+        color: #0f172a !important;
+      }
+      .card-desc {
+        color: #475569 !important;
+      }
+      .presentation-table th {
+        background: #e2e8f0 !important;
+        color: #0f172a !important;
+      }
+      .presentation-table td {
+        color: #334155 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="progress-track">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <div class="ambient-glow-1"></div>
+  <div class="ambient-glow-2"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="brand-wrap">
+      <div class="brand-badge">
+        <span>⚡ FAYZEE</span>
+      </div>
+      <span class="brand-tagline">Commercial Showcase</span>
+    </div>
+
+    <div class="controls-wrap">
+      <div class="slide-indicator" id="slideIndicator">01 / 13</div>
+      <button class="btn-ctrl" id="btnOverview" title="Slide Overview (O)">
+        <span>🗂️</span><span class="btn-text">Grid</span>
+      </button>
+      <button class="btn-ctrl" id="btnNotes" title="Speaker Notes (N)">
+        <span>🎙️</span><span class="btn-text">Notes</span>
+      </button>
+      <button class="btn-ctrl" id="btnFullscreen" title="Fullscreen (F)">
+        <span>⛶</span><span class="btn-text">Full</span>
+      </button>
+      <button class="btn-ctrl" id="btnPrint" title="Print or Save as PDF (P)">
+        <span>🖨️</span><span class="btn-text">PDF</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Viewport Stage -->
+  <main id="viewport">
+
+    <!-- SLIDE 1: COVER -->
+    <div class="slide active" data-slide="1"
+         data-note-en="Welcome everyone! Today we present Fayzee — an ultra-fast, production-ready multi-vendor e-commerce platform built with Next.js 14 and powered by our live AI shopping assistant."
+         data-note-ur="Assalam-o-Alaikum aur welcome! Aaj hum Fayzee platform introduce kar rahe hain jo ke aik ultra-fast, multi-vendor marketplace hai jahan real-time Fayzee AI Shopping Assistant aur Pakistani market ke localized features shamil hain.">
+      <div class="hero-center">
+        <div class="slide-badge">⚡ Commercial & Enterprise Showcase</div>
+        <h1 class="hero-title">FAYZEE</h1>
+        <div class="hero-tagline">Shop Smart. Sell Smarter. Scale Seamlessly.</div>
+        <p class="hero-desc">
+          Next-generation multi-vendor digital commerce ecosystem engineered with Next.js 14 App Router, TypeScript, Prisma ORM, and autonomous database-integrated AI shopping intelligence.
+        </p>
+
+        <div style="margin-bottom: clamp(14px, 2vh, 22px); display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;">
+          <span class="pill pill-cyan">⚡ Next.js 14 App Router</span>
+          <span class="pill pill-coral">✨ Fayzee AI Agent</span>
+          <span class="pill pill-green">🏬 Multi-Vendor KYC</span>
+          <span class="pill pill-cyan">🇵🇰 Localized (COD, EasyPaisa, JazzCash)</span>
+        </div>
+
+        <div class="hero-metrics">
+          <div class="metric-item">
+            <div class="metric-value">&lt; 0.8s</div>
+            <div class="metric-label">Page Load Speed</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-value">100%</div>
+            <div class="metric-label">Type-Safe TypeScript</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-value">5-Step</div>
+            <div class="metric-label">Visual Order Tracking</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-value">Zero</div>
+            <div class="metric-label">AI Hallucinations</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: EXECUTIVE SUMMARY -->
+    <div class="slide" data-slide="2"
+         data-note-en="Fayzee bridges the gap between buyers who want speed and authentic items, and sellers who need an easy-to-use business portal with guaranteed data privacy."
+         data-note-ur="Fayzee ka vision yeh hai ke customers ko high-speed shopping mile, sellers ko professional dashboard mile, aur platform owners ke paas poori marketplace ka centralized control ho.">
+      <div class="slide-header">
+        <div>
+          <div class="slide-badge">02 // Strategic Overview</div>
+          <h2 class="slide-title">Executive Summary & Platform Vision</h2>
+          <div class="slide-subtitle">Unifying consumer excitement, merchant autonomy, and operational governance</div>
+        </div>
+        <div class="slide-tag">Core Value Pillars</div>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="card card-highlight">
+            <div class="card-icon">🛍️</div>
+            <h3 class="card-title">1. Frictionless Buyer Experience</h3>
+            <p class="card-desc">
+              Sub-second page transitions, interactive variant pickers (size, color, storage), live flash sales countdown, persistent cart, and crystal-clear 5-step visual parcel tracking.
+            </p>
+          </div>
+
+          <div class="card card-coral">
+            <div class="card-icon">🏬</div>
+            <h3 class="card-title">2. Autonomous Merchant Suite</h3>
+            <p class="card-desc">
+              Complete seller onboarding with CNIC and NTN tax verification, isolated inventory controls, low-stock alerts, order dispatch management, and automated net payout calculations.
+            </p>
+          </div>
+
+          <div class="card card-highlight">
+            <div class="card-icon">🛡️</div>
+            <h3 class="card-title">3. Enterprise Governance</h3>
+            <p class="card-desc">
+              Super Admin console tracking Gross Merchandise Value (GMV), seller approval pipelines, immutable security audit logs, commission management, and dispute resolution.
+            </p>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 4px; background: rgba(0, 180, 216, 0.08); border-color: rgba(0, 180, 216, 0.25);">
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="font-weight: 700; color: #fff; font-size: 14.5px;">The Fayzee Differentiator</div>
+            <div style="font-size: 13px; color: var(--text-muted);">
+              Traditional platforms force you to choose between slow multi-vendor plugins or closed single-store silos. Fayzee integrates native multi-vendor architecture and intelligent AI tooling inside a unified, ultra-fast codebase.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: MARKET PROBLEMS VS SOLUTIONS -->
+    <div class="slide" data-slide="3"
+         data-note-en="Here we contrast the critical issues plaguing traditional e-commerce platforms against how Fayzee systematically eliminates them."
+         data-note-ur="Yeh slide dikhati hai ke purani websites mein kiya maslay hain aur Fayzee un masail ko kis tarah modern technology ke zariye jad se khatam karti hai.">
+      <div class="slide-header">
+        <div>
+          <div class="slide-badge">03 // Market Pain Points</div>
+          <h2 class="slide-title">Market Challenges vs. The Fayzee Solution</h2>
+          <div class="slide-subtitle">Transforming high-friction legacy shopping into an intelligent, trust-first marketplace</div>
+        </div>
+        <div class="slide-tag">Problem vs Solution</div>
+      </div>
+
+      <div class="slide-body">
+        <div class="table-responsive">
+          <table class="presentation-table">
+            <thead>
+              <tr>
+                <th style="width: 48%; background: rgba(239, 68, 68, 0.15); color: #F87171; border-color: rgba(239, 68, 68, 0.3);">Legacy Marketplace Pain Points ❌</th>
+                <th style="width: 52%; background: rgba(0, 180, 216, 0.15); color: var(--primary); border-color: rgba(0, 180, 216, 0.3);">The Fayzee Advantage ✅</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Slow, Bloated Pages:</strong> High bounce rates and cart abandonment due to legacy PHP/monolith bottlenecks.</td>
+                <td><strong>Sub-Second Next.js 14 Engine:</strong> Edge-rendered SSR & caching delivering instantaneous transitions and high SEO rankings.</td>
+              </tr>
+              <tr>
+                <td><strong>Disconnected "Dumb" Chatbots:</strong> Bots repeating static FAQ scripts with zero knowledge of actual product stock or pricing.</td>
+                <td><strong>Fayzee AI with Live DB Tools:</strong> Directly queries PostgreSQL records; checks real stock, compares specs, and adds items to cart in chat.</td>
+              </tr>
+              <tr>
+                <td><strong>Counterfeit & Fraudulent Vendors:</strong> Unverified sellers damaging platform reputation and customer confidence.</td>
+                <td><strong>Strict KYC Verification:</strong> CNIC ID cards, NTN tax verification, store review, and admin approval pipeline before going live.</td>
+              </tr>
+              <tr>
+                <td><strong>Opaque Order Status:</strong> Customers constantly calling customer support asking where their parcel is.</td>
+                <td><strong>5-Stage Visual Order Lifecycle:</strong> Placed ➔ Confirmed ➔ Processing ➔ Shipped ➔ Delivered with tracking numbers.</td>
+              </tr>
+              <tr>
+                <td><strong>Fragmented Payment Gateways:</strong> Inflexible checkouts missing localized cash and mobile wallet preferences.</td>
+                <td><strong>Localized Multi-Payment Engine:</strong> Native Cash on Delivery, EasyPaisa, JazzCash, Bank Transfer, and Card payments.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: CUSTOMER STOREFRONT -->
+    <div class="slide" data-slide="4"
+         data-note-en="The storefront is optimized for maximum conversion. From flash sales countdowns to multi-faceted filters and dynamic price updates when picking variants."
+         data-note-ur="Customer storefront ka design intehai modern hai: Flash sales countdown timers, dynamic price updating jab customer color ya size badle, aur 1-page secure checkout.">
+      <div class="slide-header">
+        <div>
+          <div class="slide-badge">04 // Buyer Experience</div>
+          <h2 class="slide-title">Customer Storefront & Conversion Architecture</h2>
+          <div class="slide-subtitle">Engineered to captivate visitors, maximize basket sizes, and build brand loyalty</div>
+        </div>
+        <div class="slide-tag">Storefront UX</div>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-4">
+          <div class="card">
+            <div class="card-icon">⚡</div>
+            <h4 class="card-title">Live Flash Sales</h4>
+            <p class="card-desc">Real-time countdown timers create urgency and drive impulse purchases for limited-time promotions.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">🔍</div>
+            <h4 class="card-title">Faceted Filters</h4>
+            <p class="card-desc">Instant filtering across categories, brands, price ranges, ratings, and in-stock availability.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">🎨</div>
+            <h4 class="card-title">Dynamic Variants</h4>
+            <p class="card-desc">Interactive Color, Size, and Storage pickers that recalculate price and live inventory without full reloads.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">📦</div>
+            <h4 class="card-title">5-Stage Tracker</h4>
+            <p class="card-desc">Visual parcel lifecycle tracking gives buyers peace of mind and reduces customer support tickets.</p>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card card-highlight">
+            <h4 class="card-title">🛒 Persistent Cart & Inventory Safeguards</h4>
+            <p class="card-desc">
+              Items remain securely saved across user sessions. Before checkout, atomic verification prevents out-of-stock purchases even during high-traffic flash sale spikes.
+            </p>
+          </div>
+          <div class="card card-coral">
+            <h4 class="card-title">⭐ Verified Buyer Reviews & Trust Badges</h4>
+            <p class="card-desc">
+              Only authenticated customers who purchased an item can submit verified reviews with ratings, elevating marketplace integrity and buyer trust.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: FAYZEE AI ASSISTANT -->
+    <div class="slide" data-slide="5"
+         data-note-en="Fayzee AI is our flagship USP. It doesn't just chat; it executes server-side database tools, searches products, compares specs, and puts items straight into the user's cart."
+         data-note-ur="Yeh Fayzee ka sabse bara feature hai: Fayzee AI Shopping Assistant. Yeh database se live connected hai, customer ko product search karke deta hai, comparison karta hai aur direct cart mein add karta hai.">
+      <div class="slide-header">
+        <div>
+          <div class="slide-badge">05 // Flagship Innovation</div>
+          <h2 class="slide-title">✨ Fayzee AI: The Conversational Shopping Agent</h2>
+          <div class="slide-subtitle">Industry-first server-side function calling connected to live database inventory</div>
+        </div>
+        <div class="slide-tag">Autonomous AI Tools</div>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-highlight">
+            <div class="slide-badge" style="background: rgba(255, 107, 53, 0.15); color: var(--secondary); border-color: rgba(255, 107, 53, 0.3);">
+              Zero-Hallucination Architecture
+            </div>
+            <h3 style="font-size: clamp(16px, 2vw, 19px); font-weight: 700; color: #fff; margin: 10px 0 6px 0;">
+              How Fayzee AI Interacts With The Database
+            </h3>
+            <p class="card-desc" style="margin-bottom: 12px;">
+              Traditional AI assistants hallucinate products, fake prices, and guess inventory. Fayzee AI is strictly bound to authorized server-side execution tools.
+            </p>
+
+            <div style="background: rgba(0, 0, 0, 0.4); padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);">
+              <div style="font-size: 11px; color: var(--primary); font-family: var(--font-mono); margin-bottom: 6px;">
+                SERVER-SIDE FUNCTION CALLS:
+              </div>
+              <ul style="font-size: 12.5px; color: #E2E8F0; list-style: none; display: flex; flex-direction: column; gap: 5px;">
+                <li>🔹 <code style="color: #6EE7B7;">searchProducts</code>: Real-time keyword & filter lookup</li>
+                <li>🔹 <code style="color: #6EE7B7;">toolGetProduct</code>: Live price, specs & stock verification</li>
+                <li>🔹 <code style="color: #6EE7B7;">toolCompareProducts</code>: Side-by-side spec comparison table</li>
+                <li>🔹 <code style="color: #6EE7B7;">toolGetUserOrders</code>: Authenticated delivery status query</li>
+                <li>🔹 <code style="color: #6EE7B7;">toolAddToCart</code>: 1-click cart insertion right in chat drawer</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card" style="background: #060B18; border-color: rgba(0, 180, 216, 0.3);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">
+              <span style="font-size: 12.5px; font-weight: 700; color: var(--primary);">💬 Live Shopping Simulation</span>
+              <span class="pill pill-green">Online</span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 12.5px;">
+              <div style="background: rgba(255,255,255,0.06); padding: 8px 12px; border-radius: 10px; align-self: flex-end; max-width: 90%;">
+                "I'm looking for a premium gaming headset under Rs. 15,000 that's in stock."
+              </div>
+
+              <div style="background: rgba(0, 180, 216, 0.12); border: 1px solid rgba(0, 180, 216, 0.25); padding: 10px 12px; border-radius: 10px; align-self: flex-start; max-width: 95%;">
+                <div style="color: var(--primary); font-weight: 600; margin-bottom: 4px;">✨ Fayzee AI:</div>
+                I found 2 top-rated headsets in stock! Here is the best option:
+                <div style="margin-top: 6px; background: rgba(0,0,0,0.4); padding: 8px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                  <div>
+                    <div style="font-weight: 700; color: #fff;">HyperPulse Wireless RGB</div>
+                    <div style="color: var(--secondary); font-weight: 700;">Rs. 13,499 <span style="font-size: 11px; color: var(--success);">(In Stock)</span></div>
+                  </div>
+                  <button style="background: var(--primary); border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #070d1e; cursor: pointer; white-space: nowrap;">
+                    + Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top: 10px; font-size: 11.5px; color: var(--text-dim); text-align: center;">
+              ⚡ Increases customer conversion rates by up to 35% through guided sales.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: MULTI-VENDOR SELLER ECOSYSTEM -->
+    <div class="slide" data-slide="6"
+         data-note-en="Sellers are the lifeblood of our marketplace. We provide a KYC onboarding pipeline, isolated inventory management, sales analytics, and payout tracking."
+         data-note-ur="Sellers ke liye Fayzee aik complete business solution hai. Seller register karta hai, admin use verify karta hai, aur seller ko apna dashboard milta hai jahan wo products aur profits manage karta hai.">
+      <div class="slide-header">
+        <div>
+          <div class="slide-badge">06 // Vendor Platform</div>
+          <h2 class="slide-title">Multi-Vendor Merchant Ecosystem</h2>
+          <div class="slide-subtitle">Empowering independent businesses with enterprise-grade selling tools</div>
+        </div>
+        <div class="slide-tag">Seller Portal</div>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="card card-highlight">
+            <div class="card-icon">📝</div>
+            <h4 class="card-title">KYC Onboarding</h4>
+            <p class="card-desc">
+              Merchants register with their business CNIC, Tax ID (NTN), bank account proofs, and business address. Applications undergo administrative review.
+            </p>
+          </div>
+
+          <div class="card card-coral">
+            <div class="card-icon">📊</div>
+            <h4 class="card-title">Live Revenue Dashboard</h4>
+            <p class="card-desc">
+              Real-time analytics for gross sales, platform commissions, net earnings, order counts, and best-selling item rankings.
+            </p>
+          </div>
+
+          <div class="card card-highlight">
+            <div class="card-icon">📦</div>
+            <h4 class="card-title">SKU & Stock Control</h4>
+            <p class="card-desc">
+              Multi-image uploads, discount scheduling, variant definitions, and automatic alerts when stock drops below safety thresholds.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">🏪 Branded Public Storefronts</div>
+            <p class="card-desc">
+              Each approved vendor receives a dedicated store link with custom brand banners, official logos, verified seller badges, customer follower counts, and merchant ratings.
+            </p>
+          </div>
+
+          <div class="card">
+            <div class="card-title">🔒 Strict Merchant Isolation & Data Security</div>
+            <p class="card-desc">
+              Multi-tenant database policies guarantee that no seller can view or manipulate competitor catalogs, sensitive financial figures, or customer contact records.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: ADMIN COMMAND CENTER -->
+    <div class="slide" data-slide="7"
+         data-note-en="The Super Admin console provides complete transparency and control over platform commissions, merchant approvals, and an immutable security audit trail."
+         data-note-ur="Admin panel poore platform ka control center hai jahan GMV, seller approvals, commissions aur har administrative action ka permanent Audit Log rehta hai.">
+      <div class="slide-header">
+        <div>
+          <div class="slide-badge">07 // Platform Governance</div>
+          <h2 class="slide-title">Admin Command Center & Operations</h2>
+          <div class="slide-subtitle">Centralized governance, risk mitigation, and marketplace financial oversight</div>
+        </div>
+        <div class="slide-tag">Governance & Audit</div>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="card card-highlight">
+            <div class="card-icon">📈</div>
+            <h4 class="card-title">Platform KPIs & GMV</h4>
+            <p class="card-desc">
+              Real-time monitoring of Gross Merchandise Value, platform commission fees collected, active merchants, and registered customer growth.
+            </p>
+          </div>
+
+          <div class="card card-coral">
+            <div class="card-icon">✅</div>
+            <h4 class="card-title">Vendor Review Queue</h4>
+            <p class="card-desc">
+              Inspect submitted CNIC documents, tax certificates, and store profiles. 1-click Approve, Reject with written feedback, or Suspend bad actors.
+            </p>
+          </div>
+
+          <div class="card card-highlight">
+            <div class="card-icon">📜</div>
+            <h4 class="card-title">Immutable Audit Trail</h4>
+            <p class="card-desc">
+              Every single admin operation is permanently logged in the <code>AuditLog</code> table with user ID, action type, IP details, and timestamps for legal compliance.
+            </p>
+          </div>
+        </div>
+
+        <div class="card" style="background: rgba(16, 27, 56, 0.9);">
+          <div class="card-title" style="font-size: 14.5px; color: var(--primary);">
+            ⚙️ Operational Control Features
+          </div>
+          <div class="grid-3" style="margin-top: 8px; font-size: 12.5px; color: #CBD5E1; gap: 8px;">
+            <div>• Platform commission adjustments</div>
+            <div>• Featured hero banners & flash sales</div>
+            <div>• Category taxonomy & brand management</div>
+            <div>• Coupon code generator & limits</div>
+            <div>• Customer dispute resolution</div>
+            <div>• System diagnostics & backups</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: PAYMENT & CHECKOUT LOCALIZATION -->
+    <div class="slide" data-slide="8"
+         data-note-en="We engineered a zero-trust pricing engine. Prices are authoritatively calculated on the server and executed atomically via database transactions."
+         data-note-ur="Payments mein Cash on Delivery, Cards, EasyPaisa aur JazzCash shamil hain. Aur prices server par check hoti hain taake koi fraud ya double-spending na ho sake.">
+      <div class="slide-header">
+        <div>
+          <div class="slide-badge">08 // Financial Architecture</div>
+          <h2 class="slide-title">Payment Flexibility & Transaction Integrity</h2>
+          <div class="slide-subtitle">Bridging local Pakistani payment channels with enterprise zero-trust security</div>
+        </div>
+        <div class="slide-tag">Transactional Integrity</div>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-highlight">
+            <h3 class="card-title">💳 Pluggable Payment Channels</h3>
+            <p class="card-desc" style="margin-bottom: 10px;">
+              Designed with an abstracted <code>PaymentProvider</code> interface that cleanly accommodates both local and international gateways:
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 6px; font-size: 12.5px;">
+              <div style="background: rgba(255,255,255,0.04); padding: 7px 10px; border-radius: 6px;">
+                <strong>💵 Cash On Delivery (COD):</strong> Industry staple for customer acquisition; verified via SMS/phone.
+              </div>
+              <div style="background: rgba(255,255,255,0.04); padding: 7px 10px; border-radius: 6px;">
+                <strong>📱 EasyPaisa & JazzCash:</strong> Direct mobile wallet API integration for instant domestic settlements.
+              </div>
+              <div style="background: rgba(255,255,255,0.04); padding: 7px 10px; border-radius: 6px;">
+                <strong>🏦 Direct Bank Transfer:</strong> Dedicated account titles and transaction reference verification.
+              </div>
+              <div style="background: rgba(255,255,255,0.04); padding: 7px 10px; border-radius: 6px;">
+                <strong>💳 Visa / Mastercard:</strong> 3D-Secure card processing ready for Stripe or local acquirers.
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-coral">
+            <h3 class="card-title">🔒 Zero-Trust Pricing & Atomic Transactions</h3>
+            <p class="card-desc" style="margin-bottom: 8px;">
+              Client applications can never be trusted with price calculations. Fayzee enforces strict authoritative verification:
+            </p>
+
+            <pre class="code-card">// Atomic Order Placement Transaction
+await prisma.$transaction(async (tx) => {
+  // 1. Authoritative price recalculation
+  const verifiedTotal = await calculateTruePrice(items);
+  // 2. Decrement physical inventory
+  await validateAndLockStock(tx, items);
+  // 3. Increment coupon usage limits
+  await applyCoupon(tx, couponCode);
+  // 4. Create Order & Payment simultaneously
+  return await tx.order.create({ ... });
+});</pre>
+            <div style="font-size: 11.5px; color: var(--text-dim); margin-top: 6px;">
+              ⚡ Guaranteed zero phantom orders and zero race conditions under high concurrent demand.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: TECHNICAL ARCHITECTURE -->
+    <div class="slide" data-slide="9"
+         data-note-en="Our technical stack uses modern standards: Next.js 14 App Router, TypeScript, Prisma ORM, PostgreSQL, and Google Gemini SDK."
+         data-note-ur="Technical stack mein Next.js 14, TypeScript, Tailwind CSS, Prisma ORM aur Google Gemini shamil hain jo platform ko scalable aur bug-free banate hain.">
+      <div class="slide-header">
+        <div>
+          <div class="slide-badge">09 // System Architecture</div>
+          <h2 class="slide-title">Technical Architecture & Stack</h2>
+          <div class="slide-subtitle">Engineered for sub-second response times, infinite vertical scaling, and 100% type safety</div>
+        </div>
+        <div class="slide-tag">Tech Stack</div>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-4">
+          <div class="card" style="border-top: 3px solid var(--primary);">
+            <div style="font-size: 11px; color: var(--primary); font-weight: 700; margin-bottom: 4px;">FRONTEND LAYER</div>
+            <h4 style="font-size: 15px; color: #fff; margin-bottom: 6px;">Next.js 14 & React 18</h4>
+            <p class="card-desc" style="font-size: 12px;">
+              Server Components (RSC), App Router, Tailwind CSS, Lucide Icons, and responsive glassmorphism aesthetic.
+            </p>
+          </div>
+
+          <div class="card" style="border-top: 3px solid var(--secondary);">
+            <div style="font-size: 11px; color: var(--secondary); font-weight: 700; margin-bottom: 4px;">APPLICATION LOGIC</div>
+            <h4 style="font-size: 15px; color: #fff; margin-bottom: 6px;">TypeScript & Node.js</h4>
+            <p class="card-desc" style="font-size: 12px;">
+              100% End-to-end type safety, RBAC authorization, bcrypt password hashing, and secure HTTP cookies.
+            </p>
+          </div>
+
+          <div class="card" style="border-top: 3px solid var(--success);">
+            <div style="font-size: 11px; color: var(--success); font-weight: 700; margin-bottom: 4px;">DATABASE & ORM</div>
+            <h4 style="font-size: 15px; color: #fff; margin-bottom: 6px;">Prisma & PostgreSQL</h4>
+            <p class="card-desc" style="font-size: 12px;">
+              Relational data modeling, ACID transactions, automated schema migrations, and indexing optimization.
+            </p>
+          </div>
+
+          <div class="card" style="border-top: 3px solid #A855F7;">
+            <div style="font-size: 11px; color: #A855F7; font-weight: 700; margin-bottom: 4px;">AI INTELLIGENCE</div>
+            <h4 style="font-size: 15px; color: #fff; margin-bottom: 6px;">Google Gemini SDK</h4>
+            <p class="card-desc" style="font-size: 12px;">
+              Generative function calling, semantic product search, and live database inventory tooling.
+            </p>
+          </div>
+        </div>
+
+        <div class="card" style="background: rgba(0, 0, 0, 0.35);">
+          <div class="grid-3" style="text-align: center; gap: 12px;">
+            <div>
+              <div style="font-size: 17px; font-weight: 800; color: var(--primary);">Next.js App Router</div>
+              <div style="font-size: 11.5px; color: var(--text-muted);">Modern Routing & Streaming</div>
+            </div>
+            <div>
+              <div style="font-size: 17px; font-weight: 800; color: var(--secondary);">PostgreSQL + Prisma</div>
+              <div style="font-size: 11.5px; color: var(--text-muted);">Rock-Solid Relational Integrity</div>
+            </div>
+            <div>
+              <div style="font-size: 17px; font-weight: 800; color: var(--success);">Role-Based Security</div>
+              <div style="font-size: 11.5px; color: var(--text-muted);">Admin / Seller / Customer</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: BUSINESS & REVENUE MODEL -->
+    <div class="slide" data-slide="10"
+         data-note-en="Fayzee is built to be a profitable commercial venture with multiple diversified revenue streams: transaction commissions, premium seller subscriptions, and sponsored ad placements."
+         data-note-ur="Platform ka revenue model multi-stream hai: Har order par percentage commission, featured seller advertising, aur courier deliveries par margin.">
+      <div class="slide-header">
+        <div>
+          <div class="slide-badge">10 // Commercial Monetization</div>
+          <h2 class="slide-title">Business & Revenue Model</h2>
+          <div class="slide-subtitle">A high-margin, scalable commercial structure with multiple diversified income streams</div>
+        </div>
+        <div class="slide-tag">Monetization</div>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-4">
+          <div class="card card-highlight">
+            <div class="card-icon">💰</div>
+            <h4 class="card-title">1. Commission Take Rate</h4>
+            <div style="font-size: 20px; font-weight: 800; color: var(--primary); margin: 4px 0;">5% - 15%</div>
+            <p class="card-desc">
+              Automatic deduction on each fulfilled vendor transaction based on product category margin.
+            </p>
+          </div>
+
+          <div class="card card-coral">
+            <div class="card-icon">🚀</div>
+            <h4 class="card-title">2. Sponsored Ads</h4>
+            <div style="font-size: 20px; font-weight: 800; color: var(--secondary); margin: 4px 0;">Pay-per-Slot</div>
+            <p class="card-desc">
+              Merchants pay premium fees for priority placement in homepage carousels and top search results.
+            </p>
+          </div>
+
+          <div class="card card-highlight">
+            <div class="card-icon">👑</div>
+            <h4 class="card-title">3. Seller Subscriptions</h4>
+            <div style="font-size: 20px; font-weight: 800; color: var(--primary); margin: 4px 0;">Tiered Plans</div>
+            <p class="card-desc">
+              "Pro Seller" membership offering discounted commission rates, sales analytics, and verified badge.
+            </p>
+          </div>
+
+          <div class="card card-coral">
+            <div class="card-icon">🚚</div>
+            <h4 class="card-title">4. Logistics Margins</h4>
+            <div style="font-size: 20px; font-weight: 800; color: var(--secondary); margin: 4px 0;">Per Parcel</div>
+            <p class="card-desc">
+              Partnership discounts with local courier fleets (TCS/Trax) retaining a delivery margin per parcel.
+            </p>
+          </div>
+        </div>
+
+        <div class="card" style="background: rgba(0, 180, 216, 0.05); border-color: rgba(0, 180, 216, 0.2);">
+          <div style="font-weight: 700; color: #fff; margin-bottom: 4px; font-size: 14px;">💼 Projected Unit Economics</div>
+          <div style="font-size: 12.5px; color: var(--text-muted); line-height: 1.5;">
+            With zero recurring plugin costs and lightweight Next.js serverless hosting, operational server overhead remains below 3% of revenue, ensuring high gross profit margins right from platform launch.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 11: COMPETITIVE ADVANTAGE -->
+    <div class="slide" data-slide="11"
+         data-note-en="Compared to Shopify, Fayzee requires zero monthly app subscriptions for multi-vendor functionality. Compared to legacy marketplaces, Fayzee is lightning fast with native AI."
+         data-note-ur="Shopify ke muqablay mein Fayzee mein multi-vendor aur tracking built-in hain baghair kisi monthly plugin fee ke, aur Daraz ke muqablay mein Fayzee ki speed aur AI assistance kahin aagay hain.">
+      <div class="slide-header">
+        <div>
+          <div class="slide-badge">11 // Market Positioning</div>
+          <h2 class="slide-title">Competitive Edge: Why Fayzee Wins</h2>
+          <div class="slide-subtitle">Outperforming traditional SaaS builders and monolithic legacy portals</div>
+        </div>
+        <div class="slide-tag">Benchmarking</div>
+      </div>
+
+      <div class="slide-body">
+        <div class="table-responsive">
+          <table class="presentation-table">
+            <thead>
+              <tr>
+                <th style="width: 34%;">Feature / Capability</th>
+                <th style="width: 22%; background: rgba(0, 180, 216, 0.2); color: #fff;">⚡ Fayzee</th>
+                <th style="width: 22%;">Traditional Shopify</th>
+                <th style="width: 22%;">Legacy Portals (Daraz-style)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Native Multi-Vendor Multi-Store</strong></td>
+                <td><span class="pill pill-green">✅ Built-in Core</span></td>
+                <td>❌ Expensive 3rd-party apps</td>
+                <td>✅ Built-in, but rigid</td>
+              </tr>
+              <tr>
+                <td><strong>Live AI Agent with DB Tools</strong></td>
+                <td><span class="pill pill-green">✅ Native (Fayzee AI)</span></td>
+                <td>❌ Generic external bots</td>
+                <td>❌ No real-time DB tools</td>
+              </tr>
+              <tr>
+                <td><strong>Page Load & Transition Speed</strong></td>
+                <td><span class="pill pill-green">✅ &lt; 0.8s (Next.js 14)</span></td>
+                <td>⚠️ Heavy theme bloat</td>
+                <td>❌ 3.0s+ legacy monolith</td>
+              </tr>
+              <tr>
+                <td><strong>Verified KYC Pipeline (CNIC/NTN)</strong></td>
+                <td><span class="pill pill-green">✅ Fully Automated</span></td>
+                <td>❌ Manual or unavailable</td>
+                <td>⚠️ Tedious manual review</td>
+              </tr>
+              <tr>
+                <td><strong>5-Step Visual Order Tracking</strong></td>
+                <td><span class="pill pill-green">✅ Out-of-the-Box</span></td>
+                <td>⚠️ Requires paid plugin</td>
+                <td>⚠️ Basic static text</td>
+              </tr>
+              <tr>
+                <td><strong>Cost of Platform Ownership</strong></td>
+                <td><span class="pill pill-green">✅ One Codebase, $0 Apps</span></td>
+                <td>❌ $300+/mo in Shopify apps</td>
+                <td>❌ High 20-30% platform cuts</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 12: STRATEGIC ROADMAP -->
+    <div class="slide" data-slide="12"
+         data-note-en="Our strategic roadmap includes native mobile apps, automated 1-click courier air-waybill generation, and multilingual voice shopping."
+         data-note-ur="Roadmap bohot mazboot hai: Phase 1 mukammal hai, Phase 2 mein iOS/Android apps aur automated courier dispatch ayegi, aur Phase 3 mein voice shopping integrate hogi.">
+      <div class="slide-header">
+        <div>
+          <div class="slide-badge">12 // Future Growth</div>
+          <h2 class="slide-title">Strategic Roadmap & Expansion</h2>
+          <div class="slide-subtitle">A clear, phased trajectory toward enterprise scale and regional commerce leadership</div>
+        </div>
+        <div class="slide-tag">Future Milestones</div>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="card card-highlight">
+            <div style="font-size: 11px; font-weight: 700; color: var(--success); margin-bottom: 4px;">
+              PHASE 1 // COMPLETED ✅
+            </div>
+            <h4 class="card-title">Production Core Release</h4>
+            <div style="font-size: 12.5px; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
+              <div>✔️ Unified Next.js 14 Storefront</div>
+              <div>✔️ Multi-Vendor KYC Onboarding</div>
+              <div>✔️ Fayzee AI Shopping Agent with live DB tools</div>
+              <div>✔️ Admin Governance & Audit Logging</div>
+              <div>✔️ Localized COD & Digital Payments</div>
+            </div>
+          </div>
+
+          <div class="card card-coral">
+            <div style="font-size: 11px; font-weight: 700; color: var(--secondary); margin-bottom: 4px;">
+              PHASE 2 // Q3 - Q4 🚀
+            </div>
+            <h4 class="card-title">Mobile & Courier Automation</h4>
+            <div style="font-size: 12.5px; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
+              <div>🔹 Native iOS & Android Apps (React Native)</div>
+              <div>🔹 1-Click Courier Dispatch (TCS, Trax)</div>
+              <div>🔹 WhatsApp Automated Notifications</div>
+              <div>🔹 Automated Seller Bank Payouts</div>
+              <div>🔹 Multi-Currency Regional Support</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="font-size: 11px; font-weight: 700; color: #A855F7; margin-bottom: 4px;">
+              PHASE 3 // LONG-TERM SCALE 🌐
+            </div>
+            <h4 class="card-title">Hyper-AI & Global Trade</h4>
+            <div style="font-size: 12.5px; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
+              <div>🔸 Voice-Enabled Shopping in Urdu & English</div>
+              <div>🔸 Predictive AI Inventory Restocking</div>
+              <div>🔸 Cross-Border International Shipments</div>
+              <div>🔸 Automated Social Commerce Integration</div>
+              <div>🔸 AI-Powered Customer Video Reviews</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 13: LIVE DEMO & Q&A -->
+    <div class="slide" data-slide="13"
+         data-note-en="Thank you everyone! Now we invite you to experience the live platform walkthrough: from customer shopping with Fayzee AI, to the seller portal and admin console."
+         data-note-ur="Aap sab ka bohot shukriya! Ab hum live website demo dekhain gay aur aapke tamaam sawalaat aur commercial inquiries ke jawabaat dain gay.">
+      <div class="hero-center">
+        <div class="slide-badge">13 // Interactive Demonstration</div>
+        <h2 class="hero-title" style="font-size: clamp(28px, 5.5vw, 48px);">Experience Fayzee Live</h2>
+        <div class="hero-tagline">Ready for Commercial Deployment & Scaling</div>
+
+        <div class="grid-3" style="width: 100%; max-width: 900px; margin: clamp(10px, 1.8vh, 18px) 0;">
+          <div class="card card-highlight" style="text-align: left;">
+            <div style="font-size: 18px;">🛍️</div>
+            <div style="font-weight: 700; color: #fff; margin: 3px 0; font-size: 14px;">1. Buyer Storefront</div>
+            <div style="font-size: 12px; color: var(--text-muted);">
+              Browse flash sales, dynamic filters, and interact with live Fayzee AI assistant.
+            </div>
+          </div>
+
+          <div class="card card-coral" style="text-align: left;">
+            <div style="font-size: 18px;">🏬</div>
+            <div style="font-weight: 700; color: #fff; margin: 3px 0; font-size: 14px;">2. Seller Portal</div>
+            <div style="font-size: 12px; color: var(--text-muted);">
+              Manage product listings, configure SKU variants, track profits, and dispatch orders.
+            </div>
+          </div>
+
+          <div class="card card-highlight" style="text-align: left;">
+            <div style="font-size: 18px;">🛡️</div>
+            <div style="font-weight: 700; color: #fff; margin: 3px 0; font-size: 14px;">3. Admin Console</div>
+            <div style="font-size: 12px; color: var(--text-muted);">
+              Review pending merchant KYC, monitor GMV metrics, and review immutable audit logs.
+            </div>
+          </div>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.05); padding: clamp(12px, 2vh, 18px) clamp(16px, 3vw, 36px); border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 700px;">
+          <div style="font-size: clamp(15px, 2vw, 18px); font-weight: 800; color: var(--primary);">Thank You for Your Time!</div>
+          <div style="font-size: 13px; color: #CFE9F7; margin-top: 3px;">Questions, Commercial Partnerships & Deployment Discussion</div>
+          <div style="font-size: 11.5px; color: var(--text-dim); margin-top: 6px; font-family: var(--font-mono);">
+            Platform URL: fayzee.store • Founder: Malak Fayaz
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Speaker Notes Drawer -->
+  <div id="notes-drawer">
+    <div class="notes-header">
+      <div class="notes-title">
+        <span>🎙️ Speaker Notes (Presenter Talking Points)</span>
+      </div>
+      <button class="btn-ctrl" id="btnCloseNotes" style="padding: 4px 10px; font-size: 11px;">Close (N)</button>
+    </div>
+    <div class="notes-grid">
+      <div class="note-box">
+        <div class="note-lang">🇬🇧 English Presentation Script</div>
+        <p class="note-text" id="noteEnText">Speaker notes will load here...</p>
+      </div>
+      <div class="note-box urdu">
+        <div class="note-lang">🇵🇰 Roman Urdu (Bolne Ke Points)</div>
+        <p class="note-text" id="noteUrText">Urdu bolne ke points yahan show hongay...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overview Grid Modal -->
+  <div id="overview-modal">
+    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
+      <h2 style="font-size: clamp(18px, 2.5vw, 22px); font-weight: 800; color: #fff;">Slide Overview & Navigation</h2>
+      <button class="btn-ctrl" id="btnCloseOverview">Close (Esc)</button>
+    </div>
+    <div class="overview-grid" id="overviewGrid">
+      <!-- Generated via JS -->
+    </div>
+  </div>
+
+  <!-- Footer Navigation -->
+  <footer>
+    <div class="nav-hints">
+      <span><span class="key-badge">←</span> Prev</span>
+      <span><span class="key-badge">→</span> Next</span>
+      <span><span class="key-badge">N</span> Notes</span>
+      <span><span class="key-badge">O</span> Overview</span>
+      <span><span class="key-badge">F</span> Full</span>
+      <span style="color: var(--primary);">📱 Mobile: Swipe Left/Right</span>
+    </div>
+
+    <div class="footer-controls controls-wrap">
+      <button class="btn-ctrl" id="btnPrev">
+        <span>◀</span><span class="btn-text">Prev</span>
+      </button>
+      <button class="btn-ctrl" id="btnNotesMobile" title="Notes">
+        <span>🎙️</span><span class="btn-text">Notes</span>
+      </button>
+      <button class="btn-ctrl primary-btn" id="btnNext" style="background: var(--primary); color: #070d1e; border-color: var(--primary);">
+        <span class="btn-text">Next</span><span>▶</span>
+      </button>
+    </div>
+  </footer>
+
+  <script>
+    (function() {
+      const slides = document.querySelectorAll('.slide');
+      const totalSlides = slides.length;
+      let currentSlide = 1;
+
+      const slideIndicator = document.getElementById('slideIndicator');
+      const progressBar = document.getElementById('progressBar');
+      const notesDrawer = document.getElementById('notes-drawer');
+      const noteEnText = document.getElementById('noteEnText');
+      const noteUrText = document.getElementById('noteUrText');
+      const overviewModal = document.getElementById('overview-modal');
+      const overviewGrid = document.getElementById('overviewGrid');
+
+      // Build overview cards
+      slides.forEach((slide, idx) => {
+        const num = idx + 1;
+        const titleEl = slide.querySelector('.slide-title') || slide.querySelector('.hero-title');
+        const title = titleEl ? titleEl.innerText : 'Slide ' + num;
+
+        const card = document.createElement('div');
+        card.className = 'overview-card' + (num === 1 ? ' active' : '');
+        card.setAttribute('data-target', num);
+        card.innerHTML = `
+          <div class="overview-num">SLIDE ${String(num).padStart(2, '0')}</div>
+          <div class="overview-name">${title}</div>
+        `;
+        card.addEventListener('click', () => {
+          goToSlide(num);
+          closeOverview();
+        });
+        overviewGrid.appendChild(card);
+      });
+
+      function updateSlide() {
+        slides.forEach((s, idx) => {
+          const sNum = idx + 1;
+          if (sNum === currentSlide) {
+            s.classList.add('active');
+            s.scrollTop = 0; // scroll to top when slide opens
+            noteEnText.innerText = s.getAttribute('data-note-en') || 'No notes for this slide.';
+            noteUrText.innerText = s.getAttribute('data-note-ur') || 'Is slide ke liye koi notes nahi hain.';
+          } else {
+            s.classList.remove('active');
+          }
+        });
+
+        // Update indicator & progress
+        slideIndicator.innerText = `${String(currentSlide).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`;
+        progressBar.style.width = `${((currentSlide - 1) / (totalSlides - 1)) * 100}%`;
+
+        // Update overview cards active class
+        document.querySelectorAll('.overview-card').forEach(c => {
+          if (parseInt(c.getAttribute('data-target')) === currentSlide) {
+            c.classList.add('active');
+          } else {
+            c.classList.remove('active');
+          }
+        });
+      }
+
+      function goToSlide(n) {
+        if (n >= 1 && n <= totalSlides) {
+          currentSlide = n;
+          updateSlide();
+        }
+      }
+
+      function nextSlide() {
+        if (currentSlide < totalSlides) {
+          currentSlide++;
+          updateSlide();
+        }
+      }
+
+      function prevSlide() {
+        if (currentSlide > 1) {
+          currentSlide--;
+          updateSlide();
+        }
+      }
+
+      function toggleNotes() {
+        notesDrawer.classList.toggle('open');
+        document.getElementById('btnNotes').classList.toggle('active');
+        const mNotes = document.getElementById('btnNotesMobile');
+        if (mNotes) mNotes.classList.toggle('active');
+      }
+
+      function toggleOverview() {
+        overviewModal.classList.toggle('open');
+      }
+
+      function closeOverview() {
+        overviewModal.classList.remove('open');
+      }
+
+      function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+
+      // Event Listeners
+      document.getElementById('btnNext').addEventListener('click', nextSlide);
+      document.getElementById('btnPrev').addEventListener('click', prevSlide);
+      document.getElementById('btnNotes').addEventListener('click', toggleNotes);
+      const mNotes = document.getElementById('btnNotesMobile');
+      if (mNotes) mNotes.addEventListener('click', toggleNotes);
+      document.getElementById('btnCloseNotes').addEventListener('click', toggleNotes);
+      document.getElementById('btnOverview').addEventListener('click', toggleOverview);
+      document.getElementById('btnCloseOverview').addEventListener('click', closeOverview);
+      document.getElementById('btnFullscreen').addEventListener('click', toggleFullscreen);
+      document.getElementById('btnPrint').addEventListener('click', () => {
+        window.print();
+      });
+
+      // Keyboard navigation
+      window.addEventListener('keydown', (e) => {
+        if (overviewModal.classList.contains('open')) {
+          if (e.key === 'Escape') closeOverview();
+          return;
+        }
+
+        switch (e.key) {
+          case 'ArrowRight':
+          case ' ':
+          case 'PageDown':
+            e.preventDefault();
+            nextSlide();
+            break;
+          case 'ArrowLeft':
+          case 'Backspace':
+          case 'PageUp':
+            e.preventDefault();
+            prevSlide();
+            break;
+          case 'n':
+          case 'N':
+            toggleNotes();
+            break;
+          case 'o':
+          case 'O':
+            toggleOverview();
+            break;
+          case 'f':
+          case 'F':
+            toggleFullscreen();
+            break;
+          case 'p':
+          case 'P':
+            window.print();
+            break;
+          case 'Home':
+            goToSlide(1);
+            break;
+          case 'End':
+            goToSlide(totalSlides);
+            break;
+        }
+      });
+
+      // TOUCH / SWIPE GESTURES FOR MOBILE & TABLETS
+      let touchStartX = 0;
+      let touchStartY = 0;
+      let touchEndX = 0;
+      let touchEndY = 0;
+
+      window.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+      }, { passive: true });
+
+      window.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        touchEndY = e.changedTouches[0].screenY;
+        handleSwipe();
+      }, { passive: true });
+
+      function handleSwipe() {
+        const diffX = touchEndX - touchStartX;
+        const diffY = touchEndY - touchStartY;
+        // Check if horizontal swipe is dominant and above 45px threshold
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 45) {
+          if (diffX < 0) {
+            nextSlide(); // Swiped left -> Next Slide
+          } else {
+            prevSlide(); // Swiped right -> Previous Slide
+          }
+        }
+      }
+
+      // Initialize
+      updateSlide();
+    })();
+  </script>
+</body>
+</html>

@@ -69,6 +69,10 @@ export interface PaymentProvider {
   name: string;
   processPayment(request: PaymentInitiationRequest): Promise<PaymentInitiationResult>;
   verifyPayment(transactionId: string, payload?: any): Promise<PaymentVerificationResult>;
-  refundPayment(transactionId: string, amount: number): Promise<{ success: boolean; refundId?: string; error?: string }>;
+  refundPayment(
+    transactionId: string,
+    amount: number,
+    reason?: string
+  ): Promise<{ success: boolean; refundId?: string; error?: string }>;
 }
 

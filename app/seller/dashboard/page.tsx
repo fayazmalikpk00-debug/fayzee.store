@@ -136,12 +136,24 @@ export default function SellerDashboardPage() {
 
   // Shipping Modal & Fulfillment Actions State
   const [shippingModalItem, setShippingModalItem] = useState<any | null>(null);
-  const [courierName, setCourierName] = useState("PostEx Courier");
+  const [courierName, setCourierName] = useState("Trax Logistics");
   const [courierWeight, setCourierWeight] = useState("0.5");
   const [trackingCode, setTrackingCode] = useState("");
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isAutoBooking, setIsAutoBooking] = useState(false);
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>("ALL");
+
+  // Pickup Location Options State (Both Methods: Doorstep Auto vs Registered Location ID)
+  const [pickupMode, setPickupMode] = useState<"DOORSTEP" | "REGISTERED_LOCATION">("DOORSTEP");
+  const [traxLocations, setTraxLocations] = useState<any[]>([]);
+  const [loadingTraxLocations, setLoadingTraxLocations] = useState(false);
+  const [selectedTraxLocationId, setSelectedTraxLocationId] = useState("");
+  const [customPickupIdInput, setCustomPickupIdInput] = useState("");
+  const [doorstepAddressOverride, setDoorstepAddressOverride] = useState("");
+  const [doorstepCityOverride, setDoorstepCityOverride] = useState("");
+  const [doorstepPhoneOverride, setDoorstepPhoneOverride] = useState("");
+  const [syncingStoreWithTrax, setSyncingStoreWithTrax] = useState(false);
+  const [traxSyncSuccessMsg, setTraxSyncSuccessMsg] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -927,6 +939,53 @@ ${paymentLine}${noteLine}
     }
   };
 
+  const fetchTraxLocations = async () => {
+    try {
+      setLoadingTraxLocations(true);
+      const res = await fetch("/api/courier/trax/pickup-addresses");
+      const data = await res.json();
+      if (res.ok && Array.isArray(data?.pickup_addresses)) {
+        setTraxLocations(data.pickup_addresses);
+        if (data.pickup_addresses.length > 0 && !selectedTraxLocationId) {
+          setSelectedTraxLocationId(String(data.pickup_addresses[0].id));
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to fetch Trax locations", e);
+    } finally {
+      setLoadingTraxLocations(false);
+    }
+  };
+
+  const handleSyncStoreWithTrax = async () => {
+    try {
+      setSyncingStoreWithTrax(true);
+      setTraxSyncSuccessMsg("");
+      const res = await fetch("/api/courier/trax/pickup-addresses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          address: storeAddress || (user?.sellerProfile as any)?.address,
+          phone_number: storePhone || (user?.sellerProfile as any)?.phone || user?.phone,
+          person_of_contact: user?.sellerProfile?.storeName || user?.name || "Seller",
+          email_address: user?.email,
+          city_name: storeAddress ? storeAddress.split(",").pop()?.trim() : "Peshawar",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to register pickup address on Trax");
+      }
+      setTraxSyncSuccessMsg(`✓ Store registered on Trax! Pickup Location ID: #${data.pickup_address_id}`);
+      await fetchTraxLocations();
+      setTimeout(() => setTraxSyncSuccessMsg(""), 8000);
+    } catch (err: any) {
+      alert(err.message || "Failed to register with Trax");
+    } finally {
+      setSyncingStoreWithTrax(false);
+    }
+  };
+
   const handleAutoBookCourier = async (item: any) => {
     if (!item) return;
     setIsAutoBooking(true);
@@ -937,7 +996,9 @@ ${paymentLine}${noteLine}
         ? "TRAX"
         : courierName.includes("TCS")
         ? "TCS"
-        : "POSTEX";
+        : "TRAX";
+
+      const chosenPickupId = customPickupIdInput.trim() || selectedTraxLocationId;
 
       const res = await fetch("/api/seller/orders/book-courier", {
         method: "POST",
@@ -946,6 +1007,11 @@ ${paymentLine}${noteLine}
           orderItemId: item.id,
           courierProvider: providerKey,
           weightInKg: Number(courierWeight) || 0.5,
+          pickupMode: pickupMode === "DOORSTEP" ? "doorstep" : "manual",
+          customPickupAddressId: pickupMode === "REGISTERED_LOCATION" ? chosenPickupId : undefined,
+          doorstepAddress: doorstepAddressOverride || undefined,
+          doorstepCity: doorstepCityOverride || undefined,
+          doorstepPhone: doorstepPhoneOverride || undefined,
         }),
       });
 
@@ -1772,12 +1838,28 @@ ${paymentLine}${noteLine}
                                 </button>
                               </div>
 
-                              <a
-                                href={`tel:${customerPhone}`}
-                                className="text-[11px] text-blue-600 hover:underline font-medium block"
-                              >
-                                📞 {customerPhone}
-                              </a>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <a
+                                  href={`tel:${customerPhone}`}
+                                  className="text-[11px] text-blue-600 hover:underline font-medium"
+                                >
+                                  📞 {customerPhone}
+                                </a>
+
+                                {customerPhone && customerPhone !== "Not provided" && (
+                                  <a
+                                    href={`https://wa.me/${customerPhone.replace(/[^0-9]/g, "").replace(/^0/, "92")}?text=${encodeURIComponent(
+                                      `Assalam-o-Alaikum ${customerName}! Fayzee Store (${user.sellerProfile?.storeName || "Fayzee"}) se aapka Order #${item.order.orderNumber} (Item: ${item.title}) confirm karne ke liye rabta kar rahe hain.`
+                                    )}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-2 py-0.5 bg-[#25D366] hover:bg-[#20ba5a] text-white rounded-md text-[10px] font-bold flex items-center gap-1 transition shadow-2xs active:scale-95"
+                                    title="Verify & Confirm Order with Customer on WhatsApp"
+                                  >
+                                    <span>💬 WhatsApp</span>
+                                  </a>
+                                )}
+                              </div>
 
                               {/* Complete Customer Address Box */}
                               <div className="text-[11px] bg-slate-50 p-2 rounded-xl border border-slate-200/90 leading-snug space-y-0.5">
@@ -1883,6 +1965,16 @@ ${paymentLine}${noteLine}
                                     onClick={() => {
                                       setShippingModalItem(item);
                                       setTrackingCode(`TRK-${Math.floor(1000000 + Math.random() * 9000000)}`);
+                                      const curAddr = storeAddress || (user?.sellerProfile as any)?.address || "";
+                                      setDoorstepAddressOverride(curAddr);
+                                      setDoorstepPhoneOverride(storePhone || (user?.sellerProfile as any)?.phone || user?.phone || "");
+                                      if (curAddr) {
+                                        const parts = curAddr.split(",").map((p: string) => p.trim());
+                                        setDoorstepCityOverride(parts.length > 1 ? parts[parts.length - 1] : parts[0]);
+                                      } else {
+                                        setDoorstepCityOverride("Peshawar");
+                                      }
+                                      fetchTraxLocations();
                                     }}
                                     disabled={isUpdatingStatus}
                                     className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-xs transition flex items-center gap-1 active:scale-98"
@@ -2162,23 +2254,25 @@ ${paymentLine}${noteLine}
       {activeTab === "finance" && (
         <div className="space-y-6">
           {/* Top Finance Overview KPIs */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             {/* Available Balance */}
-            <div className="bg-gradient-to-br from-emerald-50 to-teal-50/60 p-5 rounded-3xl border border-emerald-200 shadow-xs relative overflow-hidden">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-emerald-800 uppercase tracking-wide">
-                  Available for Payout
-                </span>
-                <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
-                  <Wallet className="w-4 h-4" />
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50/60 p-5 rounded-3xl border border-emerald-200 shadow-xs relative overflow-hidden flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-emerald-800 uppercase tracking-wide">
+                    Available for Payout
+                  </span>
+                  <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                    <Wallet className="w-4 h-4" />
+                  </div>
                 </div>
+                <p className="text-2xl font-black text-emerald-950 mt-2">
+                  {formatPrice(financeData?.summary?.availableBalance || 0)}
+                </p>
+                <p className="text-[11px] text-emerald-700 mt-1">
+                  Cleared funds ready to withdraw
+                </p>
               </div>
-              <p className="text-2xl sm:text-3xl font-black text-emerald-950 mt-2">
-                {formatPrice(financeData?.summary?.availableBalance || 0)}
-              </p>
-              <p className="text-[11px] text-emerald-700 mt-1">
-                Cleared from delivered orders (Net 90%)
-              </p>
 
               <div className="mt-4">
                 <button
@@ -2202,24 +2296,50 @@ ${paymentLine}${noteLine}
               </div>
             </div>
 
-            {/* Pending Clearance */}
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50/50 p-5 rounded-3xl border border-amber-200 shadow-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-amber-800 uppercase tracking-wide">
-                  Pending Clearance
-                </span>
-                <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-xs">
-                  <Clock className="w-4 h-4" />
+            {/* In Escrow (7-Day Customer Warranty & Return Protection) */}
+            <div className="bg-gradient-to-br from-indigo-50 to-blue-50/60 p-5 rounded-3xl border border-indigo-200 shadow-xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-indigo-900 uppercase tracking-wide flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>In Escrow (7-Day)</span>
+                  </span>
+                  <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
                 </div>
+                <p className="text-2xl font-black text-indigo-950 mt-2">
+                  {formatPrice(financeData?.summary?.escrowEarnings || 0)}
+                </p>
+                <p className="text-[11px] text-indigo-700 mt-1">
+                  {financeData?.summary?.escrowItemsCount || 0} delivered item(s) under warranty
+                </p>
               </div>
-              <p className="text-2xl sm:text-3xl font-black text-amber-950 mt-2">
-                {formatPrice(financeData?.summary?.pendingEarnings || 0)}
-              </p>
-              <p className="text-[11px] text-amber-700 mt-1">
-                Locked in packing / in-transit orders.
-              </p>
-              <div className="mt-4 p-2 bg-amber-100/60 rounded-xl border border-amber-200 text-[10px] text-amber-800">
-                Transfers to available balance once orders are delivered.
+              <div className="mt-4 p-2.5 bg-indigo-100/70 rounded-xl border border-indigo-200 text-[10px] text-indigo-900 font-medium leading-tight">
+                🛡️ Automatically clears to Available Balance 7 days after delivery if no return is requested.
+              </div>
+            </div>
+
+            {/* Pending Delivery (In-Transit / Packing) */}
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50/50 p-5 rounded-3xl border border-amber-200 shadow-xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-amber-800 uppercase tracking-wide">
+                    In-Transit / Packing
+                  </span>
+                  <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-xs">
+                    <Clock className="w-4 h-4" />
+                  </div>
+                </div>
+                <p className="text-2xl font-black text-amber-950 mt-2">
+                  {formatPrice(financeData?.summary?.pendingEarnings || 0)}
+                </p>
+                <p className="text-[11px] text-amber-700 mt-1">
+                  Orders currently in processing or courier transit.
+                </p>
+              </div>
+              <div className="mt-4 p-2.5 bg-amber-100/60 rounded-xl border border-amber-200 text-[10px] text-amber-800 leading-tight">
+                Moves to 7-Day Escrow once marked Delivered by courier.
               </div>
             </div>
 
@@ -3125,6 +3245,31 @@ ${paymentLine}${noteLine}
                         placeholder="Karachi, Pakistan"
                         className="w-full px-3 py-2 bg-[#FAF9F6] rounded-xl border border-[#E8E5DC] text-[#0B0F14] focus:outline-none focus:border-[#C8A96B] transition"
                       />
+                      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          disabled={syncingStoreWithTrax || !storeAddress}
+                          onClick={handleSyncStoreWithTrax}
+                          className="text-[11px] font-bold text-[#0B0F14] hover:text-[#C8A96B] bg-white border border-[#E8E5DC] hover:border-[#C8A96B] px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow-2xs disabled:opacity-50"
+                        >
+                          {syncingStoreWithTrax ? (
+                            <>
+                              <Loader2 className="w-3 h-3 animate-spin text-[#C8A96B]" />
+                              <span>Registering on Trax...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Truck className="w-3 h-3 text-[#C8A96B]" />
+                              <span>🏢 Sync / Register Address with Trax</span>
+                            </>
+                          )}
+                        </button>
+                        {traxSyncSuccessMsg && (
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
+                            {traxSyncSuccessMsg}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -4073,11 +4218,16 @@ ${paymentLine}${noteLine}
                   </label>
                   <select
                     value={courierName}
-                    onChange={(e) => setCourierName(e.target.value)}
+                    onChange={(e) => {
+                      setCourierName(e.target.value);
+                      if (e.target.value.includes("Trax") && traxLocations.length === 0) {
+                        fetchTraxLocations();
+                      }
+                    }}
                     className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30"
                   >
+                    <option value="Trax Logistics">Trax Logistics (Express Doorstep & Hub COD)</option>
                     <option value="PostEx Courier">PostEx (Instant Pickup & Fast COD)</option>
-                    <option value="Trax Logistics">Trax Logistics (Express COD)</option>
                     <option value="TCS Express">TCS Express (Corporate Network)</option>
                   </select>
                 </div>
@@ -4095,6 +4245,154 @@ ${paymentLine}${noteLine}
                     className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#C8A96B]/30"
                   />
                 </div>
+              </div>
+
+              {/* 📦 Pickup Location Method Selection (Dono Tareeqay) */}
+              <div className="pt-2 border-t border-slate-200/80">
+                <label className="block text-[10px] font-black text-slate-800 mb-1.5 uppercase tracking-wider">
+                  Pickup Location Method (Rider Kahan se Parcel Uthaye):
+                </label>
+                <div className="grid grid-cols-2 gap-1.5 p-1 bg-white rounded-xl border border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => setPickupMode("DOORSTEP")}
+                    className={`py-2 px-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                      pickupMode === "DOORSTEP"
+                        ? "bg-[#0B0F14] text-[#C8A96B] shadow-xs"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                    }`}
+                  >
+                    <span>🏠 Tareeqa 1: Ghar/Shop se</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPickupMode("REGISTERED_LOCATION");
+                      if (traxLocations.length === 0) fetchTraxLocations();
+                    }}
+                    className={`py-2 px-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                      pickupMode === "REGISTERED_LOCATION"
+                        ? "bg-[#0B0F14] text-[#C8A96B] shadow-xs"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                    }`}
+                  >
+                    <span>🏢 Tareeqa 2: Trax Hub / ID</span>
+                  </button>
+                </div>
+
+                {/* Tareeqa 1 Content: Direct Doorstep Pickup */}
+                {pickupMode === "DOORSTEP" && (
+                  <div className="mt-2.5 p-3 bg-amber-50/70 rounded-xl border border-amber-200 text-xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-amber-950 flex items-center gap-1">
+                        <span>🏠 Direct Doorstep Pickup (Live Trax Auto-Sync)</span>
+                      </span>
+                      <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 bg-amber-200/90 text-amber-950 rounded-full">
+                        Rider at Doorstep
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-amber-900 leading-snug">
+                      Trax rider seedha aapke diye gaye address par aakar parcel collect karega. Baraye meherbani apna pickup address aur phone check kar lein:
+                    </p>
+                    <div className="space-y-1.5 pt-1">
+                      <div>
+                        <label className="block text-[9px] font-bold text-amber-950 mb-0.5">
+                          Doorstep / Shop Address:
+                        </label>
+                        <input
+                          type="text"
+                          value={doorstepAddressOverride}
+                          onChange={(e) => setDoorstepAddressOverride(e.target.value)}
+                          placeholder="e.g. Shop 12, Saddar Bazaar, Peshawar"
+                          className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-amber-300 text-xs font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[9px] font-bold text-amber-950 mb-0.5">
+                            Pickup City:
+                          </label>
+                          <input
+                            type="text"
+                            value={doorstepCityOverride}
+                            onChange={(e) => setDoorstepCityOverride(e.target.value)}
+                            placeholder="e.g. Peshawar"
+                            className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-amber-300 text-xs font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-bold text-amber-950 mb-0.5">
+                            Contact Phone:
+                          </label>
+                          <input
+                            type="text"
+                            value={doorstepPhoneOverride}
+                            onChange={(e) => setDoorstepPhoneOverride(e.target.value)}
+                            placeholder="03301234567"
+                            className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-amber-300 text-xs font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tareeqa 2 Content: Registered Hub / Trax Location ID */}
+                {pickupMode === "REGISTERED_LOCATION" && (
+                  <div className="mt-2.5 p-3 bg-blue-50/70 rounded-xl border border-blue-200 text-xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-blue-950 flex items-center gap-1">
+                        <span>🏢 Trax Registered Location / Hub</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={fetchTraxLocations}
+                        className="text-[10px] font-bold text-blue-700 hover:text-blue-900 underline flex items-center gap-0.5"
+                      >
+                        {loadingTraxLocations ? "Refreshing..." : "↻ Refresh List"}
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-blue-900 leading-snug">
+                      Apne Trax portal par pehle se registered warehouse/hub select karein ya custom ID dalein:
+                    </p>
+
+                    <div>
+                      <label className="block text-[9px] font-bold text-blue-950 mb-0.5">
+                        Select Registered Trax Location:
+                      </label>
+                      <select
+                        value={selectedTraxLocationId}
+                        onChange={(e) => setSelectedTraxLocationId(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-blue-300 text-xs font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        {traxLocations.length === 0 ? (
+                          <option value="667099">
+                            ID #667099 - Default Hub (Dalazak Road Umar pharmacy, Peshawar)
+                          </option>
+                        ) : (
+                          traxLocations.map((loc) => (
+                            <option key={loc.id} value={loc.id}>
+                              ID #{loc.id} - {loc.person_of_contact || "Hub"} ({loc.address}, {loc.city?.name || "Peshawar"})
+                            </option>
+                          ))
+                        )}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[9px] font-bold text-blue-950 mb-0.5">
+                        Or Enter Custom Trax Pickup ID (Optional):
+                      </label>
+                      <input
+                        type="text"
+                        value={customPickupIdInput}
+                        onChange={(e) => setCustomPickupIdInput(e.target.value)}
+                        placeholder="e.g. 667099"
+                        className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-blue-300 text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <button

@@ -4,10 +4,12 @@ export interface CourierPickupAddress {
   storeName: string;
   contactPerson: string;
   phone: string;
+  email?: string;
   street: string;
   city: string;
   state?: string;
   postalCode?: string;
+  traxPickupAddressId?: number | null;
 }
 
 export interface CourierConsignee {

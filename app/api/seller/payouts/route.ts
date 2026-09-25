@@ -48,6 +48,7 @@ export async function POST(req: Request) {
               select: {
                 status: true,
                 paymentStatus: true,
+                updatedAt: true,
               },
             },
           },
@@ -96,15 +97,37 @@ export async function POST(req: Request) {
       );
     }
 
-    // Calculate available balance
+    // Calculate available balance with 7-day escrow protection
     const commissionRate = seller.commissionRate || 10.0;
+    const ESCROW_HOLD_DAYS = 7;
+    const nowTime = Date.now();
+
     const deliveredItems = seller.orderItems.filter(
       (item) =>
         item.fulfillmentStatus === "DELIVERED" || item.order.status === "DELIVERED"
     );
-    const deliveredGross = deliveredItems.reduce((acc, item) => acc + item.total, 0);
-    const deliveredCommission = (deliveredGross * commissionRate) / 100;
-    const netDeliveredEarnings = deliveredGross - deliveredCommission;
+
+    // Filter items delivered at least 7 days ago (cleared)
+    const clearedItems = deliveredItems.filter((item) => {
+      const deliveryTime = new Date(item.updatedAt || item.order.updatedAt).getTime();
+      const daysPassed = (nowTime - deliveryTime) / (1000 * 60 * 60 * 24);
+      return daysPassed >= ESCROW_HOLD_DAYS;
+    });
+
+    // Items currently under 7-day customer return protection
+    const escrowItems = deliveredItems.filter((item) => {
+      const deliveryTime = new Date(item.updatedAt || item.order.updatedAt).getTime();
+      const daysPassed = (nowTime - deliveryTime) / (1000 * 60 * 60 * 24);
+      return daysPassed < ESCROW_HOLD_DAYS;
+    });
+
+    const clearedGross = clearedItems.reduce((acc, item) => acc + item.total, 0);
+    const clearedCommission = (clearedGross * commissionRate) / 100;
+    const clearedEarnings = clearedGross - clearedCommission;
+
+    const escrowGross = escrowItems.reduce((acc, item) => acc + item.total, 0);
+    const escrowCommission = (escrowGross * commissionRate) / 100;
+    const escrowEarnings = escrowGross - escrowCommission;
 
     const transferredPayouts = seller.payouts
       .filter((p) => p.status === "TRANSFERRED")
@@ -116,15 +139,19 @@ export async function POST(req: Request) {
 
     const availableBalance = Math.max(
       0,
-      netDeliveredEarnings - transferredPayouts - pendingPayouts
+      clearedEarnings - transferredPayouts - pendingPayouts
     );
 
     if (amount > availableBalance) {
+      const escrowMsg = escrowEarnings > 0
+        ? ` Note: Rs. ${Math.round(escrowEarnings).toLocaleString()} is currently held in 7-day customer warranty/return escrow and will unlock automatically.`
+        : "";
+
       return NextResponse.json(
         {
-          error: `Insufficient available balance. You can withdraw up to Rs. ${Math.floor(
+          error: `Insufficient available balance. You can currently withdraw up to Rs. ${Math.floor(
             availableBalance
-          ).toLocaleString()}`,
+          ).toLocaleString()}.${escrowMsg}`,
         },
         { status: 400 }
       );

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { CourierService } from "@/services/courierService";
-import { ConsignmentBookingRequest, CourierProviderType } from "@/lib/courier/types";
+import { ConsignmentBookingRequest, CourierProviderType, CourierPickupAddress } from "@/lib/courier/types";
 
 export async function POST(req: Request) {
   try {
@@ -12,7 +12,17 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { orderItemId, courierProvider, notes, weightInKg } = body;
+    const {
+      orderItemId,
+      courierProvider,
+      notes,
+      weightInKg,
+      pickupMode,
+      customPickupAddressId,
+      doorstepAddress,
+      doorstepCity,
+      doorstepPhone,
+    } = body;
 
     if (!orderItemId) {
       return NextResponse.json({ error: "Order Item ID is required." }, { status: 400 });
@@ -71,18 +81,45 @@ export async function POST(req: Request) {
       where: { id: user.sellerProfile.id },
       select: {
         storeName: true,
+        businessName: true,
         address: true,
         phone: true,
       },
     });
 
-    // Prepare Seller Pickup Address (Warehouse)
-    const pickup = {
+    // Detect seller city from their address (e.g., "Shop 12, Saddar, Peshawar" -> "Peshawar")
+    let sellerCity = "Peshawar";
+    const rawAddress = doorstepAddress?.trim() || seller?.address || "";
+    if (rawAddress) {
+      const parts = rawAddress.split(",").map((p: string) => p.trim());
+      if (parts.length > 1) {
+        sellerCity = parts[parts.length - 1];
+      } else {
+        sellerCity = parts[0];
+      }
+    }
+    if (doorstepCity && doorstepCity.trim()) {
+      sellerCity = doorstepCity.trim();
+    }
+
+    // Method 2: Manual / Pre-registered Trax Location ID
+    let selectedTraxId: number | undefined = undefined;
+    if (customPickupAddressId && (!pickupMode || pickupMode === "REGISTERED_LOCATION" || pickupMode === "manual")) {
+      const parsed = Number(customPickupAddressId);
+      if (!isNaN(parsed) && parsed > 0) {
+        selectedTraxId = parsed;
+      }
+    }
+
+    // Prepare Seller Pickup Address (Supports Method 1: Doorstep Pickup & Method 2: Registered Hub ID)
+    const pickup: CourierPickupAddress = {
       storeName: seller?.storeName || user.sellerProfile.storeName || "Fayzee Seller",
-      contactPerson: user.name || "Store Dispatcher",
-      phone: seller?.phone || user.phone || "03001234567",
-      street: seller?.address || "Seller Store Address, Pakistan",
-      city: "Karachi", // Fallback city
+      contactPerson: user.name || seller?.businessName || "Store Dispatcher",
+      phone: doorstepPhone?.trim() || seller?.phone || user.phone || "03306767357",
+      email: user.email || "support@fayzee.store",
+      street: rawAddress || "Seller Store Address, Pakistan",
+      city: sellerCity || "Peshawar",
+      traxPickupAddressId: selectedTraxId,
     };
 
     const isCOD = item.order.paymentMethod === "COD";

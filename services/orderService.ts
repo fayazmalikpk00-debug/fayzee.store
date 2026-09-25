@@ -444,3 +444,84 @@ export async function updateSellerOrderItemStatus(
   return updatedItem;
 }
 
+/**
+ * Automatically releases reserved stock for online card orders (Safepay)
+ * that were abandoned during checkout (older than cutoffMinutes without payment).
+ */
+export async function releaseAbandonedOnlineOrders(cutoffMinutes: number = 30) {
+  const cutoffDate = new Date(Date.now() - cutoffMinutes * 60 * 1000);
+
+  // Find pending online orders that have timed out
+  const abandonedOrders = await prisma.order.findMany({
+    where: {
+      paymentMethod: "ONLINE_CARD",
+      paymentStatus: { in: ["PENDING", "PROCESSING"] },
+      status: "PENDING",
+      createdAt: { lte: cutoffDate },
+    },
+    include: {
+      items: true,
+    },
+  });
+
+  if (abandonedOrders.length === 0) {
+    return { releasedOrdersCount: 0, restoredItemsCount: 0 };
+  }
+
+  let restoredItemsCount = 0;
+
+  for (const order of abandonedOrders) {
+    await prisma.$transaction(async (tx) => {
+      // 1. Restore product and variant inventory
+      for (const item of order.items) {
+        if (item.fulfillmentStatus !== "CANCELLED") {
+          if (item.variantId) {
+            await tx.productVariant.update({
+              where: { id: item.variantId },
+              data: { stockQuantity: { increment: item.quantity } },
+            });
+          }
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stockQuantity: { increment: item.quantity } },
+          });
+          restoredItemsCount += item.quantity;
+        }
+      }
+
+      // 2. Mark order and items as CANCELLED
+      await tx.orderItem.updateMany({
+        where: { orderId: order.id },
+        data: { fulfillmentStatus: "CANCELLED" },
+      });
+
+      await tx.order.update({
+        where: { id: order.id },
+        data: {
+          status: "CANCELLED",
+          paymentStatus: "CANCELLED",
+          notes: `Auto-cancelled: Online card checkout was not completed within ${cutoffMinutes} minutes. Reserved stock has been restored to store inventory.`,
+          updatedAt: new Date(),
+        },
+      });
+
+      // 3. Update payment status if exists
+      await tx.payment.updateMany({
+        where: { orderId: order.id, status: { in: ["PENDING", "PROCESSING"] } },
+        data: {
+          status: "CANCELLED",
+          gatewayResponse: JSON.stringify({
+            reason: "Checkout session expired / abandoned by customer.",
+            cancelledAt: new Date().toISOString(),
+          }),
+        },
+      });
+    });
+  }
+
+  return {
+    releasedOrdersCount: abandonedOrders.length,
+    restoredItemsCount,
+  };
+}
+

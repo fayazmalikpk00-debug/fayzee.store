@@ -10,6 +10,7 @@ import {
   FileText,
   Lock,
   MapPin,
+  MessageCircle,
   Package,
   Printer,
   ShieldCheck,
@@ -174,6 +175,20 @@ export default async function OrderDetailPage(props: {
             <Printer className="w-3.5 h-3.5 text-[#C8A96B]" />
             <span>Official Invoice</span>
           </Link>
+
+          {/* 1-Click WhatsApp Order Support & Tracking */}
+          <a
+            href={`https://wa.me/923485084930?text=${encodeURIComponent(
+              `Assalam-o-Alaikum Fayzee Support! I need an update regarding my Order #${order.orderNumber} (Grand Total: Rs. ${Math.round(order.grandTotal).toLocaleString()}, Status: ${order.status}). Order Link: https://fayzee.store/orders/${order.id}`
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-bold rounded-full flex items-center gap-1.5 transition shadow-xs active:scale-95"
+            title="Chat with Customer Support on WhatsApp"
+          >
+            <MessageCircle className="w-3.5 h-3.5 fill-current" />
+            <span>WhatsApp Support</span>
+          </a>
 
           {order.status === "PENDING" && (
             <span className="px-3 py-1.5 bg-amber-50 text-amber-800 text-xs font-bold rounded-full border border-amber-200 flex items-center gap-1.5 shadow-xs">
