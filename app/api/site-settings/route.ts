@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export async function GET() {
   try {
@@ -39,10 +39,17 @@ export async function GET() {
       maintenanceMode: false,
     };
 
-    return NextResponse.json({
-      settings: settings || fallbackSettings,
-      banners: activeBanners || [],
-    });
+    return NextResponse.json(
+      {
+        settings: settings || fallbackSettings,
+        banners: activeBanners || [],
+      },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+        },
+      }
+    );
   } catch (err: any) {
     console.error("Public site settings fetch error:", err);
     return NextResponse.json(

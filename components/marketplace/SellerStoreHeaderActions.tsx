@@ -35,7 +35,7 @@ export function SellerStoreHeaderActions({ seller }: SellerStoreHeaderActionsPro
 
   // Check follow status
   useEffect(() => {
-    if (!seller?.id) return;
+    if (!seller?.id || !user) return;
 
     fetch(`/api/sellers/${seller.id}/follow`)
       .then((res) => res.json())

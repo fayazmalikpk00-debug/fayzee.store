@@ -1,5 +1,53 @@
 import prisma from "../lib/db";
 
+export async function getExistingCart(userId?: string, sessionToken?: string) {
+  if (userId) {
+    return prisma.cart.findUnique({
+      where: { userId },
+      include: {
+        items: {
+          include: {
+            product: {
+              include: {
+                images: {
+                  orderBy: [{ isThumbnail: "desc" }, { sortOrder: "asc" }],
+                  take: 1,
+                },
+                seller: { select: { storeName: true, storeSlug: true } },
+              },
+            },
+            variant: true,
+          },
+        },
+      },
+    });
+  }
+
+  if (sessionToken) {
+    return prisma.cart.findUnique({
+      where: { sessionToken },
+      include: {
+        items: {
+          include: {
+            product: {
+              include: {
+                images: {
+                  orderBy: [{ isThumbnail: "desc" }, { sortOrder: "asc" }],
+                  take: 1,
+                },
+                seller: { select: { storeName: true, storeSlug: true } },
+              },
+            },
+            variant: true,
+          },
+        },
+      },
+    });
+  }
+
+  return null;
+}
+
 export async function getOrCreateCart(userId?: string, sessionToken?: string) {
   if (userId) {
     let cart = await prisma.cart.findUnique({

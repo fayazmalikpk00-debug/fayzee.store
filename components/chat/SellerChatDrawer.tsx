@@ -132,12 +132,12 @@ export function SellerChatDrawer({
     // Initial fetch on open
     fetchMessages(conversationId);
 
-    // Optimized polling: every 15 seconds, and ONLY if tab is active/visible
+    // Optimized polling: every 35 seconds, and ONLY if tab is active/visible
     pollingRef.current = setInterval(() => {
       if (typeof document !== "undefined" && !document.hidden) {
         fetchMessages(conversationId);
       }
-    }, 15000);
+    }, 35000);
 
     // Re-fetch immediately when user switches back to this tab
     const handleVisibilityChange = () => {

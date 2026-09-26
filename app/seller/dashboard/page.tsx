@@ -303,12 +303,12 @@ export default function SellerDashboardPage() {
     if (activeChatId && activeTab === "messages") {
       fetchActiveChatMessages(activeChatId);
 
-      // Optimized polling: every 15s and only when tab is visible
+      // Optimized polling: every 35s and only when tab is visible
       const interval = setInterval(() => {
         if (typeof document !== "undefined" && !document.hidden) {
           fetchActiveChatMessages(activeChatId);
         }
-      }, 15000);
+      }, 35000);
 
       // Re-fetch immediately when seller focuses back on this tab
       const handleVisibilityChange = () => {

@@ -3,6 +3,7 @@ import prisma from "@/lib/db";
 import {
   addToCart,
   clearCart,
+  getExistingCart,
   getOrCreateCart,
   removeFromCart,
   updateCartItemQuantity,
@@ -30,10 +31,16 @@ async function getSessionToken() {
 export async function GET() {
   try {
     const user = await getSessionUser();
-    const sessionToken = user ? undefined : await getSessionToken();
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get("fayzee_cart_session")?.value;
 
-    const cart = await getOrCreateCart(user?.id, sessionToken);
-    return NextResponse.json({ cart });
+    // Do not create empty carts in the database on simple GET requests
+    if (!user && !sessionToken) {
+      return NextResponse.json({ cart: null });
+    }
+
+    const cart = await getExistingCart(user?.id, sessionToken);
+    return NextResponse.json({ cart: cart || null });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

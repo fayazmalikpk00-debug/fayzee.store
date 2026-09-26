@@ -114,7 +114,8 @@ export function ProductDetailView({ product }: { product: any }) {
   const [loadingFollow, setLoadingFollow] = useState(false);
 
   useEffect(() => {
-    if (!product.seller?.id) return;
+    // Only check follow status if user is logged in
+    if (!product.seller?.id || !user) return;
     fetch(`/api/sellers/${product.seller.id}/follow`)
       .then((res) => res.json())
       .then((data) => {

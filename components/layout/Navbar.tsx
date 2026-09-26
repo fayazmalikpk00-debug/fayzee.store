@@ -42,6 +42,9 @@ const CATEGORY_EMOJIS: Record<string, string> = {
   other: "📦",
 };
 
+// Module-level cache for site settings to prevent repeat network calls
+let _globalCachedSettings: any = null;
+
 export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
@@ -67,13 +70,33 @@ export function Navbar() {
   }, [cartCount]);
 
   // Mega Menu State
-  const [siteSettings, setSiteSettings] = useState<any>(null);
+  const [siteSettings, setSiteSettings] = useState<any>(_globalCachedSettings);
 
   useEffect(() => {
+    if (_globalCachedSettings) {
+      setSiteSettings(_globalCachedSettings);
+      return;
+    }
+    try {
+      const stored = sessionStorage.getItem("fayzee_site_settings");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        _globalCachedSettings = parsed;
+        setSiteSettings(parsed);
+        return;
+      }
+    } catch {}
+
     fetch("/api/site-settings")
       .then((res) => res.json())
       .then((d) => {
-        if (d?.settings) setSiteSettings(d.settings);
+        if (d?.settings) {
+          _globalCachedSettings = d.settings;
+          setSiteSettings(d.settings);
+          try {
+            sessionStorage.setItem("fayzee_site_settings", JSON.stringify(d.settings));
+          } catch {}
+        }
       })
       .catch(() => {});
   }, []);
